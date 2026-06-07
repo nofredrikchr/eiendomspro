@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   EiendomsPRO — lyst designsystem
+   Rolig, lyst og «finans/eiendom-seriøst». Navy som merkevarefarge,
+   dempet gull som detalj, grønn kun for positive tall.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg: #F6F6F4;          /* lerret */
+  --surface: #FFFFFF;     /* kort */
+  --border: #E9E8E2;      /* hårfin kant */
+  --text: #1A1B1E;        /* primærtekst */
+  --brand: #16284A;       /* navy — primær handling/merkevare */
+  --brand-hover: #1E3A5F;
+  --gold: #9A7A24;        /* detalj */
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background-color: #F6F6F4;
+  color: #1A1B1E;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root { width: 100%; min-height: 100vh; }
+
+::selection { background: rgba(22, 40, 74, 0.12); }
+
+/* Diskret rullefelt som passer lyst tema */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #D7D6CD;
+  border-radius: 7px;
+  border: 3px solid #F6F6F4;
+}
+::-webkit-scrollbar-thumb:hover { background: #C2C1B6; }
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Tall i DM Mono med tabularfigurer (linjerer pent i tabeller) */
+.num { font-family: 'DM Mono', monospace; font-feature-settings: 'tnum' 1; }
+
+/* Serif-display til forsiden — gir redaksjonell/«byrå»-følelse, ikke AI-generisk */
+.font-display { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; }
+
+/* Myk elevasjon for kort på lyst lerret — gir dybde uten tunge skygger */
+.shadow-card {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+.shadow-card-lg {
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.07), 0 2px 6px rgba(16, 24, 40, 0.04);
+}
+.shadow-soft {
+  box-shadow: 0 10px 40px rgba(16, 24, 40, 0.10), 0 4px 12px rgba(16, 24, 40, 0.05);
+}

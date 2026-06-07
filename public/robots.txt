@@ -1,0 +1,26 @@
+# EiendomsPRO — robots.txt
+User-agent: *
+Allow: /$
+Allow: /kalkulator
+Allow: /guider
+Allow: /login
+Allow: /register
+
+# Private, innloggede deler — ingen SEO-verdi, hold dem ute av indeks
+Disallow: /app
+Disallow: /bygg
+Disallow: /leieobjekter
+Disallow: /kontrakter
+Disallow: /rapporter
+Disallow: /boliganalyse
+Disallow: /innstillinger
+Disallow: /tilbakemelding
+Disallow: /admin
+Disallow: /integrasjoner
+Disallow: /varsler
+Disallow: /meldinger
+Disallow: /protokoll
+Disallow: /annonser
+Disallow: /leietaker
+
+Sitemap: https://eiendomspro.no/sitemap.xml

@@ -1,0 +1,271 @@
+/**
+ * Guider/blogg — SEO-innhold. Hver artikkel er strukturerte blokker som rendres
+ * av GuideArtikkel. Støtter **fet** og _kursiv_ i avsnitt og listepunkter.
+ *
+ * Felt:
+ *  - cta: { tittel, tekst?, punkter?[], knapp, lenke, kilde }  (kontekstuell CTA)
+ *  - relaterte: [slug, ...]  (intern lenking — styrker SEO og navigasjon)
+ *
+ * Skriv nytt innhold her — ingen byggeverktøy nødvendig.
+ */
+export const ARTIKLER = [
+  // ───────────────────────────── Lønnsomhet ─────────────────────────────
+  {
+    slug: 'slik-regner-du-yield-pa-utleiebolig',
+    tittel: 'Slik regner du yield på utleiebolig (med eksempel)',
+    description: 'Lær hva yield er, forskjellen på brutto og netto yield, og hvordan du regner det ut — med et konkret regneeksempel for en norsk utleiebolig.',
+    kategori: 'Lønnsomhet',
+    lesetid: '4 min',
+    dato: '2026-06-01',
+    ingress: 'Yield er det viktigste nøkkeltallet når du vurderer en utleiebolig. Her er hvordan du regner det riktig — og hva som er et godt nivå.',
+    blokker: [
+      { type: 'h2', tekst: 'Hva er yield?' },
+      { type: 'p', tekst: 'Yield er den årlige avkastningen en utleiebolig gir, målt mot hva boligen koster. Det lar deg sammenligne helt ulike boliger på tvers av pris og by, og er ofte det første profesjonelle utleiere ser på.' },
+      { type: 'h2', tekst: 'Brutto yield vs. netto yield' },
+      { type: 'p', tekst: '**Brutto yield** = årlig leieinntekt delt på total kostnad. Den tar ikke hensyn til utgifter, og blir derfor litt for optimistisk.' },
+      { type: 'p', tekst: '**Netto yield** trekker først fra de løpende driftskostnadene — felleskostnader, forsikring, kommunale avgifter og vedlikehold. Dette gir et mer realistisk bilde av hva boligen faktisk kaster av seg.' },
+      { type: 'tip', tekst: 'Regn alltid yield av total kostnad — kjøpesum pluss oppussing og omkostninger. Det er den summen du faktisk binder opp.' },
+      { type: 'h2', tekst: 'Regneeksempel' },
+      { type: 'p', tekst: 'Si at du kjøper en leilighet for **3 500 000 kr** og pusser opp for **150 000 kr**. Total kostnad blir 3 650 000 kr. Du leier den ut for **16 500 kr/mnd** (198 000 kr/år), og har driftskostnader på **2 800 kr/mnd** (33 600 kr/år).' },
+      { type: 'ul', punkter: [
+        'Brutto yield = 198 000 / 3 650 000 = **5,4 %**',
+        'Netto leie = 198 000 − 33 600 = 164 400 kr',
+        'Netto yield = 164 400 / 3 650 000 = **4,5 %**',
+      ] },
+      { type: 'h2', tekst: 'Hva er en god yield?' },
+      { type: 'p', tekst: 'Som en tommelfingerregel er netto yield på 4–6 % solid for norske utleieboliger. I de største byene er yielden ofte lavere (men verdistigningen historisk høyere), mens mindre steder kan gi høyere yield. Det viktigste er at tallene henger sammen med din egenkapital, rente og risikovilje.' },
+      { type: 'p', tekst: 'Husk at yield ikke forteller alt: kontantstrøm (hva som blir igjen etter lånekostnader) og forventet verdiutvikling hører med i totalvurderingen.' },
+    ],
+    cta: {
+      tittel: 'Test dine egne tall',
+      tekst: 'Regn ut yield, kontantstrøm og avkastning på egenkapital gratis — uten innlogging.',
+      knapp: 'Åpne kalkulator', lenke: '/kalkulator', kilde: 'guide:yield',
+    },
+    relaterte: ['hva-kan-du-ta-i-leie', 'skatt-pa-utleie-privat-eller-as', 'kpi-regulering-av-husleie'],
+  },
+  {
+    slug: 'hva-kan-du-ta-i-leie',
+    tittel: 'Hva kan du ta i leie? Slik setter du riktig leiepris',
+    description: 'Slik finner du riktig leiepris for utleieboligen din: markedsleie, gjengs leie, hva husleieloven sier, og hvordan du unngår både tap og lang ledighet.',
+    kategori: 'Lønnsomhet',
+    lesetid: '4 min',
+    dato: '2026-05-28',
+    ingress: 'Riktig leiepris er en balanse: for høyt gir lang ledighet, for lavt gir tapt inntekt. Slik finner du nivået.',
+    blokker: [
+      { type: 'h2', tekst: 'Hva sier loven om leieprisen?' },
+      { type: 'p', tekst: 'Etter husleieloven § 4-1 avtaler partene leien fritt. Men leien kan ikke være **urimelig** sammenlignet med det som vanligvis betales for tilsvarende bolig på stedet — det som kalles gjengs leie. I praksis betyr det at markedet setter rammene.' },
+      { type: 'h2', tekst: 'Slik finner du markedsleien' },
+      { type: 'ul', punkter: [
+        'Sammenlign med liknende boliger til leie på Finn.no i samme område.',
+        'Regn ut pris per kvadratmeter, og juster for standard og beliggenhet.',
+        'Vurder om boligen er møblert eller umøblert.',
+        'Ta hensyn til hva som er inkludert — strøm, internett, felleskostnader.',
+      ] },
+      { type: 'tip', tekst: 'En litt lavere leie til en god, langsiktig leietaker slår ofte en høyere leie med hyppige bytter og ledige måneder.' },
+      { type: 'h2', tekst: 'Leieprisen bestemmer lønnsomheten' },
+      { type: 'p', tekst: 'Leien er den største enkeltfaktoren for yield og kontantstrøm. Selv noen hundrelapper i måneden utgjør mye over tid. Test hvordan ulike leienivåer slår ut på avkastningen før du bestemmer deg.' },
+      { type: 'p', tekst: 'Husk også at du kan justere leien årlig etter konsumprisindeksen (KPI) — så start på riktig nivå, og hold leien oppdatert.' },
+    ],
+    cta: {
+      tittel: 'Se hva leien betyr for avkastningen',
+      tekst: 'Test ulike leienivåer i yield-kalkulatoren.',
+      knapp: 'Åpne kalkulator', lenke: '/kalkulator', kilde: 'guide:leiepris',
+    },
+    relaterte: ['slik-regner-du-yield-pa-utleiebolig', 'kpi-regulering-av-husleie', 'leiekontrakt-sjekkliste'],
+  },
+
+  // ───────────────────────────── Skatt ─────────────────────────────
+  {
+    slug: 'skatt-pa-utleie-privat-eller-as',
+    tittel: 'Skatt på utleie: privat eller AS?',
+    description: 'Hvordan beskattes utleie i Norge? Oversikt over skatt på utleie som privatperson (22 %) kontra gjennom AS, fradrag, og hva som lønner seg.',
+    kategori: 'Skatt',
+    lesetid: '5 min',
+    dato: '2026-05-20',
+    ingress: 'Skatten avgjør mye av lønnsomheten. Her er hovedforskjellene mellom å eie utleiebolig privat og gjennom aksjeselskap.',
+    blokker: [
+      { type: 'h2', tekst: 'Utleie som privatperson' },
+      { type: 'p', tekst: 'Utleie av sekundærbolig er skattepliktig. Du skatter **22 %** av netto utleieresultat — altså leieinntekten minus fradragsberettigede kostnader. Tallene føres i skattemeldingen (skjema RF-1159 for fast eiendom).' },
+      { type: 'p', tekst: 'Fradragsberettigede kostnader er blant annet kommunale avgifter, forsikring, **vedlikehold**, og gjeldsrenter. Et viktig skille: **vedlikehold** (å sette tilbake til opprinnelig standard) gir direkte fradrag, mens **påkostning** (å heve standarden) i stedet legges til boligens kostpris og kommer til fradrag ved et eventuelt skattepliktig salg.' },
+      { type: 'h2', tekst: 'Utleie gjennom AS' },
+      { type: 'p', tekst: 'I et aksjeselskap betaler selskapet **22 % selskapsskatt** på overskuddet. Vil du ta pengene ut privat som utbytte, kommer **utbytteskatt** i tillegg (effektivt rundt 37,8 %). Samlet effektiv skatt ved full utdeling blir derfor høy — i størrelsesorden 51 %.' },
+      { type: 'p', tekst: 'Fordelen med AS er at så lenge pengene blir igjen i selskapet og reinvesteres, betaler du bare de 22 %. For utleiere som bygger portefølje over tid kan det gi en betydelig utsatt skatt-effekt.' },
+      { type: 'tip', tekst: 'Tommelfingerregel: skal du ta ut overskuddet til privat forbruk, er privat eie ofte enklest og billigst. Skal du reinvestere og vokse, kan AS lønne seg. Dette er en forenkling — snakk med regnskapsfører om din situasjon.' },
+      { type: 'p', tekst: '_Dette er generell informasjon, ikke skatteråd. Satser og regler endres — kontroller alltid mot Skatteetaten for inneværende år._' },
+    ],
+    cta: {
+      tittel: 'La EiendomsPRO regne skatten',
+      tekst: 'Automatisk skatteberegning for både privat og AS — klar til skattemeldingen.',
+      knapp: 'Kom i gang gratis', lenke: '/register', kilde: 'guide:skatt',
+    },
+    relaterte: ['nar-er-utleie-skattefritt', 'slik-regner-du-yield-pa-utleiebolig', 'leiekontrakt-sjekkliste'],
+  },
+  {
+    slug: 'nar-er-utleie-skattefritt',
+    tittel: 'Når er utleie skattefritt?',
+    description: 'Når slipper du skatt på utleie i Norge? Reglene for utleie av egen bolig, romutleie, korttidsutleie og sekundærbolig — forklart enkelt.',
+    kategori: 'Skatt',
+    lesetid: '4 min',
+    dato: '2026-05-15',
+    ingress: 'Ikke all utleie er skattepliktig. Her er hovedreglene for når utleie er skattefri — og når den ikke er det.',
+    blokker: [
+      { type: 'h2', tekst: 'Utleie av en del av egen bolig' },
+      { type: 'p', tekst: 'Leier du ut en del av boligen du selv bor i, er inntekten **skattefri** så lenge du selv bruker minst halvparten av boligen (regnet etter utleieverdi). Leier du ut mer enn halvparten, blir hele leieinntekten skattepliktig.' },
+      { type: 'h2', tekst: 'Utleie av hele egen bolig' },
+      { type: 'p', tekst: 'Leier du ut hele boligen din i kortere perioder, er inntekten skattefri opp til **20 000 kr i året**. Tjener du mer enn det, blir hele beløpet skattepliktig — ikke bare det som overstiger grensen.' },
+      { type: 'h2', tekst: 'Korttidsutleie (under 30 dager)' },
+      { type: 'p', tekst: 'For korttidsutleie av egen bolig (typisk Airbnb) gjelder en egen sjablongregel: de første **10 000 kr** er skattefrie, og av det overskytende regnes **85 %** som skattepliktig inntekt.' },
+      { type: 'h2', tekst: 'Sekundærbolig og ren utleiebolig' },
+      { type: 'p', tekst: 'Eier du en egen utleiebolig du ikke bor i selv, er utleien **skattepliktig fra første krone** — 22 % av netto resultat. Til gjengjeld får du fradrag for driftskostnader, vedlikehold og gjeldsrenter.' },
+      { type: 'tip', tekst: 'Tomannsboliger og boliger med flere enheter har egne regler. Er du i tvil, sjekk Skatteetatens veiledning eller spør regnskapsfører.' },
+      { type: 'p', tekst: '_Generell informasjon, ikke skatteråd. Beløpsgrenser og regler kan endres — kontroller mot Skatteetaten for inneværende år._' },
+    ],
+    cta: {
+      tittel: 'Hold styr på skatten',
+      tekst: 'EiendomsPRO beregner skattepliktig resultat og fradrag automatisk.',
+      knapp: 'Kom i gang gratis', lenke: '/register', kilde: 'guide:skattefri',
+    },
+    relaterte: ['skatt-pa-utleie-privat-eller-as', 'slik-regner-du-yield-pa-utleiebolig', 'hva-kan-du-ta-i-leie'],
+  },
+
+  // ───────────────────────────── Leiekontrakt / juss ─────────────────────────────
+  {
+    slug: 'leiekontrakt-sjekkliste',
+    tittel: 'Leiekontrakt: 10 punkter som må være med',
+    description: 'Sjekkliste for en trygg leiekontrakt etter husleieloven: depositum, leieperiode, oppsigelse, vedlikehold, KPI-regulering og protokoll.',
+    kategori: 'Leiekontrakt',
+    lesetid: '4 min',
+    dato: '2026-05-10',
+    ingress: 'En god leiekontrakt forebygger konflikter. Her er de ti punktene en utleiekontrakt etter husleieloven bør inneholde.',
+    blokker: [
+      { type: 'p', tekst: 'Husleieloven setter rammene for leieforhold i Norge, og flere av bestemmelsene kan ikke fravikes til ugunst for leietaker. En tydelig kontrakt beskytter begge parter. Dette bør være med:' },
+      { type: 'ul', punkter: [
+        '**Partene** — fullt navn, fødselsdato/org.nr og kontaktinfo på utleier og leietaker.',
+        '**Leieobjektet** — nøyaktig adresse, hva som leies (hele boligen, hybel, rom), og hva som følger med (bod, parkering, møbler).',
+        '**Leiesummen** — beløp, og tydelig hva som er inkludert (strøm, internett, felleskostnader).',
+        '**Depositum** — maks 6 måneders leie, og det skal stå på egen sperret depositumskonto i leietakers navn.',
+        '**Leieperiode** — tidsbestemt eller tidsubestemt. Tidsbestemt leie må som hovedregel være minst 3 år (med visse unntak).',
+        '**Oppsigelse** — oppsigelsestid og gyldige oppsigelsesgrunner etter loven.',
+        '**Vedlikeholdsansvar** — hvem som har ansvar for hva (normalt: leietaker for småting, utleier for det større).',
+        '**Husordensregler** — ro, røyking, dyrehold og eventuell fremleie.',
+        '**KPI-regulering** — at leien kan justeres årlig i takt med konsumprisindeksen, med riktig varsel.',
+        '**Inn- og utflyttingsprotokoll** — dokumenter boligens stand og målerstand ved inn- og utflytting, gjerne med bilder.',
+      ] },
+      { type: 'tip', tekst: 'Depositum skal alltid på sperret konto — det er både lovpålagt og din beste beskyttelse ved en eventuell tvist.' },
+      { type: 'h2', tekst: 'Husk protokollen' },
+      { type: 'p', tekst: 'Den vanligste kilden til konflikt ved utflytting er uenighet om boligens tilstand. En signert inn- og utflyttingsprotokoll med bilder gjør det enkelt å avgjøre hva som er normal slitasje og hva leietaker skal dekke ved utflytting.' },
+    ],
+    cta: {
+      tittel: 'Lag leiekontrakten i EiendomsPRO',
+      tekst: 'Ferdig kontrakt etter husleieloven på minutter.',
+      punkter: [
+        'Juridisk korrekt mal med inn- og utflyttingsprotokoll',
+        'Automatisk KPI-varsel — så du øker leien første dag den kan reguleres',
+        'BankID-signering (kommer for Pro)',
+      ],
+      knapp: 'Opprett leiekontrakt', lenke: '/register', kilde: 'guide:leiekontrakt-sjekkliste',
+    },
+    relaterte: ['depositum-regler-for-utleiere', 'kpi-regulering-av-husleie', 'oppsigelse-av-leieforhold'],
+  },
+  {
+    slug: 'depositum-regler-for-utleiere',
+    tittel: 'Depositum: regler for utleiere',
+    description: 'Hvor mye depositum kan du kreve? Reglene for depositumskonto, maksbeløp (6 måneder), renter og bankgaranti etter husleieloven — forklart for utleiere.',
+    kategori: 'Leiekontrakt',
+    lesetid: '4 min',
+    dato: '2026-05-05',
+    ingress: 'Depositum er din viktigste sikkerhet som utleier — men reglene er strenge. Slik gjør du det riktig.',
+    blokker: [
+      { type: 'h2', tekst: 'Hvor mye kan du kreve?' },
+      { type: 'p', tekst: 'Etter husleieloven kan depositumet maksimalt være **seks måneders leie**. Det er vanlig med to til tre måneder, men du står fritt til å avtale opptil seks.' },
+      { type: 'h2', tekst: 'Det skal stå på egen depositumskonto' },
+      { type: 'p', tekst: 'Depositumet skal settes på en **egen, sperret depositumskonto i leietakers navn**. Du som utleier kan ikke ta imot depositum kontant eller på din egen konto — det er ikke lov. Banken sperrer kontoen, og hverken du eller leietaker kan ta ut pengene uten den andres samtykke eller en rettslig avgjørelse.' },
+      { type: 'ul', punkter: [
+        '**Renter** på depositumet tilfaller leietaker.',
+        '**Kostnaden** for å opprette kontoen dekkes av deg som utleier.',
+        'Pengene er øremerket skader, ubetalt leie og lignende — ikke fri likviditet.',
+      ] },
+      { type: 'tip', tekst: 'Et alternativ til kontantdepositum er en depositumsgaranti (forsikring) — da slipper leietaker å binde opp pengene, mens du fortsatt har sikkerhet.' },
+      { type: 'h2', tekst: 'Ved utflytting' },
+      { type: 'p', tekst: 'Er det ingen tvist, frigis depositumet til leietaker. Mener du at leietaker skylder for skade eller leie, kan du kreve dekning fra kontoen — men ved uenighet må kravet avgjøres, for eksempel av Husleietvistutvalget. En god inn- og utflyttingsprotokoll er gull verdt her.' },
+    ],
+    cta: {
+      tittel: 'Få depositum riktig i kontrakten',
+      tekst: 'EiendomsPRO setter opp depositum og protokoll etter husleieloven.',
+      knapp: 'Opprett leiekontrakt', lenke: '/register', kilde: 'guide:depositum',
+    },
+    relaterte: ['leiekontrakt-sjekkliste', 'oppsigelse-av-leieforhold', 'kpi-regulering-av-husleie'],
+  },
+  {
+    slug: 'kpi-regulering-av-husleie',
+    tittel: 'KPI-regulering av husleie: slik øker du leien riktig',
+    description: 'Hvordan regulere husleien etter konsumprisindeksen (KPI)? Reglene for indeksregulering, varslingsfrist og gjengs leie — slik taper du ikke leieinntekt.',
+    kategori: 'Leiekontrakt',
+    lesetid: '4 min',
+    dato: '2026-04-28',
+    ingress: 'Mange utleiere glemmer å justere leien og taper tusenvis i året. Slik regulerer du husleien riktig etter KPI.',
+    blokker: [
+      { type: 'h2', tekst: 'Hva er KPI-regulering?' },
+      { type: 'p', tekst: 'Konsumprisindeksen (KPI) fra SSB måler prisveksten i samfunnet. Etter husleieloven § 4-2 kan du justere leien i takt med KPI **én gang i året**, slik at leien holder tritt med inflasjonen.' },
+      { type: 'kpikalkulator' },
+      { type: 'h2', tekst: 'Reglene du må følge' },
+      { type: 'ul', punkter: [
+        'Leien kan tidligst endres **ett år** etter at den sist ble fastsatt eller endret.',
+        'Du må gi leietaker **skriftlig varsel minst én måned** før økningen trer i kraft.',
+        'Økningen kan ikke være større enn endringen i KPI i perioden.',
+      ] },
+      { type: 'tip', tekst: 'Glemmer du å regulere på tidspunktet du har rett til, kan du ikke ta igjen det tapte med tilbakevirkende kraft. Derfor lønner det seg å regulere **så snart** du har anledning.' },
+      { type: 'h2', tekst: 'Gjengs leie — det større løftet' },
+      { type: 'p', tekst: 'KPI-regulering følger bare inflasjonen. Har markedsleien steget mer, kan du etter en viss tid (se husleieloven § 4-3) i stedet kreve tilpasning til **gjengs leie** — nivået liknende boliger faktisk leies ut for. Dette er en egen prosess med eget varsel.' },
+      { type: 'h2', tekst: 'Ikke gjør det manuelt' },
+      { type: 'p', tekst: 'Det er lett å glemme datoen, og hver måned uten regulering er tapt inntekt. Et system som varsler deg automatisk når leien kan reguleres, sørger for at du øker leien fra første dag du har rett til det.' },
+    ],
+    cta: {
+      tittel: 'Glem aldri en leieregulering igjen',
+      tekst: 'EiendomsPRO varsler deg automatisk når leien kan KPI-reguleres.',
+      punkter: [
+        'Varsel så snart leien kan justeres',
+        'Riktig beregning fra SSBs KPI',
+        'Knyttet direkte til leiekontrakten',
+      ],
+      knapp: 'Kom i gang gratis', lenke: '/register', kilde: 'guide:kpi',
+    },
+    relaterte: ['leiekontrakt-sjekkliste', 'hva-kan-du-ta-i-leie', 'depositum-regler-for-utleiere'],
+  },
+  {
+    slug: 'oppsigelse-av-leieforhold',
+    tittel: 'Oppsigelse av leieforhold: utleiers rettigheter',
+    description: 'Kan utleier si opp leietaker? Reglene for oppsigelse, oppsigelsestid, saklig grunn og utkastelse etter husleieloven — forklart for utleiere.',
+    kategori: 'Leiekontrakt',
+    lesetid: '5 min',
+    dato: '2026-04-20',
+    ingress: 'Å avslutte et leieforhold riktig er viktig — gjør du det feil, kan oppsigelsen bli kjent ugyldig. Her er reglene.',
+    blokker: [
+      { type: 'h2', tekst: 'Tidsbestemt vs. tidsubestemt leie' },
+      { type: 'p', tekst: 'En **tidsbestemt** leieavtale opphører automatisk ved utløp uten oppsigelse, og kan normalt ikke sies opp i perioden med mindre dere har avtalt det. En **tidsubestemt** avtale løper til en av partene sier den opp.' },
+      { type: 'h2', tekst: 'Utleier må ha saklig grunn' },
+      { type: 'p', tekst: 'Som utleier kan du ikke si opp en tidsubestemt avtale uten videre. Du må ha en **saklig grunn** — for eksempel at du selv eller familie skal bruke boligen, riving eller ombygging, eller mislighold fra leietaker.' },
+      { type: 'h2', tekst: 'Krav til selve oppsigelsen' },
+      { type: 'ul', punkter: [
+        'Den skal være **skriftlig** og **begrunnet**.',
+        'Den skal opplyse om at leietaker kan **protestere innen én måned**.',
+        '**Oppsigelsestiden** er normalt **tre måneder** til månedsslutt, om ikke annet er avtalt.',
+      ] },
+      { type: 'tip', tekst: 'Mangler oppsigelsen formkravene, kan den bli kjent ugyldig. Bruk en korrekt mal og dokumenter at den er mottatt.' },
+      { type: 'h2', tekst: 'Hvis leietaker ikke flytter' },
+      { type: 'p', tekst: 'Protesterer leietaker og blir boende, kan du ikke kaste vedkommende ut selv. Da må saken avgjøres — typisk av **Husleietvistutvalget** eller forliksrådet — og en eventuell **fravikelse (utkastelse)** gjennomføres av namsmannen. Selvtekt er ikke lov.' },
+      { type: 'p', tekst: 'Ved vesentlig mislighold (for eksempel manglende betaling) kan avtalen i stedet **heves**, som gir raskere prosess. Også her gjelder strenge formkrav.' },
+      { type: 'p', tekst: '_Dette er en forenklet oversikt. Ved konkrete saker bør du sjekke husleieloven eller søke juridisk hjelp._' },
+    ],
+    cta: {
+      tittel: 'Hold leieforholdet ryddig fra start',
+      tekst: 'Tydelige kontrakter og dokumentasjon gjør en eventuell avslutning enklere.',
+      knapp: 'Opprett leiekontrakt', lenke: '/register', kilde: 'guide:oppsigelse',
+    },
+    relaterte: ['leiekontrakt-sjekkliste', 'depositum-regler-for-utleiere', 'kpi-regulering-av-husleie'],
+  },
+];
+
+export function finnArtikkel(slug) {
+  return ARTIKLER.find((a) => a.slug === slug);
+}

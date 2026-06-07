@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#16284A"/>
+  <!-- subtilt rutenett -->
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <path d="M0 158 H1200 M0 316 H1200 M0 474 H1200 M300 0 V630 M600 0 V630 M900 0 V630"/>
+  </g>
+  <!-- mykt skjær -->
+  <ellipse cx="950" cy="120" rx="420" ry="280" fill="#ffffff" fill-opacity="0.04"/>
+
+  <!-- logo: ikon + ordmerke -->
+  <g transform="translate(96,86)">
+    <g transform="translate(0,2)">
+      <polyline points="2,18 16,4 30,18" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <line x1="2" y1="18" x2="2" y2="31" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="2" y1="31" x2="14" y2="31" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="30" y1="18" x2="30" y2="31" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="16" y1="31" x2="30" y2="31" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="12" y="24" width="3.4" height="7" rx="0.6" fill="#C9A84C"/>
+      <rect x="17" y="20" width="3.4" height="11" rx="0.6" fill="#C9A84C"/>
+      <rect x="22" y="15" width="3.4" height="16" rx="0.6" fill="#C9A84C"/>
+    </g>
+    <text x="46" y="27" font-family="Inter, Helvetica, Arial, sans-serif" font-size="26" font-weight="600" letter-spacing="-0.3">
+      <tspan fill="#ffffff">Eiendoms</tspan><tspan fill="#C9A84C" font-weight="700">PRO</tspan>
+    </text>
+  </g>
+
+  <!-- gull aksentlinje -->
+  <rect x="96" y="232" width="54" height="4" rx="2" fill="#C9A84C"/>
+
+  <!-- overskrift -->
+  <text x="94" y="312" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-weight="600" fill="#ffffff">Se nøyaktig hva hver</text>
+  <text x="94" y="392" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-weight="600">
+    <tspan fill="#D9BE7A" font-style="italic">utleiebolig</tspan><tspan fill="#ffffff"> tjener deg.</tspan>
+  </text>
+
+  <!-- underline -->
+  <text x="96" y="452" font-family="Inter, Helvetica, Arial, sans-serif" font-size="27" fill="#B9C2D2">Yield · kontantstrøm · skatt · 10-års prognose · leiekontrakter</text>
+
+  <!-- nøkkeltall-brikker -->
+  <g transform="translate(96,500)" font-family="Inter, Helvetica, Arial, sans-serif">
+    <g>
+      <rect width="200" height="74" rx="14" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="20" y="30" font-size="14" fill="#9FB0C6">YIELD</text>
+      <text x="20" y="58" font-size="26" font-weight="700" fill="#9FE7B8" font-family="'DM Mono', monospace">6,4 %</text>
+    </g>
+    <g transform="translate(220,0)">
+      <rect width="240" height="74" rx="14" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="20" y="30" font-size="14" fill="#9FB0C6">NETTO / MND</text>
+      <text x="20" y="58" font-size="26" font-weight="700" fill="#ffffff" font-family="'DM Mono', monospace">24 850 kr</text>
+    </g>
+    <g transform="translate(480,0)">
+      <rect width="250" height="74" rx="14" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="20" y="30" font-size="14" fill="#9FB0C6">KONTANTSTRØM</text>
+      <text x="20" y="58" font-size="26" font-weight="700" fill="#9FE7B8" font-family="'DM Mono', monospace">+8 100 kr</text>
+    </g>
+  </g>
+
+  <text x="1104" y="600" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20" fill="#8A98AE">eiendomspro.no</text>
+</svg>
