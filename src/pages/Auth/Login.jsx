@@ -12,6 +12,7 @@ export default function Login({ startModus = 'innlogg' }) {
   const [epost, setEpost] = useState('');
   const [telefon, setTelefon] = useState('');
   const [passord, setPassord] = useState('');
+  const [bekreftPassord, setBekreftPassord] = useState('');
   const [fulltNavn, setFulltNavn] = useState('');
   const [primaryRolle, setPrimaryRolle] = useState('utleier');
   const [jobber, setJobber] = useState(false);
@@ -25,6 +26,10 @@ export default function Login({ startModus = 'innlogg' }) {
   async function submit(e) {
     e.preventDefault();
     setFeil(null);
+    if (modus === 'registrer' && passord !== bekreftPassord) {
+      setFeil({ passord: 'Passordene er ikke like.' });
+      return;
+    }
     setJobber(true);
     const res = modus === 'registrer'
       ? await registrer({ fulltNavn, epost: epost || undefined, telefon: telefon || undefined, passord, primaryRolle })
@@ -67,6 +72,7 @@ export default function Login({ startModus = 'innlogg' }) {
                 <Felt ikon={Mail} type="email" placeholder="E-post" value={epost} onChange={setEpost} />
                 <Felt ikon={Phone} type="tel" placeholder="Telefon (valgfritt)" value={telefon} onChange={setTelefon} />
                 <Felt ikon={KeyRound} type="password" placeholder="Passord (minst 8 tegn)" value={passord} onChange={setPassord} required />
+                <Felt ikon={KeyRound} type="password" placeholder="Bekreft passord" value={bekreftPassord} onChange={setBekreftPassord} required />
                 <RolleVelger valgt={primaryRolle} onChange={setPrimaryRolle} />
               </>
             ) : (
