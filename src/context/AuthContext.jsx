@@ -1,49 +1,89 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 /**
- * Autentisering for EiendomsPRO.
+ * Autentisering for EiendomsPRO (Fase 0).
  *
- * Status: demo/lokal modus. Appen kjører uten innloggingsvegg med én lokal
- * bruker, akkurat som før. Ekte innlogging bygges som egen jobb mot Neon
- * (serverless functions i /api), gjerne sammen med BankID/Signicat.
+ * Snakker med /api/auth/* (Neon-backend). Når DB ikke er konfigurert svarer
+ * /api/auth/me med { demo: true } → appen kjører i demo-modus uten innloggingsvegg
+ * (som før, nyttig lokalt uten DATABASE_URL).
  *
- * Når Neon-auth er på plass byttes DEMO_BRUKER ut med en sesjonssjekk mot
- * /api/auth/* — resten av appen bruker allerede `innlogget`/`laster`/`erDemo`.
+ * Eksponerer: bruker, innlogget, laster, erDemo, niva, roller, aktivModus,
+ * registrer(), loggInn(), loggUt().
  */
 const AuthContext = createContext(null);
 
-const DEMO_BRUKER = { id: 'lokal', email: 'demo@lokal', navn: 'Demobruker', lokal: true };
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    ...opts,
+  });
+  let data = {};
+  try { data = await res.json(); } catch { /* tom respons */ }
+  return { res, data };
+}
 
 export function AuthProvider({ children }) {
-  const [bruker] = useState(DEMO_BRUKER);
+  const [bruker, setBruker] = useState(null);
+  const [laster, setLaster] = useState(true);
+  const [erDemo, setErDemo] = useState(false);
 
-  async function sendMagiskLenke() {
-    return { feil: 'Innlogging er ikke aktivert ennå (kommer med Neon-backend).' };
-  }
-  async function loggInnPassord() {
-    return { feil: 'Innlogging er ikke aktivert ennå (kommer med Neon-backend).' };
-  }
-  async function registrer() {
-    return { feil: 'Registrering er ikke aktivert ennå (kommer med Neon-backend).' };
-  }
-  async function loggUt() {
-    /* ingen sesjon å avslutte i demo-modus */
-  }
+  const lastInn = useCallback(async () => {
+    const { data } = await api('/api/auth/me');
+    setBruker(data.bruker ?? null);
+    setErDemo(!!data.demo);
+  }, []);
+
+  // Hent sesjon ved oppstart. setState skjer i promise-callback (ekstern kilde),
+  // ikke synkront i effekten. aktiv-flagget unngår setState etter unmount.
+  useEffect(() => {
+    let aktiv = true;
+    api('/api/auth/me')
+      .then(({ data }) => {
+        if (!aktiv) return;
+        setBruker(data.bruker ?? null);
+        setErDemo(!!data.demo);
+      })
+      .catch(() => { /* ingen sesjon */ })
+      .finally(() => { if (aktiv) setLaster(false); });
+    return () => { aktiv = false; };
+  }, []);
+
+  const registrer = useCallback(async (felter) => {
+    const { res, data } = await api('/api/auth/register', { method: 'POST', body: JSON.stringify(felter) });
+    if (res.ok) { setBruker(data.bruker); return { ok: true }; }
+    return { ok: false, feil: data.feil || { generelt: 'Noe gikk galt.' } };
+  }, []);
+
+  const loggInn = useCallback(async (felter) => {
+    const { res, data } = await api('/api/auth/login', { method: 'POST', body: JSON.stringify(felter) });
+    if (res.ok) { setBruker(data.bruker); return { ok: true }; }
+    return { ok: false, feil: data.feil || { generelt: 'Noe gikk galt.' } };
+  }, []);
+
+  const loggUt = useCallback(async () => {
+    try { await api('/api/auth/logout', { method: 'POST' }); } catch { /* uansett ut lokalt */ }
+    setBruker(null);
+  }, []);
 
   const verdier = {
     bruker,
-    laster: false,
+    laster,
     innlogget: !!bruker,
-    erDemo: true,
-    sendMagiskLenke,
-    loggInnPassord,
+    erDemo,
+    niva: bruker?.niva ?? null,
+    roller: bruker?.roller ?? [],
+    aktivModus: bruker?.aktivModus ?? null,
     registrer,
+    loggInn,
     loggUt,
+    lastInn,
   };
 
   return <AuthContext.Provider value={verdier}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- idiomatisk context-hook ved siden av provider
 export function useAuth() {
   return useContext(AuthContext);
 }

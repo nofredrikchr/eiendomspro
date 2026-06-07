@@ -283,7 +283,7 @@ export default function MinKonto() {
         {!erDemo && bruker && (
           <div className="text-right">
             <div className="text-xs text-[#7A7D83]">Logget inn som</div>
-            <div className="text-sm text-[#1A1B1E]">{bruker.email}</div>
+            <div className="text-sm text-[#1A1B1E]">{bruker.epost || bruker.telefon || bruker.fulltNavn}</div>
             <button onClick={loggUt}
               className="flex items-center gap-1.5 text-xs text-[#65696F] hover:text-[#DC2626] transition-colors cursor-pointer mt-1.5 ml-auto">
               <LogOut size={12} /> Logg ut
