@@ -204,7 +204,7 @@ function UtleiereTab() {
         tittel="Slette utleieren?"
         tekst="Utleieren fjernes fra kontoen. Eksisterende kontrakter beholder informasjonen som allerede er lagret."
         bekreftLabel="Slett utleier"
-        onBekreft={() => { deleteUtleier(slettId); setSlettId(null); }}
+        onBekreft={async () => { await deleteUtleier(slettId); setSlettId(null); }}
         onAvbryt={() => setSlettId(null)}
       />
       <p className="text-sm text-[#65696F] mb-5">
@@ -216,7 +216,7 @@ function UtleiereTab() {
         {utleiere.map((u) =>
           redigerer?.id === u.id ? (
             <UtleierSkjema key={u.id} initial={redigerer}
-              onLagre={(form) => { updateUtleier(u.id, form); setRedigerer(null); }}
+              onLagre={async (form) => { await updateUtleier(u.id, form); setRedigerer(null); }}
               onAvbryt={() => setRedigerer(null)} />
           ) : (
             <UtleierKort key={u.id} utleier={u} onRediger={setRedigerer}
@@ -234,7 +234,7 @@ function UtleiereTab() {
 
       {visNy ? (
         <UtleierSkjema
-          onLagre={(form) => { addUtleier(form); setVisNy(false); }}
+          onLagre={async (form) => { await addUtleier(form); setVisNy(false); }}
           onAvbryt={() => setVisNy(false)} />
       ) : (
         <Button type="button" variant="secondary" onClick={() => setVisNy(true)}>

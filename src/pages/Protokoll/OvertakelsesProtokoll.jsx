@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Download, Check,
-  Camera, FileText, CheckCircle2, Circle, AlertCircle,
+  Camera, CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Input, Textarea } from '../../components/ui/Input';
@@ -154,11 +154,10 @@ export default function OvertakelsesProtokoll() {
   const totaltOppgjor = ['ubetaltLeie', 'restStrom', 'restVann', 'utbedringskostnader', 'annetTap']
     .reduce((s, k) => s + (parseFloat(prot.oppgjor?.[k]) || 0), 0);
 
-  function lagre() {
+  async function lagre() {
     const data = { ...prot, kontraktId: prot.kontraktId || kontraktId, lagret: true };
-    if (eksisterende) updateProtokoll(prot.id, data);
-    else addProtokoll(data);
-    setProt(data);
+    if (prot.id) { await updateProtokoll(prot.id, data); setProt(data); }
+    else { const ny = await addProtokoll(data); setProt({ ...data, id: ny.id }); }
     setLagret(true);
     setTimeout(() => setLagret(false), 2500);
   }

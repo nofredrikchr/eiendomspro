@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, Eye, X, ClipboardList, Plus, FileText } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, Eye, X, ClipboardList, FileText } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Input, Select, Textarea, Toggle } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -377,15 +377,19 @@ export default function KontraktSkjema() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.leietakerNavn) { setFeil('Fyll inn leietakers navn (seksjon 1).'); setApne((a) => a.includes(1) ? a : [...a, 1]); return; }
     if (!form.leieobjektId) { setFeil('Velg et leieobjekt (seksjon 2).'); setApne((a) => a.includes(2) ? a : [...a, 2]); return; }
     if (!form.startdato) { setFeil('Fyll inn startdato (seksjon 4).'); setApne((a) => a.includes(4) ? a : [...a, 4]); return; }
     setFeil('');
-    if (existing) updateKontrakt(id, form);
-    else addKontrakt(form);
-    navigate('/kontrakter');
+    try {
+      if (existing) await updateKontrakt(id, form);
+      else await addKontrakt(form);
+      navigate('/kontrakter');
+    } catch (err) {
+      setFeil(err.message || 'Kunne ikke lagre kontrakten. Prøv igjen.');
+    }
   };
 
   async function lastNedPDF() {

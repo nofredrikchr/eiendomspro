@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Check, Upload, X, Trash2, Megaphone,
+  ArrowLeft, Check, Upload, X, Trash2,
   ExternalLink, Eye, MapPin, Image as ImageIcon, Archive, Send,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -58,7 +58,7 @@ function Seksjon({ tittel, children }) {
 export default function AnnonseSkjema() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { annonser, leieobjekter, bygg, utleiere, addAnnonse, updateAnnonse, deleteAnnonse } = useApp();
+  const { annonser, leieobjekter, bygg, addAnnonse, updateAnnonse, deleteAnnonse } = useApp();
 
   const eksisterende = id ? annonser.find((a) => a.id === id) : null;
   const [form, setForm] = useState(() => eksisterende || { ...defaultAnnonse });
@@ -100,11 +100,11 @@ export default function AnnonseSkjema() {
     setForm((p) => ({ ...p, bilder: p.bilder.filter((_, j) => j !== i) }));
   }
 
-  function lagre(nyStatus) {
+  async function lagre(nyStatus) {
     const data = { ...form, ...(nyStatus ? { status: nyStatus } : {}) };
     let lagretId = id;
-    if (eksisterende) updateAnnonse(id, data);
-    else { const ny = addAnnonse(data); lagretId = ny.id; }
+    if (eksisterende) await updateAnnonse(id, data);
+    else { const ny = await addAnnonse(data); lagretId = ny.id; }
     setForm(data);
     setLagret(true);
     setTimeout(() => setLagret(false), 2000);
@@ -126,8 +126,8 @@ export default function AnnonseSkjema() {
       }
       // Lagre med ny finn-info
       const data = { ...form, finnKode: res.finnKode || form.finnKode, finnUrl: res.url || form.finnUrl, status: 'aktiv' };
-      if (eksisterende) updateAnnonse(id, data);
-      else addAnnonse(data);
+      if (eksisterende) await updateAnnonse(id, data);
+      else await addAnnonse(data);
     } catch (err) {
       setFinnResultat({ type: 'feil', melding: err.message });
     } finally {

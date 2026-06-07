@@ -77,3 +77,46 @@ export async function slettLeieobjekt(eierId, id) {
   const rader = await sql`delete from leieobjekter where id = ${id} and eier_id = ${eierId} returning id`;
   return rader.length > 0;
 }
+
+// ─── Generisk eier-scoped CRUD for resten av entitetene ─────────────────────────
+// Tabellnavn er en whitelist (aldri brukerinput) som bakes inn i spørringen;
+// eier_id/id/data sendes som parametre.
+const CRUD_TABELLER = new Set(['kontrakter', 'fakturaer', 'annonser', 'meldinger', 'protokoller', 'notater', 'utlegg', 'utleiere']);
+
+// Etterligner en TemplateStringsArray slik at neon kan kjøre dynamisk-bygde spørringer.
+function tpl(parts) { const a = parts.slice(); a.raw = parts.slice(); return a; }
+
+export function lagCrud(tabell) {
+  if (!CRUD_TABELLER.has(tabell)) throw new Error(`Ukjent tabell: ${tabell}`);
+  return {
+    async list(eierId) {
+      const rader = await sql(tpl([`select * from ${tabell} where eier_id = `, ' order by opprettet asc']), eierId);
+      return rader.map(radTilObjekt);
+    },
+    async opprett(eierId, data) {
+      const rader = await sql(tpl([`insert into ${tabell} (eier_id, data) values (`, ', ', '::jsonb) returning *']), eierId, JSON.stringify(rensData(data)));
+      return radTilObjekt(rader[0]);
+    },
+    async oppdater(eierId, id, data) {
+      const rader = await sql(tpl([`update ${tabell} set data = `, '::jsonb, oppdatert = now() where id = ', ' and eier_id = ', ' returning *']), JSON.stringify(rensData(data)), id, eierId);
+      return rader[0] ? radTilObjekt(rader[0]) : null;
+    },
+    async slett(eierId, id) {
+      const rader = await sql(tpl([`delete from ${tabell} where id = `, ' and eier_id = ', ' returning id']), id, eierId);
+      return rader.length > 0;
+    },
+  };
+}
+
+// ─── faktiskeTall: én blob per bruker (nøkkel→{inntekt,kostnad}) ─────────────────
+export async function hentFaktiskeTall(eierId) {
+  const r = await sql`select data from faktiske_tall where eier_id = ${eierId}`;
+  return r[0]?.data ?? {};
+}
+export async function lagreFaktiskeTall(eierId, data) {
+  const blob = data && typeof data === 'object' ? data : {};
+  await sql`
+    insert into faktiske_tall (eier_id, data) values (${eierId}, ${JSON.stringify(blob)}::jsonb)
+    on conflict (eier_id) do update set data = ${JSON.stringify(blob)}::jsonb, oppdatert = now()`;
+  return blob;
+}
