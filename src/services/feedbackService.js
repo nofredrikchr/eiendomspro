@@ -1,16 +1,21 @@
 /**
- * Feedback- og support-tjeneste for EiendomsPRO.
+ * Feedback- og support-tjeneste for EiendomsPRO — Neon-backend via /api/feedback.
  *
- * Status: localStorage (fungerer lokalt uten backend). Alle funksjoner er
- * asynkrone (returnerer Promise) slik at det samme API-et kan peke mot Neon
- * (serverless functions i /api) senere uten å endre kallstedene.
- *
- * Når Neon kobles på: bytt ut localStorage-implementasjonen under med fetch
- * mot /api/feedback/*. Skjemaet ligger i /db/schema.sql.
+ * Admin (niva=3) ser alle saker; vanlige brukere ser kun egne. Tilgang og
+ * avsender/leser styres server-side (sesjon), ikke av klienten. Samme
+ * funksjonskontrakt som før, så kallstedene er uendret.
  */
-
-const KEY = 'eiendomspro_feedback';
-const PROFIL_KEY = 'eiendomspro_profil';
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    ...opts,
+  });
+  let data = {};
+  try { data = await res.json(); } catch { /* tom */ }
+  if (!res.ok) throw new Error(typeof data.feil === 'string' ? data.feil : `Feil ${res.status}`);
+  return data;
+}
 
 // ─── Etiketter ────────────────────────────────────────────────────────────────
 export const TYPE_INFO = {
@@ -25,112 +30,63 @@ export const STATUS_INFO = {
   avvist:       { label: 'Avvist', farge: '#71717a' },
 };
 
-// ─── Gjeldende bruker ─────────────────────────────────────────────────────────
+// ─── Gjeldende bruker / rolle (fra sesjon) ──────────────────────────────────────
 export async function gjeldendeBruker() {
-  let p = {};
-  try { p = JSON.parse(localStorage.getItem(PROFIL_KEY) || '{}'); } catch { /* ignore */ }
-  const navn = [p.fornavn, p.etternavn].filter(Boolean).join(' ') || 'Meg';
-  return { id: 'meg', navn, epost: p.epost || '' };
+  try {
+    const { bruker } = await api('/api/auth/me');
+    if (bruker) return { id: bruker.id, navn: bruker.fulltNavn, epost: bruker.epost || '' };
+  } catch { /* ikke innlogget */ }
+  return { id: 'meg', navn: 'Meg', epost: '' };
 }
-
 export async function erAdmin() {
-  return true; // lokal modus: full tilgang. Kobles til Neon-auth senere.
+  try { const { bruker } = await api('/api/auth/me'); return bruker?.niva === 3; } catch { return false; }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// LOCALSTORAGE-IMPLEMENTASJON
-// ════════════════════════════════════════════════════════════════════════════
-function lesLocal() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
-function skrivLocal(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
-function nyId() { return `fb_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; }
-
-// ════════════════════════════════════════════════════════════════════════════
-// PUBLIKT API
-// ════════════════════════════════════════════════════════════════════════════
+// ─── Saker ──────────────────────────────────────────────────────────────────────
 export async function hentSaker() {
-  return lesLocal().sort((a, b) => new Date(b.oppdatert) - new Date(a.oppdatert));
+  try { return (await api('/api/feedback')).saker ?? []; } catch { return []; }
 }
-
 export async function hentSak(id) {
-  return lesLocal().find((s) => s.id === id) || null;
+  try { return (await api(`/api/feedback/${id}`)).sak ?? null; } catch { return null; }
 }
-
 export async function opprettSak({ type, tittel, beskrivelse }) {
-  const bruker = await gjeldendeBruker();
-  const naa = new Date().toISOString();
-  const sak = {
-    id: nyId(), brukerId: bruker.id, brukerNavn: bruker.navn, brukerEpost: bruker.epost,
-    type, tittel, beskrivelse, status: 'ny', opprettet: naa, oppdatert: naa,
-    meldinger: [{ id: nyId(), avsender: 'bruker', type: 'melding', tekst: beskrivelse, tidspunkt: naa, lestBruker: true, lestAdmin: false }],
-  };
-  skrivLocal([sak, ...lesLocal()]);
-  return sak;
+  return (await api('/api/feedback', { method: 'POST', body: JSON.stringify({ type, tittel, beskrivelse }) })).sak;
 }
-
-export async function sendMelding(sakId, { avsender, tekst, type = 'melding', meta = null }) {
-  const saker = lesLocal();
-  const sak = saker.find((s) => s.id === sakId);
-  if (!sak) return null;
-  const naa = new Date().toISOString();
-  sak.meldinger.push({ id: nyId(), avsender, type, tekst, meta, tidspunkt: naa, lestBruker: avsender === 'bruker', lestAdmin: avsender === 'admin' });
-  sak.oppdatert = naa;
-  skrivLocal(saker);
-  return sak;
+export async function sendMelding(sakId, { tekst, type = 'melding', meta = null } = {}) {
+  return (await api(`/api/feedback/${sakId}/melding`, { method: 'POST', body: JSON.stringify({ tekst, type, meta }) })).sak;
 }
-
 export async function settStatus(sakId, status) {
-  const saker = lesLocal();
-  const sak = saker.find((s) => s.id === sakId);
-  if (!sak) return null;
-  sak.status = status; sak.oppdatert = new Date().toISOString();
-  sak.meldinger.push({ id: nyId(), avsender: 'admin', type: 'status', tekst: `Status endret til «${STATUS_INFO[status]?.label || status}».`, tidspunkt: sak.oppdatert, lestBruker: false, lestAdmin: true });
-  skrivLocal(saker);
-  return sak;
+  return (await api(`/api/feedback/${sakId}`, { method: 'PATCH', body: JSON.stringify({ status }) })).sak;
 }
-
 export async function giBelonning(sakId, { beskrivelse, maaneder }) {
-  const saker = lesLocal();
-  const sak = saker.find((s) => s.id === sakId);
-  if (!sak) return null;
-  const naa = new Date().toISOString();
-  sak.belonning = { beskrivelse, maaneder, gitt: naa }; sak.oppdatert = naa;
-  sak.meldinger.push({ id: nyId(), avsender: 'admin', type: 'belonning', tekst: beskrivelse, meta: { maaneder }, tidspunkt: naa, lestBruker: false, lestAdmin: true });
-  skrivLocal(saker);
-  return sak;
+  return (await api(`/api/feedback/${sakId}`, { method: 'PATCH', body: JSON.stringify({ belonning: { beskrivelse, maaneder } }) })).sak;
+}
+export async function markerLest(sakId) {
+  try { await api(`/api/feedback/${sakId}/lest`, { method: 'POST', body: JSON.stringify({}) }); } catch { /* ignore */ }
+}
+export async function slettSak(sakId) {
+  await api(`/api/feedback/${sakId}`, { method: 'DELETE' });
 }
 
-export async function markerLest(sakId, leser /* 'bruker' | 'admin' */) {
-  const saker = lesLocal();
-  const sak = saker.find((s) => s.id === sakId);
-  if (!sak) return;
-  const felt = leser === 'admin' ? 'lestAdmin' : 'lestBruker';
-  sak.meldinger.forEach((m) => { m[felt] = true; });
-  skrivLocal(saker);
-}
-
-// ─── Tellere (async) ──────────────────────────────────────────────────────────
+// ─── Tellere (utledet fra saker) ────────────────────────────────────────────────
 export async function antallUlestForBruker() {
-  return lesLocal().reduce((sum, s) => sum + s.meldinger.filter((m) => m.avsender === 'admin' && !m.lestBruker).length, 0);
+  const saker = await hentSaker();
+  return saker.reduce((sum, s) => sum + (s.meldinger || []).filter((m) => m.avsender === 'admin' && !m.lestBruker).length, 0);
 }
 export async function antallUlestForAdmin() {
-  return lesLocal().reduce((sum, s) => sum + s.meldinger.filter((m) => m.avsender === 'bruker' && !m.lestAdmin).length, 0);
+  const saker = await hentSaker();
+  return saker.reduce((sum, s) => sum + (s.meldinger || []).filter((m) => m.avsender === 'bruker' && !m.lestAdmin).length, 0);
 }
 export async function antallApneForAdmin() {
-  return lesLocal().filter((s) => s.status === 'ny' || s.status === 'under_arbeid').length;
+  const saker = await hentSaker();
+  return saker.filter((s) => s.status === 'ny' || s.status === 'under_arbeid').length;
 }
 
-// ─── Live oppdatering ─────────────────────────────────────────────────────────
+// ─── Live oppdatering (polling) ──────────────────────────────────────────────────
 /**
- * Abonnerer på endringer. I localStorage-modus brukes 'storage'-eventer
- * (oppdaterer mellom faner). Returnerer en avmeldingsfunksjon.
- * Når Neon kobles på kan dette byttes til SSE/websocket mot /api.
+ * Uten websocket/SSE poller vi lett hvert 20. sekund. Returnerer avmeldingsfunksjon.
  */
 export function abonner(callback) {
-  const handler = (e) => { if (e.key === KEY) callback(); };
-  window.addEventListener('storage', handler);
-  return () => window.removeEventListener('storage', handler);
-}
-
-export async function slettSak(sakId) {
-  skrivLocal(lesLocal().filter((s) => s.id !== sakId));
+  const id = setInterval(callback, 20000);
+  return () => clearInterval(id);
 }
