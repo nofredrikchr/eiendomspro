@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { erAdmin, harRolle, landingsModus } from './roller.js';
+import { erAdmin, harRolle, landingsModus, gyldigModus } from './roller.js';
+
+describe('gyldigModus', () => {
+  it('godtar utleier og leietaker', () => {
+    expect(gyldigModus('utleier')).toBe(true);
+    expect(gyldigModus('leietaker')).toBe(true);
+  });
+  it('avviser admin og ukjente verdier', () => {
+    expect(gyldigModus('admin')).toBe(false);
+    expect(gyldigModus('')).toBe(false);
+    expect(gyldigModus(null)).toBe(false);
+    expect(gyldigModus('UTLEIER')).toBe(false);
+  });
+});
 
 describe('erAdmin', () => {
   it('er sann kun for niva 3', () => {

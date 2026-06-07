@@ -1,3 +1,9 @@
+/** Gyldige app-moduser (Airbnb-stil). Admin er IKKE en modus man kan bytte til. */
+export const MODUSER = ['utleier', 'leietaker'];
+export function gyldigModus(modus) {
+  return MODUSER.includes(modus);
+}
+
 /** Admin = niva 3 (staff). Settes kun server-side / av annen admin. */
 export function erAdmin(bruker) {
   return !!bruker && bruker.niva === 3;

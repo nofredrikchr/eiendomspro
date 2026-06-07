@@ -24,6 +24,7 @@ import Innboks from './pages/Meldinger/Innboks';
 import Samtale from './pages/Meldinger/Samtale';
 import OvertakelsesProtokoll from './pages/Protokoll/OvertakelsesProtokoll';
 import LeietakerPortal from './pages/Leietaker/LeietakerPortal';
+import LeietakerHjem from './pages/Leietaker/LeietakerHjem';
 import MineAnnonser from './pages/Annonser/MineAnnonser';
 import AnnonseSkjema from './pages/Annonser/AnnonseSkjema';
 import Varsler from './pages/Varsler/Varsler';
@@ -34,7 +35,7 @@ const LANDING_PATHS = ['/'];
 
 function AppRoutes() {
   const { pathname } = useLocation();
-  const { innlogget, laster, erDemo } = useAuth();
+  const { innlogget, laster, erDemo, aktivModus } = useAuth();
   const isLanding = LANDING_PATHS.includes(pathname);
   const isLeietaker = pathname.startsWith('/leietaker');
   const isLogin = pathname === '/login';
@@ -87,7 +88,7 @@ function AppRoutes() {
     <AppProvider>
       <Layout>
         <Routes>
-          <Route path="/app" element={<Dashboard />} />
+          <Route path="/app" element={aktivModus === 'leietaker' ? <LeietakerHjem /> : <Dashboard />} />
           <Route path="/bygg" element={<ByggListe />} />
           <Route path="/bygg/ny" element={<ByggSkjema />} />
           <Route path="/bygg/:id" element={<ByggSkjema />} />

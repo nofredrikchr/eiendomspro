@@ -10,6 +10,7 @@ import { sql } from '../_db.js';
 import { genererToken, hashToken } from './token.js';
 import { hashPassord, verifyPassord } from './passord.js';
 import { offentligBruker } from './bruker.js';
+import { gyldigModus } from './roller.js';
 import { parseCookies, SESJON_COOKIE } from './cookie.js';
 
 const SESJON_LEVETID_DAGER = 30;
@@ -45,6 +46,24 @@ export async function opprettBruker({ epost, telefon, passord, fulltNavn, primar
 export async function hentRoller(brukerId) {
   const rader = await sql`select rolle from bruker_roller where bruker_id = ${brukerId} and status != 'suspendert'`;
   return rader.map((r) => r.rolle);
+}
+
+/**
+ * Bytt aktiv modus (Airbnb-stil). Provisjonerer rollen lazy hvis brukeren ikke
+ * har den fra før, og setter aktiv_modus. Returnerer { bruker, roller } eller
+ * null hvis modus er ugyldig.
+ */
+export async function byttModus(brukerId, modus) {
+  if (!gyldigModus(modus)) return null;
+  await sql`
+    insert into bruker_roller (bruker_id, rolle, status, onboardet)
+    values (${brukerId}, ${modus}, 'aktiv', now())
+    on conflict (bruker_id, rolle) do nothing`;
+  const rader = await sql`
+    update brukere set aktiv_modus = ${modus}, oppdatert = now()
+    where id = ${brukerId} returning *`;
+  if (!rader[0]) return null;
+  return { bruker: rader[0], roller: await hentRoller(brukerId) };
 }
 
 // ─── Sesjoner ─────────────────────────────────────────────────────────────────

@@ -66,6 +66,13 @@ export function AuthProvider({ children }) {
     setBruker(null);
   }, []);
 
+  // Bytt aktiv modus (utleier/leietaker). Provisjonerer rollen lazy server-side.
+  const byttModus = useCallback(async (modus) => {
+    const { res, data } = await api('/api/mode', { method: 'POST', body: JSON.stringify({ modus }) });
+    if (res.ok) { setBruker(data.bruker); return { ok: true }; }
+    return { ok: false, feil: typeof data.feil === 'string' ? data.feil : 'Kunne ikke bytte modus.' };
+  }, []);
+
   const verdier = {
     bruker,
     laster,
@@ -77,6 +84,7 @@ export function AuthProvider({ children }) {
     registrer,
     loggInn,
     loggUt,
+    byttModus,
     lastInn,
   };
 

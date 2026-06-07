@@ -1,15 +1,17 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Home, FileText, TrendingUp, Settings,
   Menu, X, BarChart3, Megaphone, MessageSquare, Bell, Zap, LifeBuoy, Percent,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
+import { useAuth } from '../context/AuthContext';
 import { antallUlestForBruker, abonner } from '../services/feedbackService';
 
-// ─── Fase 1 — aktive sider ────────────────────────────────────────────────────
-const aktiveNavItems = [
+// ─── Utleier-modus: aktive sider ──────────────────────────────────────────────
+const utleierNavItems = [
   { to: '/app', icon: LayoutDashboard, label: 'Oversikt' },
   { to: '/boliganalyse', icon: TrendingUp, label: 'Boliganalyse' },
   { to: '/bygg', icon: Building2, label: 'Mine Bygg' },
@@ -19,7 +21,12 @@ const aktiveNavItems = [
   { to: '/rapporter', icon: BarChart3, label: 'Rapporter' },
 ];
 
-// ─── Kommer snart — synlige, men ikke aktive ──────────────────────────────────
+// ─── Leietaker-modus: aktive sider ────────────────────────────────────────────
+const leietakerNavItems = [
+  { to: '/app', icon: LayoutDashboard, label: 'Min oversikt' },
+];
+
+// ─── Kommer snart (kun utleier-modus) ─────────────────────────────────────────
 const kommerNavItems = [
   { icon: Megaphone, label: 'Mine annonser' },
   { icon: MessageSquare, label: 'Meldinger' },
@@ -72,11 +79,49 @@ function KommerNavItem({ icon: Icon, label }) {
   );
 }
 
+// ─── Modus-veksler (Airbnb-stil) ──────────────────────────────────────────────
+function ModusVelger({ onNavigate }) {
+  const { aktivModus, roller, byttModus } = useAuth();
+  const navigate = useNavigate();
+  const [jobber, setJobber] = useState(false);
+  if (!aktivModus) return null;
+
+  const andre = aktivModus === 'utleier' ? 'leietaker' : 'utleier';
+  const harAndre = roller.includes(andre);
+  const byttLabel = harAndre
+    ? (andre === 'utleier' ? 'Bytt til utleier' : 'Bytt til leietaker')
+    : (andre === 'utleier' ? 'Bli utleier' : 'Finn bolig å leie');
+
+  async function bytt() {
+    setJobber(true);
+    const r = await byttModus(andre);
+    setJobber(false);
+    if (r.ok) { onNavigate?.(); navigate('/app'); }
+  }
+
+  return (
+    <div className="rounded-xl border border-[#E9E8E2] bg-[#FAF9F6] p-3 mb-3">
+      <div className="text-[10px] font-semibold text-[#AEB0B4] uppercase tracking-widest mb-1">Modus</div>
+      <div className="text-sm font-semibold text-[#16284A] mb-2">
+        {aktivModus === 'utleier' ? 'Utleier' : 'Leietaker'}
+      </div>
+      <button onClick={bytt} disabled={jobber}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-[#DCDAD2] text-[#4B4E54] hover:text-[#16284A] hover:border-[#16284A]/30 hover:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        <ArrowLeftRight size={13} /> {jobber ? 'Bytter…' : byttLabel}
+      </button>
+    </div>
+  );
+}
+
 export function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const lukk = () => setMobileOpen(false);
   const { pathname } = useLocation();
+  const { aktivModus } = useAuth();
   const [ulestFeedback, setUlestFeedback] = useState(0);
+
+  const erLeietaker = aktivModus === 'leietaker';
+  const navItems = erLeietaker ? leietakerNavItems : utleierNavItems;
 
   useEffect(() => {
     let aktiv = true;
@@ -104,20 +149,26 @@ export function Layout({ children }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
-          {/* Aktive Fase 1-sider */}
-          {aktiveNavItems.map((item) => (
+          {/* Modus-veksler */}
+          <ModusVelger onNavigate={lukk} />
+
+          {navItems.map((item) => (
             <NavItem key={item.to} {...item} onNavigate={lukk} />
           ))}
 
-          {/* Kommer snart */}
-          <div className="mt-8 mb-2 px-3">
-            <span className="text-[10px] font-semibold text-[#AEB0B4] uppercase tracking-widest">
-              Kommer snart
-            </span>
-          </div>
-          {kommerNavItems.map((item) => (
-            <KommerNavItem key={item.label} {...item} />
-          ))}
+          {/* Kommer snart — kun i utleier-modus */}
+          {!erLeietaker && (
+            <>
+              <div className="mt-8 mb-2 px-3">
+                <span className="text-[10px] font-semibold text-[#AEB0B4] uppercase tracking-widest">
+                  Kommer snart
+                </span>
+              </div>
+              {kommerNavItems.map((item) => (
+                <KommerNavItem key={item.label} {...item} />
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Bunn-nav */}
