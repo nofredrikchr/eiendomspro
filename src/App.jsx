@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
@@ -30,12 +30,16 @@ import AnnonseSkjema from './pages/Annonser/AnnonseSkjema';
 import Varsler from './pages/Varsler/Varsler';
 import Feedback from './pages/Feedback/Feedback';
 import AdminFeedback from './pages/Admin/AdminFeedback';
+import { AdminLayout } from './pages/Admin/AdminLayout';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminBrukere from './pages/Admin/AdminBrukere';
+import AdminLogg from './pages/Admin/AdminLogg';
 
 const LANDING_PATHS = ['/'];
 
 function AppRoutes() {
   const { pathname } = useLocation();
-  const { innlogget, laster, erDemo, aktivModus } = useAuth();
+  const { innlogget, laster, erDemo, aktivModus, niva } = useAuth();
   const isLanding = LANDING_PATHS.includes(pathname);
   const isLeietaker = pathname.startsWith('/leietaker');
   const isLogin = pathname === '/login';
@@ -84,6 +88,21 @@ function AppRoutes() {
     return <Login />;
   }
 
+  // Admin (niva=3): kun admin-panel — ingen utleier/leietaker-app.
+  if (niva === 3) {
+    return (
+      <AdminLayout>
+        <Routes>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/brukere" element={<AdminBrukere />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
+          <Route path="/admin/logg" element={<AdminLogg />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Routes>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AppProvider>
       <Layout>
@@ -107,7 +126,7 @@ function AppRoutes() {
           <Route path="/boliganalyse" element={<BoliganalyseKalkulator />} />
           <Route path="/innstillinger" element={<MinKonto />} />
           <Route path="/tilbakemelding" element={<Feedback />} />
-          <Route path="/admin/feedback" element={<AdminFeedback />} />
+          <Route path="/admin/*" element={<Navigate to="/app" replace />} />
           <Route path="/integrasjoner" element={<IntegrasjonsSide />} />
           <Route path="/varsler" element={<Varsler />} />
           <Route path="/meldinger" element={<Innboks />} />
