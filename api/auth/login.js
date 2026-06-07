@@ -3,6 +3,7 @@ import { dbKonfigurert } from '../_db.js';
 import { validerInnlogging } from '../_auth/validering.js';
 import { finnBruker, hentRoller, opprettSesjon, offentligBruker, verifyPassord } from '../_auth/index.js';
 import { byggSesjonsCookie } from '../_auth/cookie.js';
+import { sjekkRate } from '../_auth/ratelimit.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,6 +11,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ feil: { generelt: 'Metode ikke tillatt.' } });
   }
   if (!dbKonfigurert()) return res.status(503).json({ feil: { generelt: 'Database ikke konfigurert.' } });
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || 'ukjent';
+  if (!(await sjekkRate(`login:${ip}`, 10, 900))) {
+    return res.status(429).json({ feil: { generelt: 'For mange innloggingsforsøk. Prøv igjen om noen minutter.' } });
+  }
 
   const v = validerInnlogging(req.body ?? {});
   if (!v.ok) return res.status(400).json({ feil: v.feil });

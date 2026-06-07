@@ -7,6 +7,8 @@ import Kalkulator from './pages/Kalkulator';
 import GuiderIndex from './pages/Guider/GuiderIndex';
 import GuideArtikkel from './pages/Guider/GuideArtikkel';
 import Login from './pages/Auth/Login';
+import ResetPage from './pages/Auth/ResetPage';
+import VerifyPage from './pages/Auth/VerifyPage';
 import Dashboard from './pages/Dashboard';
 import ByggListe from './pages/Bygg/ByggListe';
 import ByggSkjema from './pages/Bygg/ByggSkjema';
@@ -59,6 +61,10 @@ function AppRoutes() {
 
   // Registrering — login-siden i registreringsmodus
   if (pathname === '/register') return <Login startModus="registrer" />;
+
+  // Passord-reset og e-postverifisering (token-baserte, ingen innlogging kreves)
+  if (pathname === '/reset') return <ResetPage />;
+  if (pathname === '/verifiser') return <VerifyPage />;
 
   // Leietakerportal — egen layout uten utleier-sidebar, men med datatilgang
   if (isLeietaker) {

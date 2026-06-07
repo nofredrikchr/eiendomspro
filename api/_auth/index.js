@@ -107,5 +107,50 @@ export async function krevAdmin(req) {
   return okt && okt.bruker.niva === 3 ? okt : null;
 }
 
+// ─── Konto (passord-reset, e-postverifisering, Google) ──────────────────────────
+export async function hentBrukerById(id) {
+  const r = await sql`select * from brukere where id = ${id} limit 1`;
+  return r[0] || null;
+}
+
+export async function oppdaterPassord(brukerId, passord) {
+  const hash = await hashPassord(passord);
+  await sql`update brukere set passord_hash = ${hash}, oppdatert = now() where id = ${brukerId}`;
+}
+
+export async function settEpostVerifisert(brukerId) {
+  await sql`update brukere set epost_verifisert = true, oppdatert = now() where id = ${brukerId}`;
+}
+
+/**
+ * Finn eller opprett en bruker fra Google-innlogging. Kobler på eksisterende
+ * konto via verifisert e-post; ellers opprettes en ny (uten passord).
+ * Returnerer { bruker, roller }.
+ */
+export async function finnEllerOpprettGoogleBruker({ sub, epost, navn }) {
+  const eks = await sql`select bruker_id from oauth_kontoer where leverandor = 'google' and ekstern_id = ${sub} limit 1`;
+  if (eks[0]) {
+    const bruker = await hentBrukerById(eks[0].bruker_id);
+    return { bruker, roller: await hentRoller(bruker.id) };
+  }
+  // Koble til eksisterende konto med samme e-post, ellers opprett ny.
+  let bruker = epost ? await finnBruker({ epost }) : null;
+  if (!bruker) {
+    const [ny] = await sql`
+      insert into brukere (epost, fullt_navn, niva, primary_rolle, aktiv_modus, epost_verifisert)
+      values (${epost}, ${navn || epost}, 1, 'utleier', 'utleier', true)
+      returning *`;
+    await sql`insert into bruker_roller (bruker_id, rolle, status, onboardet)
+              values (${ny.id}, 'utleier', 'aktiv', now()) on conflict do nothing`;
+    bruker = ny;
+  } else {
+    await sql`update brukere set epost_verifisert = true where id = ${bruker.id}`;
+  }
+  await sql`insert into oauth_kontoer (bruker_id, leverandor, ekstern_id, epost)
+            values (${bruker.id}, 'google', ${sub}, ${epost})
+            on conflict (leverandor, ekstern_id) do nothing`;
+  return { bruker, roller: await hentRoller(bruker.id) };
+}
+
 // Re-eksport for kallsteder
 export { offentligBruker, verifyPassord };

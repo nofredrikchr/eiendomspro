@@ -73,6 +73,18 @@ export function AuthProvider({ children }) {
     return { ok: false, feil: typeof data.feil === 'string' ? data.feil : 'Kunne ikke bytte modus.' };
   }, []);
 
+  // Be om passord-reset på e-post (svarer alltid ok — ingen enumerering).
+  const bePassordReset = useCallback(async (identifikator) => {
+    try { await api('/api/auth/request-reset', { method: 'POST', body: JSON.stringify({ identifikator }) }); } catch { /* ignore */ }
+    return { ok: true };
+  }, []);
+
+  // Send (ny) verifiserings-e-post til innlogget bruker.
+  const sendVerifisering = useCallback(async () => {
+    const { res, data } = await api('/api/auth/send-verifisering', { method: 'POST', body: JSON.stringify({}) });
+    return { ok: res.ok, sendt: data.sendt };
+  }, []);
+
   const verdier = {
     bruker,
     laster,
@@ -81,10 +93,13 @@ export function AuthProvider({ children }) {
     niva: bruker?.niva ?? null,
     roller: bruker?.roller ?? [],
     aktivModus: bruker?.aktivModus ?? null,
+    epostVerifisert: bruker?.epostVerifisert ?? false,
     registrer,
     loggInn,
     loggUt,
     byttModus,
+    bePassordReset,
+    sendVerifisering,
     lastInn,
   };
 

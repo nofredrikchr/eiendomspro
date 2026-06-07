@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Home, FileText, TrendingUp, Settings,
   Menu, X, BarChart3, Megaphone, MessageSquare, Bell, Zap, LifeBuoy, Percent,
-  ArrowLeftRight,
+  ArrowLeftRight, MailWarning,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -113,6 +113,32 @@ function ModusVelger({ onNavigate }) {
   );
 }
 
+// ─── E-postverifiserings-banner ───────────────────────────────────────────────
+function EpostBanner() {
+  const { bruker, epostVerifisert, sendVerifisering } = useAuth();
+  const [sendt, setSendt] = useState(false);
+  const [jobber, setJobber] = useState(false);
+  if (!bruker || !bruker.epost || epostVerifisert) return null;
+  async function send() {
+    setJobber(true);
+    const r = await sendVerifisering();
+    setJobber(false);
+    if (r.ok) setSendt(true);
+  }
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#9A7A24]/25 bg-[#9A7A24]/8 px-4 py-3">
+      <MailWarning size={16} className="text-[#9A7A24] shrink-0" />
+      <div className="flex-1 text-sm text-[#7a611c]">Bekreft e-posten din ({bruker.epost}) for full tilgang.</div>
+      {sendt
+        ? <span className="text-xs text-[#15803D]">Sendt!</span>
+        : <button onClick={send} disabled={jobber}
+            className="text-xs font-medium text-[#9A7A24] hover:underline cursor-pointer disabled:opacity-50">
+            {jobber ? 'Sender…' : 'Send på nytt'}
+          </button>}
+    </div>
+  );
+}
+
 export function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const lukk = () => setMobileOpen(false);
@@ -195,6 +221,7 @@ export function Layout({ children }) {
       {/* Innhold */}
       <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen">
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+          <EpostBanner />
           {children}
         </div>
       </main>
