@@ -15,7 +15,15 @@
  */
 import { neon } from '@neondatabase/serverless';
 
-const url = process.env.DATABASE_URL;
+// Neon-integrasjonen i Vercel setter DATABASE_URL (pooled). Fallback-kjeden gjør
+// koden robust mot ulike varianter integrasjonen kan provisjonere. neon()-driveren
+// kjører over HTTPS uansett, så pooled vs unpooled er funksjonelt likegyldig.
+const url =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL_UNPOOLED ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  null;
 
 if (!url) {
   // Kastes ved første spørring, ikke ved import, så health-sjekken kan
