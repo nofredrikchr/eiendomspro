@@ -36,3 +36,24 @@ export const faktiskeTallApi = {
   hent: () => api('/api/faktiske-tall').then((d) => d.faktiskeTall ?? {}),
   lagre: (data) => api('/api/faktiske-tall', { method: 'PUT', body: JSON.stringify(data) }).then((d) => d.faktiskeTall ?? {}),
 };
+
+// Lagrede boliganalyse-rapporter (eier-scoped entitet).
+export const analyseApi = lagKlient('analyser', 'analyser');
+
+// Per-utleier integrasjons-config (blob, kun egen — lest/skrevet via /api).
+export const integrasjonApi = {
+  hent: () => api('/api/integrasjoner').then((d) => d.config ?? {}),
+  lagre: (config) => api('/api/integrasjoner', { method: 'PUT', body: JSON.stringify(config) }).then((d) => d.config ?? {}),
+};
+
+// Brukerens profil-felter (blob).
+export const profilApi = {
+  hent: () => api('/api/profil').then((d) => d.profil ?? {}),
+  lagre: (profil) => api('/api/profil', { method: 'PUT', body: JSON.stringify(profil) }).then((d) => d.profil ?? {}),
+};
+
+// AI-analyse via server-side proxy (plattform-nøkkel).
+export const aiApi = {
+  generer: (prompt) => api('/api/ai', { method: 'POST', body: JSON.stringify({ prompt }) }).then((d) => d.tekst ?? ''),
+};
+

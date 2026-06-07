@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, ExternalLink, AlertCircle, Zap, FileSignature, CreditCard, BookOpen, ChevronDown, ChevronUp, Megaphone } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { storageExt } from '../../utils/storage';
+import { integrasjonApi } from '../../services/entitetApi';
 
 // ─── Status-badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -82,8 +82,15 @@ function VarselBoks({ children }) {
 
 // ─── Hoved-komponent ──────────────────────────────────────────────────────────
 export default function IntegrasjonssSide() {
-  const [config, setConfig] = useState(() => storageExt.getIntegrasjoner());
+  const [config, setConfig] = useState({});
   const [lagret, setLagret] = useState('');
+
+  // Integrasjons-config ligger nå eier-scopet i Neon (kun din egen), ikke localStorage.
+  useEffect(() => {
+    let aktiv = true;
+    integrasjonApi.hent().then((c) => { if (aktiv) setConfig(c); }).catch(() => {});
+    return () => { aktiv = false; };
+  }, []);
 
   function set(felt) {
     return (e) => {
@@ -92,10 +99,12 @@ export default function IntegrasjonssSide() {
     };
   }
 
-  function lagreConfig() {
-    storageExt.saveIntegrasjoner(config);
-    setLagret('ok');
-    setTimeout(() => setLagret(''), 2000);
+  async function lagreConfig() {
+    try {
+      await integrasjonApi.lagre(config);
+      setLagret('ok');
+      setTimeout(() => setLagret(''), 2000);
+    } catch { /* behold skjema ved feil */ }
   }
 
   const signicatOk = !!(config.signicatClientId && config.signicatClientSecret);

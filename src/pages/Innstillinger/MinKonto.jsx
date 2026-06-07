@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Building2, User, Check, X, Settings, Users, Shield, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { BekreftModal } from '../../components/ui/BekreftModal';
+import { profilApi } from '../../services/entitetApi';
 
 // ─── Utleier-skjema ────────────────────────────────────────────
 const defaultUtleierForm = {
@@ -126,21 +127,25 @@ function TabBtn({ active, onClick, icon: Icon, label }) {
 }
 
 // ─── Innstillinger-fane ───────────────────────────────────────
-const PROFIL_KEY = 'eiendomspro_profil';
-function loadProfil() {
-  try { return JSON.parse(localStorage.getItem(PROFIL_KEY) || '{}'); } catch { return {}; }
-}
-
 function InnstillingerTab() {
-  const [form, setForm] = useState(() => loadProfil());
+  const [form, setForm] = useState({});
   const [lagret, setLagret] = useState(false);
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  function lagre(e) {
+  // Profil ligger nå i Neon (eier-scoped), ikke localStorage.
+  useEffect(() => {
+    let aktiv = true;
+    profilApi.hent().then((p) => { if (aktiv) setForm(p); }).catch(() => {});
+    return () => { aktiv = false; };
+  }, []);
+
+  async function lagre(e) {
     e.preventDefault();
-    localStorage.setItem(PROFIL_KEY, JSON.stringify(form));
-    setLagret(true);
-    setTimeout(() => setLagret(false), 2000);
+    try {
+      await profilApi.lagre(form);
+      setLagret(true);
+      setTimeout(() => setLagret(false), 2000);
+    } catch { /* behold skjema ved feil */ }
   }
 
   return (

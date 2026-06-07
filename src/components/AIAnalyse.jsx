@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Sparkles, ChevronDown, ChevronUp, Key, Copy, Check } from 'lucide-react';
-import { Button } from './ui/Button';
-import { formatKr, formatPct } from '../utils/format';
-
-const API_KEY_STORAGE = 'utleier_pro_ai_key';
+import { useState } from 'react';
+import { Sparkles, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { aiApi } from '../services/entitetApi';
 
 function buildPrompt({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader, nettoEtterSkatt, skatt, totalInvestering, startBoligverdi }) {
   const adresse = `${form.gatenavn || ''} ${form.gatenummer || ''}, ${form.poststed || ''}`.trim();
@@ -98,9 +95,6 @@ Bjørneveien 8 fremstår som et attraktivt investeringscase med sterk og diversi
 Samlet sett er dette et case en bank vil se positivt på, forutsatt at LTV er innenfor akseptable rammer.`;
 
 export default function AIAnalyse({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader, nettoEtterSkatt, skatt, totalInvestering, startBoligverdi }) {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE) || '');
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [keyInput, setKeyInput] = useState('');
   const [analyse, setAnalyse] = useState('');
   const [showDemo, setShowDemo] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -108,51 +102,23 @@ export default function AIAnalyse({ form, totalLeie, faste, vedlikeholdKr, termi
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(true);
 
-  const hasKey = !!apiKey;
   const visibleAnalyse = analyse || (showDemo ? DEMO_ANALYSE : '');
 
   async function genererAnalyse() {
-    if (!apiKey) { setShowKeyInput(true); return; }
     setLoading(true);
     setError('');
     setAnalyse('');
     try {
       const prompt = buildPrompt({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader, nettoEtterSkatt, skatt, totalInvestering, startBoligverdi });
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'anthropic-dangerous-direct-browser-calls': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-opus-4-7',
-          max_tokens: 2048,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `API-feil: ${res.status}`);
-      }
-      const data = await res.json();
-      setAnalyse(data.content?.[0]?.text || '');
+      // AI kalles via server-side proxy (/api/ai) — ingen nøkkel i nettleseren.
+      const tekst = await aiApi.generer(prompt);
+      setAnalyse(tekst);
       setExpanded(true);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }
-
-  function lagreNokkel() {
-    const trimmed = keyInput.trim();
-    if (!trimmed) return;
-    localStorage.setItem(API_KEY_STORAGE, trimmed);
-    setApiKey(trimmed);
-    setShowKeyInput(false);
-    setKeyInput('');
   }
 
   async function kopier() {
@@ -196,73 +162,25 @@ export default function AIAnalyse({ form, totalLeie, faste, vedlikeholdKr, termi
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           )}
-          <button
-            onClick={() => { setShowKeyInput(s => !s); setKeyInput(''); }}
-            className="p-2 text-[#64748b] hover:text-[#4D7C0F] transition-colors cursor-pointer"
-            title="API-nøkkel"
-          >
-            <Key size={15} />
-          </button>
         </div>
       </div>
-
-      {/* API-nøkkel input */}
-      {showKeyInput && (
-        <div className="p-4 bg-[#F6F6F4] border-b border-[#E9E8E2]">
-          <p className="text-xs text-[#64748b] mb-2">
-            Lim inn din Anthropic API-nøkkel. Den lagres kun lokalt i nettleseren.
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={keyInput}
-              onChange={e => setKeyInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && lagreNokkel()}
-              placeholder="sk-ant-..."
-              className="flex-1 bg-[#FFFFFF] border border-[#E9E8E2] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#DCDAD2] focus:outline-none focus:border-[#4D7C0F]/40"
-            />
-            <button onClick={lagreNokkel} className="px-4 py-2 bg-[#4D7C0F]/10 text-[#4D7C0F] border border-[#4D7C0F]/20 rounded-lg text-sm hover:bg-[#4D7C0F]/20 transition-colors cursor-pointer">
-              Lagre
-            </button>
-            {apiKey && (
-              <button onClick={() => { localStorage.removeItem(API_KEY_STORAGE); setApiKey(''); setShowKeyInput(false); }}
-                className="px-3 py-2 text-[#DC2626] border border-[#DC2626]/20 rounded-lg text-sm hover:bg-[#DC2626]/10 transition-colors cursor-pointer">
-                Slett
-              </button>
-            )}
-          </div>
-          {apiKey && <p className="text-xs text-[#15803D] mt-2">✓ API-nøkkel er lagret</p>}
-        </div>
-      )}
 
       {/* Body */}
       <div className="p-5">
         {!visibleAnalyse && !loading && (
           <div className="text-center py-6">
             <p className="text-sm text-[#64748b] mb-4">
-              {hasKey
-                ? 'Klikk for å generere en profesjonell investeringsanalyse basert på dine tall.'
-                : 'Legg inn en Anthropic API-nøkkel for å aktivere AI-analyse.'}
+              Klikk for å generere en profesjonell investeringsanalyse basert på dine tall.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={hasKey ? genererAnalyse : () => setShowKeyInput(true)}
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4D7C0F]/10 text-[#4D7C0F] border border-[#4D7C0F]/20 rounded-xl text-sm font-medium hover:bg-[#4D7C0F]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Sparkles size={15} />
-                {hasKey ? 'Generer bankanalyse' : 'Sett opp API-nøkkel'}
+              <button type="button" onClick={genererAnalyse} disabled={loading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4D7C0F]/10 text-[#4D7C0F] border border-[#4D7C0F]/20 rounded-xl text-sm font-medium hover:bg-[#4D7C0F]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <Sparkles size={15} /> Generer bankanalyse
               </button>
-              {!hasKey && (
-                <button
-                  type="button"
-                  onClick={() => { setShowDemo(true); setExpanded(true); }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E9E8E2] text-[#94a3b8] border border-[#DCDAD2] rounded-xl text-sm font-medium hover:text-[#e2e8f0] hover:border-[#3a3a5a] transition-all cursor-pointer"
-                >
-                  Vis eksempel
-                </button>
-              )}
+              <button type="button" onClick={() => { setShowDemo(true); setExpanded(true); }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E9E8E2] text-[#94a3b8] border border-[#DCDAD2] rounded-xl text-sm font-medium hover:text-[#e2e8f0] hover:border-[#3a3a5a] transition-all cursor-pointer">
+                Vis eksempel
+              </button>
             </div>
           </div>
         )}
@@ -284,7 +202,7 @@ export default function AIAnalyse({ form, totalLeie, faste, vedlikeholdKr, termi
           <div>
             {showDemo && !analyse && (
               <div className="mb-4 px-3 py-2 bg-[#4D7C0F]/5 border border-[#4D7C0F]/10 rounded-lg">
-                <p className="text-xs text-[#64748b]">Dette er et eksempel på en analyse. <button type="button" onClick={() => setShowKeyInput(true)} className="text-[#4D7C0F] underline cursor-pointer">Sett opp API-nøkkel</button> for å generere en basert på dine faktiske tall.</p>
+                <p className="text-xs text-[#64748b]">Dette er et eksempel. Klikk «Generer bankanalyse» for å lage en basert på dine faktiske tall.</p>
               </div>
             )}
             <div className="prose prose-invert max-w-none">
@@ -298,17 +216,15 @@ export default function AIAnalyse({ form, totalLeie, faste, vedlikeholdKr, termi
                 {copied ? <Check size={13} className="text-[#15803D]" /> : <Copy size={13} />}
                 {copied ? 'Kopiert!' : 'Kopier tekst'}
               </button>
-              {hasKey && (
-                <button
-                  type="button"
-                  onClick={genererAnalyse}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-3 py-2 text-xs text-[#4D7C0F] border border-[#4D7C0F]/20 rounded-lg hover:bg-[#4D7C0F]/10 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <Sparkles size={13} />
-                  Regenerer
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={genererAnalyse}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-[#4D7C0F] border border-[#4D7C0F]/20 rounded-lg hover:bg-[#4D7C0F]/10 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles size={13} />
+                Regenerer
+              </button>
             </div>
           </div>
         )}

@@ -1,24 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Home, TrendingUp, Calculator, FileText, ChevronDown, ChevronUp,
   Copy, Check, BarChart3, AlertTriangle, Info, ArrowRight, Sparkles,
   Trash2, FolderOpen, Clock
 } from 'lucide-react';
+import { analyseApi } from '../../services/entitetApi';
 
-// ─── Lagrede rapporter (localStorage) ────────────────────────────────────────
-const STORAGE_KEY = 'eiendomspro_boliganalyser';
-
-function lastRapporter() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
-function lagreRapporter(liste) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(liste));
-}
-function lagreNyRapport(inp, t) {
-  const liste = lastRapporter();
+// ─── Lagrede rapporter (Neon, eier-scoped via /api) ──────────────────────────
+async function lagreNyRapport(inp, t) {
   const stressKontantstrøm = t.nettoLeieÅr - (t.stressTermMnd || 0) * 12;
   const ny = {
-    id: `ba_${Date.now()}`,
     lagretTidspunkt: new Date().toISOString(),
     inp,
     snapshot: {
@@ -44,8 +35,8 @@ function lagreNyRapport(inp, t) {
       stressKontantstrømMnd: stressKontantstrøm / 12,
     },
   };
-  lagreRapporter([ny, ...liste].slice(0, 20)); // maks 20 lagrede
-  return ny.id;
+  const lagret = await analyseApi.opprett(ny);
+  return lagret.id;
 }
 
 // ─── AI-evaluering av sammenlignede boliger ───────────────────────────────────
@@ -1043,15 +1034,20 @@ function Sammenligning({ valgte, onLukk }) {
 
 // ─── Lagrede rapporter-oversikt ───────────────────────────────────────────────
 function LagredeRapporter({ onLastInn }) {
-  const [rapporter, setRapporter] = useState(() => lastRapporter());
+  const [rapporter, setRapporter] = useState([]);
   const [valgt, setValgt] = useState([]); // ids
   const [visSammenligning, setVisSammenligning] = useState(false);
 
-  function slett(id) {
-    const oppdatert = rapporter.filter((r) => r.id !== id);
-    lagreRapporter(oppdatert);
-    setRapporter(oppdatert);
+  useEffect(() => {
+    let aktiv = true;
+    analyseApi.list().then((r) => { if (aktiv) setRapporter(r); }).catch(() => {});
+    return () => { aktiv = false; };
+  }, []);
+
+  async function slett(id) {
+    setRapporter((prev) => prev.filter((r) => r.id !== id));
     setValgt((v) => v.filter((x) => x !== id));
+    try { await analyseApi.slett(id); } catch { /* ignore */ }
   }
   function toggleValg(id) {
     setValgt((v) => v.includes(id) ? v.filter((x) => x !== id) : [...v, id]);
@@ -1190,7 +1186,6 @@ export default function BoliganalyseKalkulator() {
   const [inp, setInp] = useState(defaultInp);
   const [aktivTab, setAktivTab] = useState('kalkulator');
   const [åpneSeksjoner, setÅpneSeksjoner] = useState({ 1: true, 2: false, 3: false, 4: false, 5: false });
-  const [lagretId, setLagretId] = useState(null);
   const [visBekreftet, setVisBekreftet] = useState(false);
 
   const set = (felt) => (e) => setInp((f) => ({ ...f, [felt]: e.target.value }));
@@ -1688,8 +1683,8 @@ export default function BoliganalyseKalkulator() {
       {/* Rapport */}
       {aktivTab === 'rapport' && <Rapport inp={inp} t={{ ...t, stressKontantstrøm: t.nettoLeieÅr - t.stressTermMnd * 12 }} />}
 
-      {/* Lagrede — key={} tvinger re-mount og fresh localStorage-les ved tabbytte */}
-      {aktivTab === 'lagrede' && <LagredeRapporter key={Date.now()} onLastInn={lastInnRapport} />}
+      {/* Lagrede — betinget render monterer fersk hver gang fanen åpnes (henter fra /api) */}
+      {aktivTab === 'lagrede' && <LagredeRapporter onLastInn={lastInnRapport} />}
     </div>
   );
 }
