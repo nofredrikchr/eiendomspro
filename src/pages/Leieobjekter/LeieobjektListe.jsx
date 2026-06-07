@@ -17,7 +17,7 @@ const TYPE_LABEL = {
 
 export default function LeieobjektListe() {
   const navigate = useNavigate();
-  const { leieobjekter, bygg, deleteLeieobjekt } = useApp();
+  const { leieobjekter, bygg, lasterEiendom, deleteLeieobjekt } = useApp();
   const [filterBygg, setFilterBygg] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [søk, setSøk] = useState('');
@@ -47,7 +47,7 @@ export default function LeieobjektListe() {
         tittel="Slette leieobjektet?"
         tekst={`${slettObjekt?.betegnelse || 'Leieobjektet'} blir permanent slettet.`}
         bekreftLabel="Slett leieobjekt"
-        onBekreft={() => { deleteLeieobjekt(slettId); setSlettId(null); }}
+        onBekreft={async () => { await deleteLeieobjekt(slettId); setSlettId(null); }}
         onAvbryt={() => setSlettId(null)}
       />
       <div className="flex items-center justify-between mb-8">
@@ -79,7 +79,9 @@ export default function LeieobjektListe() {
         </div>
       )}
 
-      {leieobjekter.length === 0 ? (
+      {lasterEiendom ? (
+        <div className="text-center py-16 text-[#7A7D83] text-sm">Laster leieobjekter…</div>
+      ) : leieobjekter.length === 0 ? (
         <EmptyState
           icon="🏠"
           title="Ingen leieobjekter registrert"

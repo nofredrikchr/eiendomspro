@@ -42,6 +42,7 @@ export default function LeieobjektSkjema() {
   const existing = id ? leieobjekter.find((l) => l.id === id) : null;
   const [form, setForm] = useState(() => existing ? { ...defaultForm, ...existing } : defaultForm);
   const [feil, setFeil] = useState('');
+  const [lagrer, setLagrer] = useState(false);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   const toggle = (field) => () => setForm((f) => ({ ...f, [field]: !f[field] }));
@@ -59,16 +60,19 @@ export default function LeieobjektSkjema() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.byggId) { setFeil('Du må velge hvilket bygg leieobjektet tilhører.'); return; }
     setFeil('');
-    if (existing) {
-      updateLeieobjekt(id, form);
-    } else {
-      addLeieobjekt(form);
+    setLagrer(true);
+    try {
+      if (existing) await updateLeieobjekt(id, form);
+      else await addLeieobjekt(form);
+      navigate('/leieobjekter');
+    } catch (err) {
+      setFeil(err.message || 'Kunne ikke lagre. Prøv igjen.');
+      setLagrer(false);
     }
-    navigate('/leieobjekter');
   };
 
   return (
@@ -91,8 +95,8 @@ export default function LeieobjektSkjema() {
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="secondary" onClick={() => navigate('/leieobjekter')}>Avbryt</Button>
-          <Button type="submit" variant="primary">
-            {existing ? 'Lagre endringer' : 'Opprett leieobjekt'}
+          <Button type="submit" variant="primary" disabled={lagrer}>
+            {lagrer ? 'Lagrer…' : existing ? 'Lagre endringer' : 'Opprett leieobjekt'}
           </Button>
         </div>
       </div>

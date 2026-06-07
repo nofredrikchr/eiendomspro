@@ -22,7 +22,7 @@ const SORTERINGER = [
 
 export default function ByggListe() {
   const navigate = useNavigate();
-  const { bygg, leieobjekter, deleteBygg } = useApp();
+  const { bygg, leieobjekter, lasterEiendom, deleteBygg } = useApp();
   const [søk, setSøk] = useState('');
   const [sortering, setSortering] = useState('navn');
   const [slettId, setSlettId] = useState(null);
@@ -51,7 +51,7 @@ export default function ByggListe() {
         tittel="Slette bygget?"
         tekst={`${slettBygg ? `${slettBygg.gatenavn} ${slettBygg.gatenummer}` : 'Bygget'} og alle tilhørende leieobjekter vil bli permanent slettet.`}
         bekreftLabel="Slett bygg"
-        onBekreft={() => { deleteBygg(slettId); setSlettId(null); }}
+        onBekreft={async () => { await deleteBygg(slettId); setSlettId(null); }}
         onAvbryt={() => setSlettId(null)}
       />
       <div>
@@ -84,7 +84,9 @@ export default function ByggListe() {
           </div>
         )}
 
-        {bygg.length === 0 ? (
+        {lasterEiendom ? (
+          <div className="text-center py-16 text-[#7A7D83] text-sm">Laster bygg…</div>
+        ) : bygg.length === 0 ? (
           <EmptyState
             icon="🏢"
             title="Ingen bygg registrert ennå"

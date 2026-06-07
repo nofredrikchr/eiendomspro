@@ -1,19 +1,16 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { storage, meldingStorage, protokollStorage, notatStorage, utleggStorage, annonseStorage } from '../utils/storage';
 import { genId } from '../utils/format';
-import { seedBygg, seedLeieobjekter, seedKontrakter, seedUtleiere } from '../utils/seedData';
+import { seedKontrakter, seedUtleiere } from '../utils/seedData';
+import { byggApi, leieobjektApi } from '../services/eiendomApi';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [bygg, setByggState] = useState(() => {
-    const saved = storage.getBygg();
-    return saved.length > 0 ? saved : seedBygg;
-  });
-  const [leieobjekter, setLeieobjekterState] = useState(() => {
-    const saved = storage.getLeieobjekter();
-    return saved.length > 0 ? saved : seedLeieobjekter;
-  });
+  // Bygg & leieobjekter ligger nå i Neon (eier-scoped via /api), ikke localStorage.
+  const [bygg, setByggState] = useState([]);
+  const [leieobjekter, setLeieobjekterState] = useState([]);
+  const [lasterEiendom, setLasterEiendom] = useState(true);
   const [kontrakter, setKontrakterState] = useState(() => {
     const saved = storage.getKontrakter();
     return saved.length > 0 ? saved : seedKontrakter;
@@ -30,17 +27,16 @@ export function AppProvider({ children }) {
   const [utlegg, setUtleggState] = useState(() => utleggStorage.get());
   const [annonser, setAnnonserState] = useState(() => annonseStorage.get());
 
-  const setBygg = useCallback((data) => {
-    const next = typeof data === 'function' ? data(bygg) : data;
-    setByggState(next);
-    storage.saveBygg(next);
-  }, [bygg]);
-
-  const setLeieobjekter = useCallback((data) => {
-    const next = typeof data === 'function' ? data(leieobjekter) : data;
-    setLeieobjekterState(next);
-    storage.saveLeieobjekter(next);
-  }, [leieobjekter]);
+  // Last bygg + leieobjekter fra API ved oppstart. setState skjer i promise-callback
+  // (ekstern kilde). Ved 401/feil (f.eks. ikke innlogget) blir listene tomme.
+  useEffect(() => {
+    let aktiv = true;
+    Promise.all([byggApi.list(), leieobjektApi.list()])
+      .then(([b, l]) => { if (!aktiv) return; setByggState(b); setLeieobjekterState(l); })
+      .catch(() => { if (aktiv) { setByggState([]); setLeieobjekterState([]); } })
+      .finally(() => { if (aktiv) setLasterEiendom(false); });
+    return () => { aktiv = false; };
+  }, []);
 
   const setKontrakter = useCallback((data) => {
     const next = typeof data === 'function' ? data(kontrakter) : data;
@@ -118,34 +114,41 @@ export function AppProvider({ children }) {
     setFakturaer((prev) => prev.filter((f) => f.id !== id));
   }, [setFakturaer]);
 
-  const addBygg = useCallback((data) => {
-    const item = { ...data, id: genId(), opprettet: new Date().toISOString() };
-    setBygg((prev) => [...prev, item]);
+  const addBygg = useCallback(async (data) => {
+    const item = await byggApi.opprett(data);
+    setByggState((prev) => [...prev, item]);
     return item;
-  }, [setBygg]);
+  }, []);
 
-  const updateBygg = useCallback((id, data) => {
-    setBygg((prev) => prev.map((b) => (b.id === id ? { ...b, ...data } : b)));
-  }, [setBygg]);
-
-  const deleteBygg = useCallback((id) => {
-    setBygg((prev) => prev.filter((b) => b.id !== id));
-    setLeieobjekter((prev) => prev.filter((l) => l.byggId !== id));
-  }, [setBygg, setLeieobjekter]);
-
-  const addLeieobjekt = useCallback((data) => {
-    const item = { ...data, id: genId(), opprettet: new Date().toISOString() };
-    setLeieobjekter((prev) => [...prev, item]);
+  const updateBygg = useCallback(async (id, data) => {
+    const item = await byggApi.oppdater(id, data);
+    setByggState((prev) => prev.map((b) => (b.id === id ? item : b)));
     return item;
-  }, [setLeieobjekter]);
+  }, []);
 
-  const updateLeieobjekt = useCallback((id, data) => {
-    setLeieobjekter((prev) => prev.map((l) => (l.id === id ? { ...l, ...data } : l)));
-  }, [setLeieobjekter]);
+  const deleteBygg = useCallback(async (id) => {
+    await byggApi.slett(id);
+    setByggState((prev) => prev.filter((b) => b.id !== id));
+    // Serveren kaskaderer; speil det lokalt.
+    setLeieobjekterState((prev) => prev.filter((l) => l.byggId !== id));
+  }, []);
 
-  const deleteLeieobjekt = useCallback((id) => {
-    setLeieobjekter((prev) => prev.filter((l) => l.id !== id));
-  }, [setLeieobjekter]);
+  const addLeieobjekt = useCallback(async (data) => {
+    const item = await leieobjektApi.opprett(data);
+    setLeieobjekterState((prev) => [...prev, item]);
+    return item;
+  }, []);
+
+  const updateLeieobjekt = useCallback(async (id, data) => {
+    const item = await leieobjektApi.oppdater(id, data);
+    setLeieobjekterState((prev) => prev.map((l) => (l.id === id ? item : l)));
+    return item;
+  }, []);
+
+  const deleteLeieobjekt = useCallback(async (id) => {
+    await leieobjektApi.slett(id);
+    setLeieobjekterState((prev) => prev.filter((l) => l.id !== id));
+  }, []);
 
   const addKontrakt = useCallback((data) => {
     const item = { ...data, id: genId(), opprettet: new Date().toISOString() };
@@ -246,7 +249,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      bygg, leieobjekter, kontrakter, utleiere, faktiskeTall, fakturaer,
+      bygg, leieobjekter, lasterEiendom, kontrakter, utleiere, faktiskeTall, fakturaer,
       meldinger, sendMelding, markerLest, oppdaterVedlikeholdStatus,
       protokoller, addProtokoll, updateProtokoll, deleteProtokoll,
       notater, addNotat, updateNotat, deleteNotat,
@@ -264,6 +267,7 @@ export function AppProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- idiomatisk context-hook ved siden av provider
 export function useApp() {
   return useContext(AppContext);
 }

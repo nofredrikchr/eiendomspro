@@ -867,6 +867,8 @@ export default function ByggSkjema() {
   const [form, setForm] = useState(() => existing ? { ...defaultByggData, ...existing } : defaultByggData);
   const [valgtMaaned, setValgtMaaned] = useState(null);
   const [faktiskInput, setFaktiskInput] = useState({ inntekt: '', kostnad: '' });
+  const [lagrer, setLagrer] = useState(false);
+  const [lagrefeil, setLagrefeil] = useState('');
 
   // Leieinntekter
   const leieinntekter = form.leieinntekter || [{ id: 1, navn: '', belop: '' }];
@@ -960,14 +962,18 @@ export default function ByggSkjema() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (existing) {
-      updateBygg(id, form);
-    } else {
-      addBygg(form);
+    setLagrefeil('');
+    setLagrer(true);
+    try {
+      if (existing) await updateBygg(id, form);
+      else await addBygg(form);
+      navigate('/bygg');
+    } catch (err) {
+      setLagrefeil(err.message || 'Kunne ikke lagre bygget. Prøv igjen.');
+      setLagrer(false);
     }
-    navigate('/bygg');
   };
 
   const aar = new Date().getFullYear();
@@ -1059,10 +1065,11 @@ export default function ByggSkjema() {
             )}
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          {lagrefeil && <span className="text-xs text-[#DC2626]">{lagrefeil}</span>}
           <Button type="button" variant="secondary" onClick={() => navigate('/bygg')}>Avbryt</Button>
-          <Button type="submit" variant="primary">
-            {existing ? 'Lagre endringer' : 'Opprett bygg'}
+          <Button type="submit" variant="primary" disabled={lagrer}>
+            {lagrer ? 'Lagrer…' : existing ? 'Lagre endringer' : 'Opprett bygg'}
           </Button>
         </div>
       </div>
