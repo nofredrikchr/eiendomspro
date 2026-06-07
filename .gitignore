@@ -35,3 +35,6 @@ dist-ssr
 # Claude Code — lokale, maskinspesifikke innstillinger
 .claude/settings.local.json
 .claude/launch.json
+
+# Git worktrees (isolerte arbeidskopier)
+.worktrees
