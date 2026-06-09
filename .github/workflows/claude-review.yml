@@ -11,6 +11,7 @@ on:
 
 jobs:
   review:
+    name: opus-review
     runs-on: ubuntu-latest
     permissions:
       contents: read
