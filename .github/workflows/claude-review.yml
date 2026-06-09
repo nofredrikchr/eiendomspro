@@ -1,0 +1,62 @@
+name: Opus-review
+
+# Lag 2 – automatisk kodegjennomgang med Opus 4.8 på hver PR mot main.
+# Legger igjen kommentarer rett i diffen. Erstatter ikke din godkjenning,
+# men gir deg et ferdig vurderingsgrunnlag før du merger.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude (Opus 4.8) gjennomgang
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Bruk samme regelsett som ligger i CLAUDE.md, og fokuser på det Fredrik bryr seg om.
+          claude_args: "--model claude-opus-4-8"
+          use_sticky_comment: true
+          prompt: |
+            Du gjennomgår en Pull Request på EiendomsPRO (utleie-SaaS, Vite + React 19 SPA,
+            backend som Vercel serverless functions i /api med Neon/Postgres).
+
+            Les CLAUDE.md i repoet FØRST — den inneholder de bindende sikkerhets- og
+            strukturreglene. Vurder kun det som er ENDRET i denne PR-en (diffen).
+
+            Sjekk spesielt, i prioritert rekkefølge:
+
+            1. SIKKERHET (blokker hvis brutt):
+               - Hvert /api-endepunkt MÅ kalle krevBruker(req) og returnere 401 hvis ikke innlogget.
+               - ALLE databasespørringer MÅ filtrere på eier_id (eier-scoping). En bruker skal
+                 aldri kunne lese/endre/slette andres data via id alene.
+               - SQL MÅ være parametrisert via Neon tagged templates (sql`... ${x}`). Aldri
+                 string-konkatenering av brukerinput. Tabellnavn kun fra whitelist.
+               - Hemmeligheter leses kun server-side. ALDRI VITE_-prefiks på en hemmelighet
+                 (det bakes inn i nettleser-bundelen).
+               - Bruker-objekter til klienten MÅ gå gjennom offentligBruker() — aldri send
+                 passord_hash eller andre sensitive kolonner.
+
+            2. STRUKTUR / KONVENSJONER:
+               - Følger endringen eksisterende mønstre (generiske CRUD-handlere i _eiendom,
+                 norsk navngiving: feil/okt/bruker/eier, .test.js ved siden av koden)?
+               - Ingen ny localStorage-bruk for data som hører hjemme i Neon.
+               - Ny /api-funksjonalitet bør ha vitest-tester der det er rimelig.
+
+            3. KVALITET:
+               - Feilhåndtering, edge-cases, lekkede konsoll-logger, død kode.
+
+            Format: Legg konkrete, korte kommentarer på de relevante linjene. Avslutt med
+            en kort oppsummering øverst med en tydelig anbefaling: GODKJENN, GODKJENN MED
+            SMÅ MERKNADER, eller IKKE MERGE — og hvorfor. Skriv på norsk.

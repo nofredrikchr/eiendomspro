@@ -1,0 +1,35 @@
+name: CI
+
+# Lag 1 – harde, automatiske sjekker. Kjører på hver PR mot main og på dev.
+# Feiler noe her, blir "Merge"-knappen blokkert (når branch protection er på).
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [dev]
+
+jobs:
+  sjekk:
+    name: Lint · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Installer (rent fra lockfile)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tester (vitest)
+        run: npm test
+
+      - name: Build
+        run: npm run build
