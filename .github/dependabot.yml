@@ -1,0 +1,16 @@
+# Automatiske ukentlige oppdaterings-PR-er for avhengigheter.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Grupper småoppdateringer i én PR for mindre støy
+    groups:
+      mindre-oppdateringer:
+        update-types: ["minor", "patch"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

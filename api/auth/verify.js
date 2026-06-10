@@ -2,10 +2,14 @@
 import { dbKonfigurert } from '../_db.js';
 import { brukEngangsToken } from '../_auth/tokens.js';
 import { settEpostVerifisert } from '../_auth/index.js';
+import { sjekkRate } from '../_auth/ratelimit.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ feil: 'Metode ikke tillatt.' }); }
   if (!dbKonfigurert()) return res.status(503).json({ feil: 'Database ikke konfigurert.' });
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || 'ukjent';
+  if (!(await sjekkRate(`verify-token:${ip}`, 10, 900))) return res.status(429).json({ feil: 'For mange forsøk. Prøv igjen senere.' });
 
   const { token } = req.body ?? {};
   if (!token) return res.status(400).json({ feil: 'Mangler token.' });

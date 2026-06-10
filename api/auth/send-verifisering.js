@@ -4,6 +4,7 @@ import { krevBruker } from '../_auth/index.js';
 import { lagEngangsToken } from '../_auth/tokens.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 import { sendEpost, malVerifisering } from '../_auth/epost.js';
+import { appUrl } from '../_auth/url.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ feil: 'Metode ikke tillatt.' }); }
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const token = await lagEngangsToken(okt.bruker.id, 'epost_verifisering', 60 * 24);
-    const lenke = `https://${req.headers.host}/verifiser?token=${token}`;
+    const lenke = `${appUrl(req)}/verifiser?token=${token}`;
     const { emne, html } = malVerifisering(lenke);
     const r = await sendEpost({ til: okt.bruker.epost, emne, html });
     return res.status(200).json({ ok: true, sendt: r.sendt });

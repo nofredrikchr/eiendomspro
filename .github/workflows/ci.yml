@@ -33,3 +33,8 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Stopper kun på critical (xlsx har kjente high-advisories uten npm-fiks;
+      # lav reell risiko siden vi kun skriver xlsx, leser aldri).
+      - name: Sårbarhetsskann (npm audit)
+        run: npm audit --omit=dev --audit-level=critical

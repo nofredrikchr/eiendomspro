@@ -8,6 +8,8 @@ import { krevBruker } from '../_auth/index.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 
 const MODELL = process.env.AI_MODELL || 'claude-sonnet-4-6';
+const MAKS_PROMPT_TEGN = 8000; // kostnadsvern — lange prompter avvises med 400
+const MAKS_TOKENS = 2048; // eksplisitt tak på Anthropic-svaret
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ feil: 'Metode ikke tillatt.' }); }
@@ -23,12 +25,15 @@ export default async function handler(req, res) {
 
   const { prompt } = req.body ?? {};
   if (!prompt || typeof prompt !== 'string') return res.status(400).json({ feil: 'Mangler prompt.' });
+  if (prompt.length > MAKS_PROMPT_TEGN) {
+    return res.status(400).json({ feil: `Prompt er for lang (maks ${MAKS_PROMPT_TEGN} tegn).` });
+  }
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODELL, max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: MODELL, max_tokens: MAKS_TOKENS, messages: [{ role: 'user', content: prompt }] }),
     });
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));

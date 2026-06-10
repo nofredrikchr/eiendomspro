@@ -2,6 +2,7 @@
 import { googleKonfigurert, hentGoogleBruker } from '../../_auth/google.js';
 import { finnEllerOpprettGoogleBruker, opprettSesjon } from '../../_auth/index.js';
 import { byggSesjonsCookie, parseCookies } from '../../_auth/cookie.js';
+import { appUrl } from '../../_auth/url.js';
 
 const SLETT_STATE = 'epro_oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0';
 
@@ -20,9 +21,17 @@ export default async function handler(req, res) {
     return redirect(res, '/login?feil=google_state', [SLETT_STATE]);
   }
   try {
-    const redirectUri = `https://${req.headers.host}/api/auth/google/callback`;
+    const redirectUri = `${appUrl(req)}/api/auth/google/callback`;
     const g = await hentGoogleBruker({ code, redirectUri });
-    const { bruker } = await finnEllerOpprettGoogleBruker({ sub: g.sub, epost: g.epost, navn: g.navn });
+    const resultat = await finnEllerOpprettGoogleBruker({
+      sub: g.sub,
+      epost: g.epost,
+      navn: g.navn,
+      epostVerifisert: g.epostVerifisert,
+    });
+    // null = Google har ikke verifisert e-posten → avvis (kontoovertakelses-vern).
+    if (!resultat) return redirect(res, '/login?feil=google_epost', [SLETT_STATE]);
+    const { bruker } = resultat;
     const token = await opprettSesjon(bruker.id, {
       ip: (req.headers['x-forwarded-for'] || '').split(',')[0] || null,
       userAgent: req.headers['user-agent'] || null,
