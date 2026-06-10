@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calculator, Clock, Check } from 'lucide-react';
-import { MarketingNav, MarketingFooter, M } from '../../components/Marketing';
+import { MarketingNav, MarketingFooter } from '../../components/Marketing';
+import { M } from '../../components/marketing-tokens';
 import { useSEO } from '../../hooks/useSEO';
 import { sporHendelse, HENDELSE } from '../../utils/analytikk';
 import { finnArtikkel } from './artikler';

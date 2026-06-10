@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { ArrowRight, Check, Info } from 'lucide-react';
-import { MarketingNav, MarketingFooter, M } from '../components/Marketing';
+import { MarketingNav, MarketingFooter } from '../components/Marketing';
+import { M } from '../components/marketing-tokens';
 import { useSEO } from '../hooks/useSEO';
 import { formatKr, formatPct, calcTerminbelop } from '../utils/format';
 import { sporHendelse, HENDELSE } from '../utils/analytikk';

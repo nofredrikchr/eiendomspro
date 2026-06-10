@@ -80,61 +80,52 @@ export async function slettLeieobjekt(eierId, id) {
 
 // ─── Generisk eier-scoped CRUD for resten av entitetene ─────────────────────────
 // Tabellnavn er en whitelist (aldri brukerinput) som bakes inn i spørringen;
-// eier_id/id/data sendes som parametre.
+// eier_id/id/data sendes som $1/$2-parametre (neon-driverens konvensjonelle kall).
 const CRUD_TABELLER = new Set(['kontrakter', 'fakturaer', 'annonser', 'meldinger', 'protokoller', 'notater', 'utlegg', 'utleiere', 'analyser']);
-
-// Etterligner en TemplateStringsArray slik at neon kan kjøre dynamisk-bygde spørringer.
-function tpl(parts) { const a = parts.slice(); a.raw = parts.slice(); return a; }
 
 export function lagCrud(tabell) {
   if (!CRUD_TABELLER.has(tabell)) throw new Error(`Ukjent tabell: ${tabell}`);
   return {
     async list(eierId) {
-      const rader = await sql(tpl([`select * from ${tabell} where eier_id = `, ' order by opprettet asc']), eierId);
+      const rader = await sql(`select * from ${tabell} where eier_id = $1 order by opprettet asc`, [eierId]);
       return rader.map(radTilObjekt);
     },
     async opprett(eierId, data) {
-      const rader = await sql(tpl([`insert into ${tabell} (eier_id, data) values (`, ', ', '::jsonb) returning *']), eierId, JSON.stringify(rensData(data)));
+      const rader = await sql(
+        `insert into ${tabell} (eier_id, data) values ($1, $2::jsonb) returning *`,
+        [eierId, JSON.stringify(rensData(data))],
+      );
       return radTilObjekt(rader[0]);
     },
     async oppdater(eierId, id, data) {
-      const rader = await sql(tpl([`update ${tabell} set data = `, '::jsonb, oppdatert = now() where id = ', ' and eier_id = ', ' returning *']), JSON.stringify(rensData(data)), id, eierId);
+      const rader = await sql(
+        `update ${tabell} set data = $1::jsonb, oppdatert = now() where id = $2 and eier_id = $3 returning *`,
+        [JSON.stringify(rensData(data)), id, eierId],
+      );
       return rader[0] ? radTilObjekt(rader[0]) : null;
     },
     async slett(eierId, id) {
-      const rader = await sql(tpl([`delete from ${tabell} where id = `, ' and eier_id = ', ' returning id']), id, eierId);
+      const rader = await sql(`delete from ${tabell} where id = $1 and eier_id = $2 returning id`, [id, eierId]);
       return rader.length > 0;
     },
   };
 }
 
-// ─── faktiskeTall: én blob per bruker (nøkkel→{inntekt,kostnad}) ─────────────────
-export async function hentFaktiskeTall(eierId) {
-  const r = await sql`select data from faktiske_tall where eier_id = ${eierId}`;
-  return r[0]?.data ?? {};
-}
-export async function lagreFaktiskeTall(eierId, data) {
-  const blob = data && typeof data === 'object' ? data : {};
-  await sql`
-    insert into faktiske_tall (eier_id, data) values (${eierId}, ${JSON.stringify(blob)}::jsonb)
-    on conflict (eier_id) do update set data = ${JSON.stringify(blob)}::jsonb, oppdatert = now()`;
-  return blob;
-}
-
-// ─── Generisk blob (én rad per bruker) for integrasjoner + profil ───────────────
-const BLOB_TABELLER = new Set(['integrasjoner', 'bruker_profil']);
+// ─── Generisk blob (én rad per bruker): integrasjoner, profil, faktiske tall ───
+const BLOB_TABELLER = new Set(['integrasjoner', 'bruker_profil', 'faktiske_tall']);
 export function lagBlob(tabell) {
   if (!BLOB_TABELLER.has(tabell)) throw new Error(`Ukjent blob: ${tabell}`);
   return {
     async hent(eierId) {
-      const r = await sql(tpl([`select data from ${tabell} where eier_id = `]), eierId);
+      const r = await sql(`select data from ${tabell} where eier_id = $1`, [eierId]);
       return r[0]?.data ?? {};
     },
     async lagre(eierId, data) {
       const blob = data && typeof data === 'object' ? data : {};
       await sql(
-        tpl([`insert into ${tabell} (eier_id, data) values (`, ', ', '::jsonb) on conflict (eier_id) do update set data = ', '::jsonb, oppdatert = now()']),
-        eierId, JSON.stringify(blob), JSON.stringify(blob),
+        `insert into ${tabell} (eier_id, data) values ($1, $2::jsonb)
+         on conflict (eier_id) do update set data = $2::jsonb, oppdatert = now()`,
+        [eierId, JSON.stringify(blob)],
       );
       return blob;
     },

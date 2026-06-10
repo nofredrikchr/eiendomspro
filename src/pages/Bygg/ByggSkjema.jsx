@@ -1,14 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, ArrowLeft, Info, FileText, Home, ChevronRight, Receipt, Pencil, Check } from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line
-} from 'recharts';
 import { useApp } from '../../context/AppContext';
 import { Input, Select, Textarea, Toggle } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { formatKr, formatPct, calcTerminbelop, calcYield, postnummerTilPoststed } from '../../utils/format';
+import { formatKr, formatPct, calcTerminbelop, postnummerTilPoststed } from '../../utils/format';
 import { exportExcel, exportPDF, exportByggelaanExcel, exportByggelaanPDF } from '../../utils/export';
 import AIAnalyse from '../../components/AIAnalyse';
 
@@ -18,8 +15,6 @@ const BYGNINGSTYPER = [
   { value: 'leilighetsbygg', label: 'Leilighetsbygg' },
   { value: 'naering', label: 'Næring' },
 ];
-
-const MANEDER = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Des'];
 
 function TabBtn({ active, onClick, children }) {
   return (
@@ -83,6 +78,7 @@ const defaultByggData = {
 };
 
 // Felles beregning av byggelånsbudsjett — brukes både i UI og eksport
+// eslint-disable-next-line react-refresh/only-export-components -- ren beregningsfunksjon som hører naturlig sammen med skjemaet
 export function beregnByggelaanBudsjett(form) {
   const poster = form.oppussingsposter || [];
   const sumBudsjettert = poster.reduce((s, p) => s + Number(p.budsjettert || 0), 0);
@@ -131,12 +127,8 @@ function OppussingTab({ form, set, oppdater }) {
     oppdater('add', null, null, { ...ny, id: Date.now() });
     setNy(TOM_NY);
   }
-  const budsjett = Number(form.oppussingsbudsjett || 0);
   const sumBudsjettert = poster.reduce((s, p) => s + Number(p.budsjettert || 0), 0);
   const sumFaktisk = poster.reduce((s, p) => s + Number(p.faktisk || 0), 0);
-  const ref = budsjett > 0 ? budsjett : sumBudsjettert;
-  const bruktPst = ref > 0 ? (sumFaktisk / ref) * 100 : 0;
-  const barFarge = bruktPst > 100 ? '#DC2626' : bruktPst >= 75 ? '#B45309' : '#15803D';
   const avvik = sumFaktisk - sumBudsjettert;
 
   // Skattefordeling
@@ -513,7 +505,7 @@ function fmtT(v) {
   return (v < 0 ? '-' : '') + formatted;
 }
 
-function PrognoseTabell({ form, totalLeie, totalKostnader, terminbelop, faste, vedlikeholdKr }) {
+function PrognoseTabell({ form, totalLeie, faste, vedlikeholdKr }) {
   const YEARS = 10;
   const laan = Number(form.laanebelop || 0);
   const rentesats = Number(form.rentesats || 0);
@@ -523,7 +515,6 @@ function PrognoseTabell({ form, totalLeie, totalKostnader, terminbelop, faste, v
     : Array.from({ length: YEARS }, () => ({ renter: 0, avdrag: 0, balance: laan }));
 
   const kjoepesumP = Number(form.kjoepesum || 0);
-  const oppussingP = Number(form.oppussing || 0);
   const nyTakstP = Number(form.nyTakst || 0);
   // Startverdi = ny takst hvis fylt inn, ellers kjøpesum
   const startVerdi = nyTakstP > 0 ? nyTakstP : kjoepesumP;
@@ -550,9 +541,9 @@ function PrognoseTabell({ form, totalLeie, totalKostnader, terminbelop, faste, v
 
     const { renter, avdrag, balance } = loanSchedule[y];
 
-    let skatt = 0;
+    let skatt;
     let rentefradrag = 0;
-    let vedlikeholdFradragBrukt = 0;
+    let vedlikeholdFradragBrukt;
     if (skattemodus === 'privat') {
       const bruttoskattepliktig = Math.max(0, nettoLeieinntekt);
       vedlikeholdFradragBrukt = Math.min(gjenværendeVedlikehold, bruttoskattepliktig);
@@ -839,8 +830,8 @@ function OversiktTab({ byggId, leieobjekter, kontrakter, fakturaer, addFaktura, 
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[f.status] || statusColor.sendt}`}>
                             {statusLabel[f.status] || f.status}
                           </span>
-                          <button type="button" onClick={() => deleteFaktura(f.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
+                          <button type="button" onClick={() => deleteFaktura(f.id)} aria-label="Slett faktura"
+                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -860,13 +851,11 @@ function OversiktTab({ byggId, leieobjekter, kontrakter, fakturaer, addFaktura, 
 export default function ByggSkjema() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { bygg, leieobjekter, kontrakter, addBygg, updateBygg, faktiskeTall, setFaktiskeTall, fakturaer, addFaktura, deleteFaktura } = useApp();
+  const { bygg, leieobjekter, kontrakter, addBygg, updateBygg, fakturaer, addFaktura, deleteFaktura } = useApp();
 
   const existing = id ? bygg.find((b) => b.id === id) : null;
   const [tab, setTab] = useState('info');
   const [form, setForm] = useState(() => existing ? { ...defaultByggData, ...existing } : defaultByggData);
-  const [valgtMaaned, setValgtMaaned] = useState(null);
-  const [faktiskInput, setFaktiskInput] = useState({ inntekt: '', kostnad: '' });
   const [lagrer, setLagrer] = useState(false);
   const [lagrefeil, setLagrefeil] = useState('');
 
@@ -914,12 +903,12 @@ export default function ByggSkjema() {
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  useEffect(() => {
-    if (form.postnummer?.length === 4) {
-      const sted = postnummerTilPoststed(form.postnummer);
-      if (sted) setForm((f) => ({ ...f, poststed: sted }));
-    }
-  }, [form.postnummer]);
+  // Postnummer-oppslag i selve handleren (ikke effect) — unngår ekstra render-runde
+  const setPostnummer = (e) => {
+    const postnummer = e.target.value;
+    const sted = postnummer?.length === 4 ? postnummerTilPoststed(postnummer) : null;
+    setForm((f) => ({ ...f, postnummer, ...(sted ? { poststed: sted } : {}) }));
+  };
 
   const handleLeie = (action, idx, field, val) => {
     setForm((f) => {
@@ -976,47 +965,6 @@ export default function ByggSkjema() {
     }
   };
 
-  const aar = new Date().getFullYear();
-  const maanedKey = (mndIdx) => `${id || 'ny'}_${aar}_${mndIdx}`;
-  const getFaktisk = (mndIdx) => faktiskeTall[maanedKey(mndIdx)] || { inntekt: '', kostnad: '' };
-
-  const chartData = MANEDER.map((m, i) => {
-    const f = getFaktisk(i);
-    return {
-      name: m,
-      Budsjettert: Math.round(netto),
-      Faktisk: f.inntekt !== '' || f.kostnad !== ''
-        ? Math.round(Number(f.inntekt || leieinntekt) - Number(f.kostnad || totalKostnader))
-        : null,
-    };
-  });
-
-  const akkumulert = [];
-  let sum = 0;
-  MANEDER.forEach((m, i) => {
-    const f = getFaktisk(i);
-    const faktiskNetto = f.inntekt !== '' || f.kostnad !== ''
-      ? Number(f.inntekt || leieinntekt) - Number(f.kostnad || totalKostnader)
-      : 0;
-    sum += faktiskNetto;
-    akkumulert.push({ name: m, Akkumulert: Math.round(sum) });
-  });
-
-  const apneValgtMaaned = (mndIdx) => {
-    setValgtMaaned(mndIdx);
-    const f = getFaktisk(mndIdx);
-    setFaktiskInput({ inntekt: f.inntekt || '', kostnad: f.kostnad || '' });
-  };
-
-  const lagreFaktisk = () => {
-    if (valgtMaaned === null) return;
-    setFaktiskeTall((prev) => ({
-      ...prev,
-      [maanedKey(valgtMaaned)]: { inntekt: faktiskInput.inntekt, kostnad: faktiskInput.kostnad },
-    }));
-    setValgtMaaned(null);
-  };
-
   const rentekostnad = form.laanModus === 'kalkulert'
     ? maanedligRente
     : terminbelop * 0.4;
@@ -1052,7 +1000,7 @@ export default function ByggSkjema() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button type="button" onClick={() => navigate('/bygg')}
+          <button type="button" onClick={() => navigate('/bygg')} aria-label="Tilbake til mine bygg"
             className="text-[#65696F] hover:text-[#1A1B1E] transition-colors cursor-pointer">
             <ArrowLeft size={20} />
           </button>
@@ -1090,7 +1038,7 @@ export default function ByggSkjema() {
             <Input label="Gatenavn" value={form.gatenavn} onChange={set('gatenavn')} required placeholder="Kongens gate" />
             <Input label="Gatenummer" value={form.gatenummer} onChange={set('gatenummer')} required placeholder="12" />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Postnummer" value={form.postnummer} onChange={set('postnummer')} required placeholder="0150" />
+              <Input label="Postnummer" value={form.postnummer} onChange={setPostnummer} required placeholder="0150" />
               <Input label="Poststed" value={form.poststed} onChange={set('poststed')} required placeholder="Oslo" />
             </div>
             <Input label="Gårdsnummer" value={form.gardsnummer} onChange={set('gardsnummer')} placeholder="123" />
@@ -1611,12 +1559,12 @@ export default function ByggSkjema() {
               <h2 className="text-base font-medium text-[#1A1B1E]">10-års prognose</h2>
               <div className="flex gap-2">
                 <button type="button"
-                  onClick={() => exportExcel({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader })}
+                  onClick={() => exportExcel({ form, totalLeie, faste, vedlikeholdKr, netto, totalKostnader })}
                   className="px-3 py-1.5 text-xs font-medium text-[#15803D] border border-[#15803D]/20 bg-[#15803D]/5 rounded-lg hover:bg-[#15803D]/15 transition-all cursor-pointer">
                   ↓ Excel
                 </button>
                 <button type="button"
-                  onClick={() => exportPDF({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader })}
+                  onClick={() => exportPDF({ form, totalLeie, faste, vedlikeholdKr, netto, totalKostnader })}
                   className="px-3 py-1.5 text-xs font-medium text-[#B45309] border border-[#B45309]/20 bg-[#B45309]/5 rounded-lg hover:bg-[#B45309]/15 transition-all cursor-pointer">
                   ↓ PDF
                 </button>
@@ -1632,8 +1580,6 @@ export default function ByggSkjema() {
             <PrognoseTabell
               form={form}
               totalLeie={totalLeie}
-              totalKostnader={totalKostnader}
-              terminbelop={terminbelop}
               faste={faste}
               vedlikeholdKr={vedlikeholdKr}
             />

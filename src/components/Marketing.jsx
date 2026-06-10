@@ -2,11 +2,7 @@ import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
 import { ArrowRight } from 'lucide-react';
 import { sporHendelse, HENDELSE } from '../utils/analytikk';
-
-export const M = {
-  navy: '#16284A', navyHover: '#1E3A5F', gull: '#9A7A24', gronn: '#15803D',
-  tekst: '#1A1B1E', tekst2: '#52555B', tekst3: '#6E727A', kant: '#E5E4DE', lerret: '#F6F6F4',
-};
+import { M } from './marketing-tokens';
 
 export function MarketingNav() {
   return (

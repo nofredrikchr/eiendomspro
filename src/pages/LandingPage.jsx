@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Logo } from '../components/Logo';
 import { sporHendelse, HENDELSE } from '../utils/analytikk';
 import {
-  TrendingUp, FileText, Receipt, Landmark, ClipboardCheck, BellRing,
+  TrendingUp, FileText, Receipt, Landmark, BellRing,
   Calculator, ShieldCheck, ArrowRight, Check, Plus, Minus, Building2,
   ScrollText, LineChart,
 } from 'lucide-react';

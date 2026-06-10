@@ -67,7 +67,11 @@ export async function leggMelding(sakId, { avsender, tekst, type = 'melding', me
 }
 
 export async function settStatus(sakId, status) {
-  if (!STATUS_LABEL[status]) { const e = new Error('Ugyldig status.'); e.kode = 'UGYLDIG'; throw e; }
+  if (!STATUS_LABEL[status]) {
+    const e = new Error('Ugyldig status.');
+    e.kode = 'UGYLDIG'; e.status = 400; e.feil = 'Ugyldig status.'; // kontrollert feil → 400 i _http.js
+    throw e;
+  }
   await sql`update feedback_saker set status = ${status}, oppdatert = now() where id = ${sakId}`;
   await sql`
     insert into feedback_meldinger (sak_id, avsender, type, tekst, lest_bruker, lest_admin)

@@ -84,9 +84,10 @@ export async function antallApneForAdmin() {
 
 // ─── Live oppdatering (polling) ──────────────────────────────────────────────────
 /**
- * Uten websocket/SSE poller vi lett hvert 20. sekund. Returnerer avmeldingsfunksjon.
+ * Uten websocket/SSE poller vi lett hvert 20. sekund (overstyrbart per kallsted).
+ * Returnerer avmeldingsfunksjon.
  */
-export function abonner(callback) {
-  const id = setInterval(callback, 20000);
+export function abonner(callback, intervallMs = 20000) {
+  const id = setInterval(callback, intervallMs);
   return () => clearInterval(id);
 }

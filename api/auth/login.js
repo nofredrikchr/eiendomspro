@@ -5,6 +5,11 @@ import { finnBruker, hentRoller, opprettSesjon, offentligBruker, verifyPassord }
 import { byggSesjonsCookie } from '../_auth/cookie.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 
+// Gyldig argon2id-hash av en tilfeldig, forkastet streng (samme parametre som
+// hashPassord). Brukes til dummy-verifisering når brukeren ikke finnes, slik at
+// svartiden er lik uansett — hindrer timing-basert bruker-enumerering.
+const DUMMY_HASH = '$argon2id$v=19$m=19456,t=2,p=1$78wS+kklwCwns47PwlNZgw$dE4ohNCg6ua1EktyVMbDUFfo6ZFeR27roQqaI5r9ZRw';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -22,7 +27,8 @@ export default async function handler(req, res) {
 
   try {
     const bruker = await finnBruker({ epost: v.verdier.epost, telefon: v.verdier.telefon });
-    const ok = bruker && bruker.passord_hash && (await verifyPassord(bruker.passord_hash, v.verdier.passord));
+    // Verifiser alltid mot en hash (dummy hvis konto/hash mangler) → lik svartid.
+    const ok = (await verifyPassord(bruker?.passord_hash || DUMMY_HASH, v.verdier.passord)) && !!bruker?.passord_hash;
     // Generisk feilmelding for å unngå bruker-enumerering (lekker ikke om konto finnes)
     if (!ok) return res.status(401).json({ feil: { generelt: 'Feil e-post/telefon eller passord.' } });
 

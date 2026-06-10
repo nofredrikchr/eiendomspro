@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Bell, Clock, TrendingUp, AlertTriangle, MessageSquare, Home, ChevronRight, CheckCircle2,
+  Clock, TrendingUp, AlertTriangle, MessageSquare, Home, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { byggVarsler } from '../../utils/varsler';
@@ -13,8 +13,6 @@ const TYPE_CONFIG = {
   ulest_melding:    { ikon: MessageSquare, farge: '#2563EB', etikett: 'Melding' },
   ledig_enhet:      { ikon: Home, farge: '#DC2626', etikett: 'Ledig enhet' },
 };
-
-const ALVOR_LABEL = { hoy: 'Høy', middels: 'Middels', lav: 'Lav' };
 
 export default function Varsler() {
   const navigate = useNavigate();

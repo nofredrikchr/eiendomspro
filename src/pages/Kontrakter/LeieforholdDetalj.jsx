@@ -4,12 +4,12 @@ import {
   ArrowLeft, FileText, ClipboardList, MessageSquare,
   Phone, Mail, Home, Hash, Calendar, TrendingUp, Shield,
   Plus, Pencil, Trash2, Check, X, Download,
-  StickyNote, Receipt, ChevronRight, AlertCircle,
-  CreditCard, Share2, Copy,
+  StickyNote, Receipt,
+  Share2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../../components/ui/Button';
-import { Input, Select, Textarea } from '../../components/ui/Input';
+import { Input, Select } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Card';
 import { BekreftModal } from '../../components/ui/BekreftModal';
 import { KpiReguleringModal } from '../../components/KpiReguleringModal';
@@ -47,7 +47,9 @@ const UTLEGG_KATEGORIER = [
 
 // ─── Utlegg-modal ─────────────────────────────────────────────────────────────
 function UtleggModal({ kontraktId, onLagre, onLukk }) {
-  const [form, setForm] = useState({
+  // Lazy initialisering: forfallsdato (i dag + 14 dager) beregnes kun ved montering,
+  // ikke ved hver render (unngår urent Date.now()-kall i render-fasen).
+  const [form, setForm] = useState(() => ({
     kontraktId,
     utleggstype: 'leietaker_betaler',
     kategori: '',
@@ -56,7 +58,7 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
     faktureringsmetode: 'neste_faktura',
     status: 'ubetalt',
     forfallsdato: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
-  });
+  }));
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 
   return (
@@ -148,8 +150,8 @@ export default function LeieforholdDetalj() {
   const {
     kontrakter, leieobjekter, bygg, utleiere,
     protokoller = [], meldinger = [],
-    notater, addNotat, updateNotat, deleteNotat,
-    utlegg, addUtlegg, updateUtlegg, deleteUtlegg,
+    notater, addNotat, deleteNotat,
+    utlegg, addUtlegg, updateUtlegg,
     deleteKontrakt, updateKontrakt, sendMelding,
   } = useApp();
 
@@ -433,8 +435,8 @@ export default function LeieforholdDetalj() {
                         <p className="text-sm text-[#1A1B1E] whitespace-pre-wrap">{n.tekst}</p>
                         <p className="text-xs text-[#AEB0B4] mt-1">{datoLang(n.opprettet)}</p>
                       </div>
-                      <button type="button" onClick={() => deleteNotat(n.id)}
-                        className="opacity-0 group-hover:opacity-100 text-[#7A7D83] hover:text-[#DC2626] transition-all cursor-pointer shrink-0 p-0.5">
+                      <button type="button" onClick={() => deleteNotat(n.id)} aria-label="Slett notat"
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-[#7A7D83] hover:text-[#DC2626] transition-all cursor-pointer shrink-0 p-0.5">
                         <Trash2 size={13} />
                       </button>
                     </div>

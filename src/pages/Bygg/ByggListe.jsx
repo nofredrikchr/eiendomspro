@@ -126,12 +126,12 @@ export default function ByggListe() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/bygg/${b.id}`); }}
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/bygg/${b.id}`); }} aria-label="Rediger bygg"
                               className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer">
                               <Pencil size={13} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setSlettId(b.id); }}
+                            <button onClick={(e) => { e.stopPropagation(); setSlettId(b.id); }} aria-label="Slett bygg"
                               className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
                               <Trash2 size={13} />
                             </button>

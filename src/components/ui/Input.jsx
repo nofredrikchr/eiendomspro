@@ -1,8 +1,11 @@
+import { useId } from 'react';
+
 export function Input({ label, value, onChange, type = 'text', placeholder = '', required = false, className = '', suffix = '', prefix = '', disabled = false, step, list }) {
+  const id = useId();
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-xs font-medium text-[#65696F]">
+        <label htmlFor={id} className="text-xs font-medium text-[#65696F]">
           {label}{required && <span className="text-[#DC2626] ml-1">*</span>}
         </label>
       )}
@@ -11,6 +14,7 @@ export function Input({ label, value, onChange, type = 'text', placeholder = '',
           <span className="absolute left-3 text-[#7A7D83] text-sm pointer-events-none">{prefix}</span>
         )}
         <input
+          id={id}
           type={type}
           value={value}
           onChange={onChange}
@@ -33,14 +37,16 @@ export function Input({ label, value, onChange, type = 'text', placeholder = '',
 }
 
 export function Select({ label, value, onChange, options = [], required = false, className = '', placeholder = 'Velg...' }) {
+  const id = useId();
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-xs font-medium text-[#65696F]">
+        <label htmlFor={id} className="text-xs font-medium text-[#65696F]">
           {label}{required && <span className="text-[#DC2626] ml-1">*</span>}
         </label>
       )}
       <select
+        id={id}
         value={value}
         onChange={onChange}
         required={required}
@@ -57,14 +63,16 @@ export function Select({ label, value, onChange, options = [], required = false,
 }
 
 export function Textarea({ label, value, onChange, placeholder = '', required = false, className = '', rows = 3 }) {
+  const id = useId();
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-xs font-medium text-[#65696F]">
+        <label htmlFor={id} className="text-xs font-medium text-[#65696F]">
           {label}{required && <span className="text-[#DC2626] ml-1">*</span>}
         </label>
       )}
       <textarea
+        id={id}
         value={value}
         onChange={onChange}
         placeholder={placeholder}

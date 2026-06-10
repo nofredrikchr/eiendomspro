@@ -81,20 +81,36 @@ export async function slettSesjonViaToken(token) {
   await sql`delete from sesjoner where token_hash = ${hashToken(token)}`;
 }
 
-/** Leser sesjons-cookie fra request, returnerer { bruker, roller } eller null. */
+/** Sletter ALLE sesjoner for en bruker (f.eks. etter passordbytte). */
+export async function slettAlleSesjonerForBruker(brukerId) {
+  await sql`delete from sesjoner where bruker_id = ${brukerId}`;
+}
+
+/**
+ * Leser sesjons-cookie fra request, returnerer { bruker, roller } eller null.
+ * Én DB-rundtur: oppdaterer sist_brukt, henter bruker og aggregerer roller i
+ * samme spørring (json_agg). Retur-formen er identisk med den gamle
+ * tre-spørrings-varianten: bruker = b.* + sesjon_id + utloper, roller = string[].
+ */
 export async function hentSesjonsBruker(req) {
   const token = parseCookies(req.headers?.cookie)[SESJON_COOKIE];
   if (!token) return null;
   const rader = await sql`
-    select b.*, s.id as sesjon_id, s.utloper
-    from sesjoner s join brukere b on b.id = s.bruker_id
-    where s.token_hash = ${hashToken(token)} and s.utloper > now() and b.status = 'aktiv'
+    with okt as (
+      update sesjoner set sist_brukt = now()
+      where token_hash = ${hashToken(token)} and utloper > now()
+      returning id, bruker_id, utloper
+    )
+    select b.*, okt.id as sesjon_id, okt.utloper,
+           coalesce(json_agg(r.rolle) filter (where r.rolle is not null), '[]'::json) as roller
+    from okt
+    join brukere b on b.id = okt.bruker_id and b.status = 'aktiv'
+    left join bruker_roller r on r.bruker_id = b.id and r.status != 'suspendert'
+    group by b.id, okt.id, okt.utloper
     limit 1`;
-  const bruker = rader[0];
-  if (!bruker) return null;
-  await sql`update sesjoner set sist_brukt = now() where id = ${bruker.sesjon_id}`;
-  const roller = await hentRoller(bruker.id);
-  return { bruker, roller };
+  if (!rader[0]) return null;
+  const { roller, ...bruker } = rader[0];
+  return { bruker, roller: Array.isArray(roller) ? roller : [] };
 }
 
 // ─── Vakter (server-side håndheving) ─────────────────────────────────────────
@@ -124,15 +140,22 @@ export async function settEpostVerifisert(brukerId) {
 
 /**
  * Finn eller opprett en bruker fra Google-innlogging. Kobler på eksisterende
- * konto via verifisert e-post; ellers opprettes en ny (uten passord).
- * Returnerer { bruker, roller }.
+ * konto via VERIFISERT e-post; ellers opprettes en ny (uten passord).
+ * Returnerer { bruker, roller } — eller null hvis Google ikke har verifisert
+ * e-posten (epostVerifisert !== true) og kontoen ikke allerede er koblet via
+ * sub. Da skal innloggingen avvises (ellers kunne en angriper registrere en
+ * uverifisert Google-konto med offerets e-post og overta kontoen).
  */
-export async function finnEllerOpprettGoogleBruker({ sub, epost, navn }) {
+export async function finnEllerOpprettGoogleBruker({ sub, epost, navn, epostVerifisert }) {
+  // Allerede koblet via oauth_kontoer (sub)? Alltid OK — koblingen er etablert.
   const eks = await sql`select bruker_id from oauth_kontoer where leverandor = 'google' and ekstern_id = ${sub} limit 1`;
   if (eks[0]) {
     const bruker = await hentBrukerById(eks[0].bruker_id);
     return { bruker, roller: await hentRoller(bruker.id) };
   }
+  // Uverifisert e-post hos Google: ALDRI koble mot eksisterende konto via
+  // e-post, og aldri sette epost_verifisert=true. Avvis.
+  if (epostVerifisert !== true) return null;
   // Koble til eksisterende konto med samme e-post, ellers opprett ny.
   let bruker = epost ? await finnBruker({ epost }) : null;
   if (!bruker) {

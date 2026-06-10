@@ -1,4 +1,5 @@
-import { jsPDF } from 'jspdf';
+// jspdf lastes dynamisk i genererProtokollPDF — holder biblioteket
+// utenfor hovedbundelen til PDF faktisk genereres.
 
 function datoFmt(d) {
   if (!d) return '—';
@@ -28,6 +29,7 @@ function lastLogo(url) {
 
 // ─── PDF ─────────────────────────────────────────────────────────────────────
 export async function genererProtokollPDF({ protokoll, kontrakt, leieobjekt, bygg, utleier }) {
+  const { jsPDF } = await import('jspdf');
   const u = utleier || {};
   const erInn = protokoll.type === 'innflytting';
 
@@ -58,17 +60,6 @@ export async function genererProtokollPDF({ protokoll, kontrakt, leieobjekt, byg
     const linjer = doc.splitTextToSize(txt(s), w);
     doc.text(linjer, x, y);
     y += linjer.length * (sz * 0.38) + 2.5;
-  }
-
-  function toKol(e1, v1, e2, v2) {
-    sf('normal', 7.5); sc(C.graa);
-    doc.text(txt(e1), mL, y);
-    if (e2) doc.text(txt(e2), midX + 2, y);
-    y += 3.5;
-    sf('normal', 9.5); sc(C.svart);
-    doc.text(txt(v1 || '—'), mL, y);
-    if (e2) doc.text(txt(v2 || '—'), midX + 2, y);
-    y += 6;
   }
 
   function seksjon(tittel) {

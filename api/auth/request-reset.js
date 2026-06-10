@@ -5,6 +5,7 @@ import { lagEngangsToken } from '../_auth/tokens.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 import { sendEpost, malReset } from '../_auth/epost.js';
 import { normaliserTelefon } from '../_auth/telefon.js';
+import { appUrl } from '../_auth/url.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ feil: 'Metode ikke tillatt.' }); }
@@ -17,12 +18,20 @@ export default async function handler(req, res) {
   const epost = raw.includes('@') ? raw.toLowerCase() : null;
   const telefon = !epost ? normaliserTelefon(raw) : null;
 
+  // Per-mottaker-grense (maks 3 per identifikator per time) i tillegg til
+  // IP-grensen. Svaret er nøytralt (200) uansett — ingen enumerering, og en
+  // angriper kan ikke spamme én adresse fra mange IP-er.
+  const mottaker = epost || telefon;
+  if (mottaker && !(await sjekkRate(`reset-mottaker:${mottaker}`, 3, 3600))) {
+    return res.status(200).json({ ok: true });
+  }
+
   try {
     const bruker = await finnBruker({ epost, telefon });
     // Send kun hvis kontoen finnes OG har e-post (reset-lenke går på e-post).
     if (bruker?.epost) {
       const token = await lagEngangsToken(bruker.id, 'passord_reset', 60);
-      const lenke = `https://${req.headers.host}/reset?token=${token}`;
+      const lenke = `${appUrl(req)}/reset?token=${token}`;
       const { emne, html } = malReset(lenke);
       await sendEpost({ til: bruker.epost, emne, html });
     }

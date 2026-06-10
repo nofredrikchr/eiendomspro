@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import {
   PieChart, TrendingUp, Receipt, Wallet, LineChart, Coins, GitCompare,
-  Download, FileDown, ChevronDown, Building2, Info,
+  Download, FileDown, ChevronDown, Info,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { byggOkonomi, byggPrognose, aggreger, DRIFT_LABELS } from '../utils/byggRapport';
-import { beregnSkattSamlet, KOSTNAD_LABELS } from '../utils/skatt';
+import { beregnSkattSamlet } from '../utils/skatt';
 import { genererRapportPDF } from '../utils/rapportPDF';
 import { formatKr } from '../utils/format';
 
@@ -616,7 +616,7 @@ function InfoBoks({ children }) {
 // HOVED
 // ════════════════════════════════════════════════════════════════════════════
 export default function Rapporter() {
-  const { bygg, leieobjekter, utleiere = [] } = useApp();
+  const { bygg, leieobjekter } = useApp();
   const [rapport, setRapport] = useState('portefolje');
   const [filterBygg, setFilterBygg] = useState('alle');
   const [filterEier, setFilterEier] = useState('alle');

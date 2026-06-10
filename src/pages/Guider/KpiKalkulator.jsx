@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import { hentKpiSerie, indeksFor, tilSsbMaaned, ssbMaanedTilTekst, manederMellom } from '../../services/ssbKpi';
-import { M } from '../../components/Marketing';
+import { M } from '../../components/marketing-tokens';
 import { formatKr } from '../../utils/format';
 import { sporHendelse } from '../../utils/analytikk';
 

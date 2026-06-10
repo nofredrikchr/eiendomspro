@@ -1,11 +1,12 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- EiendomsPRO — databaseskjema (Neon / PostgreSQL)
+-- EiendomsPRO — HISTORISK feedback-skjema (Neon / PostgreSQL)
 -- ════════════════════════════════════════════════════════════════════════════
--- Kjør i Neon → SQL Editor, eller:
---   psql "$DATABASE_URL" -f db/schema.sql
+-- MERK: Denne filen er kun det opprinnelige feedback-/support-skjemaet og
+-- vedlikeholdes ikke videre. FASIT for databaseskjemaet er db/migrations/*.sql,
+-- som kjøres i rekkefølge med `npm run migrate` (se db/migrate.mjs).
 --
--- Merk: Tilgangskontroll håndteres i serverlaget (/api), ikke med Postgres RLS.
--- Kolonnen bruker_id kobles til ekte brukere når Neon-auth er på plass.
+-- Tilgangskontroll håndteres i serverlaget (/api), ikke med Postgres RLS.
+-- Auth er live: bruker_id refererer brukere fra db/migrations/001_auth.sql.
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ── Feedback / support-saker ────────────────────────────────────────────────

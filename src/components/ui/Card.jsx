@@ -23,7 +23,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E9E8E2] shrink-0">
           <h2 className="text-base font-semibold text-[#1A1B1E]">{title}</h2>
-          <button onClick={onClose} className="text-[#65696F] hover:text-[#1A1B1E] transition-colors text-xl leading-none cursor-pointer w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/[0.045]">×</button>
+          <button onClick={onClose} aria-label="Lukk" className="text-[#65696F] hover:text-[#1A1B1E] transition-colors text-xl leading-none cursor-pointer w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/[0.045]">×</button>
         </div>
         <div className="overflow-y-auto flex-1 p-6">{children}</div>
       </div>

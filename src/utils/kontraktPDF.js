@@ -1,4 +1,5 @@
-import { jsPDF } from 'jspdf';
+// jspdf lastes dynamisk i genererKontraktPDF — holder biblioteket
+// utenfor hovedbundelen til PDF faktisk genereres.
 
 // ─── Formattering ─────────────────────────────────────────────────────────────
 function datoFmt(d) {
@@ -43,6 +44,7 @@ function lastLogo(url) {
 
 // ─── PDF-generator (async pga. bilde-lasting) ────────────────────────────────
 export async function genererKontraktPDF({ kontrakt, leieobjekt, bygg, utleier }) {
+  const { jsPDF } = await import('jspdf');
   const u = utleier || {};
   const utleierNavn = txt(u.navn || 'Utleier');
   const utleierKonto = u.kontonummer || kontrakt.kontonummer || '';
@@ -54,7 +56,6 @@ export async function genererKontraktPDF({ kontrakt, leieobjekt, bygg, utleier }
   const mR = 188;         // høyre margin
   const W = mR - mL;      // tekstbredde (166 mm)
   const midX = mL + W / 2;
-  const colW = W / 2 - 3;
   let y = 0;
 
   // ─── Palett ────────────────────────────────────────────────────
@@ -136,15 +137,6 @@ export async function genererKontraktPDF({ kontrakt, leieobjekt, bygg, utleier }
 
   function paragraf(s) {
     blokk(s, mL, W, 'normal', 9, C.moerk);
-  }
-
-  // Ramme-boks med grå bakgrunn
-  function boks(tegnFn, høyde) {
-    fc(C.boks); dc(C.ramme);
-    doc.setLineWidth(0.25);
-    doc.roundedRect(mL, y, W, høyde, 1.5, 1.5, 'FD');
-    tegnFn();
-    y += høyde + 4;
   }
 
   // ─── Sidefot + sidehode ────────────────────────────────────────

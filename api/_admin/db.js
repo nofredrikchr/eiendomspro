@@ -1,6 +1,6 @@
 /**
  * Admin-DB-lag. Alle funksjoner forutsetter at kallstedet allerede har
- * verifisert at brukeren er admin (niva=3) via krevAdmin. Muterende handlinger
+ * verifisert at brukeren er admin (niva=3) via medAdmin (api/_http.js). Muterende handlinger
  * logges i admin_logg.
  */
 import { sql } from '../_db.js';
@@ -8,27 +8,28 @@ import { sql } from '../_db.js';
 const NIVAER = [1, 2, 3];
 const STATUSER = ['aktiv', 'suspendert', 'slettet'];
 
-function n(rad) { return rad?.n ?? 0; }
-
 // ─── Statistikk ───────────────────────────────────────────────────────────────
+// Én rundtur i stedet for åtte: alle tellerne hentes som subselects.
 export async function hentStatistikk() {
-  const [brukere] = await sql`select count(*)::int n from brukere`;
-  const [u] = await sql`select count(*)::int n from brukere where niva = 1`;
-  const [l] = await sql`select count(*)::int n from brukere where niva = 2`;
-  const [a] = await sql`select count(*)::int n from brukere where niva = 3`;
-  const [bygg] = await sql`select count(*)::int n from bygg`;
-  const [leieobjekter] = await sql`select count(*)::int n from leieobjekter`;
-  const [nye7] = await sql`select count(*)::int n from brukere where opprettet > now() - interval '7 days'`;
-  const [nye30] = await sql`select count(*)::int n from brukere where opprettet > now() - interval '30 days'`;
+  const [r] = await sql`
+    select
+      (select count(*)::int from brukere)                                            as brukere,
+      (select count(*)::int from brukere where niva = 1)                             as utleiere,
+      (select count(*)::int from brukere where niva = 2)                             as leietakere,
+      (select count(*)::int from brukere where niva = 3)                             as admins,
+      (select count(*)::int from bygg)                                               as bygg,
+      (select count(*)::int from leieobjekter)                                       as leieobjekter,
+      (select count(*)::int from brukere where opprettet > now() - interval '7 days')  as nye7,
+      (select count(*)::int from brukere where opprettet > now() - interval '30 days') as nye30`;
   return {
-    brukere: n(brukere),
-    utleiere: n(u),
-    leietakere: n(l),
-    admins: n(a),
-    bygg: n(bygg),
-    leieobjekter: n(leieobjekter),
-    nyeBrukere7: n(nye7),
-    nyeBrukere30: n(nye30),
+    brukere: r?.brukere ?? 0,
+    utleiere: r?.utleiere ?? 0,
+    leietakere: r?.leietakere ?? 0,
+    admins: r?.admins ?? 0,
+    bygg: r?.bygg ?? 0,
+    leieobjekter: r?.leieobjekter ?? 0,
+    nyeBrukere7: r?.nye7 ?? 0,
+    nyeBrukere30: r?.nye30 ?? 0,
   };
 }
 
@@ -54,12 +55,20 @@ export async function oppdaterBruker(adminId, id, { niva, status }) {
   if (!fra) return null;
 
   if (niva !== undefined) {
-    if (!NIVAER.includes(niva)) { const e = new Error('Ugyldig nivå.'); e.kode = 'UGYLDIG'; throw e; }
+    if (!NIVAER.includes(niva)) {
+      const e = new Error('Ugyldig nivå.');
+      e.kode = 'UGYLDIG'; e.status = 400; e.feil = 'Ugyldig nivå.'; // kontrollert feil → 400 i _http.js
+      throw e;
+    }
     await sql`update brukere set niva = ${niva}, oppdatert = now() where id = ${id}`;
     await loggHandling(adminId, 'endre_niva', id, { fra: fra.niva, til: niva });
   }
   if (status !== undefined) {
-    if (!STATUSER.includes(status)) { const e = new Error('Ugyldig status.'); e.kode = 'UGYLDIG'; throw e; }
+    if (!STATUSER.includes(status)) {
+      const e = new Error('Ugyldig status.');
+      e.kode = 'UGYLDIG'; e.status = 400; e.feil = 'Ugyldig status.'; // kontrollert feil → 400 i _http.js
+      throw e;
+    }
     await sql`update brukere set status = ${status}, oppdatert = now() where id = ${id}`;
     await loggHandling(adminId, 'endre_status', id, { fra: fra.status, til: status });
   }
