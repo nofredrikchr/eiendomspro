@@ -63,6 +63,7 @@ export default function AnnonseSkjema() {
   const eksisterende = id ? annonser.find((a) => a.id === id) : null;
   const [form, setForm] = useState(() => eksisterende || { ...defaultAnnonse });
   const [lagret, setLagret] = useState(false);
+  const [lagrefeil, setLagrefeil] = useState('');
   const [jobber, setJobber] = useState(false);
   const [finnResultat, setFinnResultat] = useState(null);
   const [slettVis, setSlettVis] = useState(false);
@@ -102,19 +103,38 @@ export default function AnnonseSkjema() {
 
   async function lagre(nyStatus) {
     const data = { ...form, ...(nyStatus ? { status: nyStatus } : {}) };
-    let lagretId = id;
-    if (eksisterende) await updateAnnonse(id, data);
-    else { const ny = await addAnnonse(data); lagretId = ny.id; }
-    setForm(data);
-    setLagret(true);
-    setTimeout(() => setLagret(false), 2000);
-    return lagretId;
+    setLagrefeil('');
+    try {
+      let lagretId = id;
+      if (eksisterende) await updateAnnonse(id, data);
+      else { const ny = await addAnnonse(data); lagretId = ny.id; }
+      setForm(data);
+      setLagret(true);
+      setTimeout(() => setLagret(false), 2000);
+      return lagretId;
+    } catch (err) {
+      setLagrefeil(err.message || 'Kunne ikke lagre annonsen. Prøv igjen.');
+      return null;
+    }
   }
 
   async function publiser() {
     setJobber(true);
     setFinnResultat(null);
     try {
+      // FINN-publisering krever API-avtale. Uten den fabrikkerer vi IKKE
+      // FINN-koder/lenker — annonsen lagres ærlig som upublisert kladd.
+      if (!finnKonfigurert()) {
+        const data = { ...form, status: 'kladd', finnKode: null, finnUrl: null };
+        if (eksisterende) await updateAnnonse(id, data);
+        else await addAnnonse(data);
+        setForm(data);
+        setFinnResultat({
+          type: 'kladd',
+          melding: 'FINN-publisering er ikke tilgjengelig ennå. Annonsen er lagret som kladd og kan publiseres når integrasjonen er på plass.',
+        });
+        return;
+      }
       let res;
       if (form.finnKode) {
         res = await oppdaterFinnAnnonse(form.finnKode, form);
@@ -141,8 +161,10 @@ export default function AnnonseSkjema() {
       await avpubliserFinn(form.finnKode);
       const data = { ...form, status: 'arkivert' };
       setForm(data);
-      if (eksisterende) updateAnnonse(id, data);
+      if (eksisterende) await updateAnnonse(id, data);
       setFinnResultat({ type: 'arkivert' });
+    } catch (err) {
+      setFinnResultat({ type: 'feil', melding: err.message });
     } finally {
       setJobber(false);
     }
@@ -167,7 +189,7 @@ export default function AnnonseSkjema() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate('/annonser')}
+          <button type="button" onClick={() => navigate('/annonser')} aria-label="Tilbake til mine annonser"
             className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg transition-all cursor-pointer">
             <ArrowLeft size={18} />
           </button>
@@ -176,7 +198,8 @@ export default function AnnonseSkjema() {
             <p className="text-sm text-[#65696F] mt-0.5">{form.tittel || 'Lag en annonse og publiser til FINN.no'}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {lagrefeil && <span className="text-xs text-[#DC2626]">{lagrefeil}</span>}
           {eksisterende && (
             <Button variant="ghost" onClick={() => setSlettVis(true)}>
               <Trash2 size={14} /> Slett
@@ -242,8 +265,8 @@ export default function AnnonseSkjema() {
               {form.bilder.map((b, i) => (
                 <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[#E9E8E2] group">
                   <img src={b} alt="" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => fjernBilde(i)}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-[#1A1B1E] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <button type="button" onClick={() => fjernBilde(i)} aria-label="Fjern bilde"
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-[#1A1B1E] flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer">
                     <X size={12} />
                   </button>
                   {i === 0 && <span className="absolute bottom-1.5 left-1.5 text-xs bg-black/70 text-[#1A1B1E] px-1.5 py-0.5 rounded">Hovedbilde</span>}
@@ -326,8 +349,8 @@ export default function AnnonseSkjema() {
 
             {!finnKonfigurert() && (
               <div className="bg-[#9A7A24]/5 border border-[#9A7A24]/20 rounded-lg p-3 text-xs text-[#9A7A24] leading-relaxed">
-                FINN-integrasjon er ikke aktivert. Publisering bruker testmodus inntil API-avtalen er på plass
-                (se Integrasjoner). Annonsen lagres og er klar.
+                FINN-publisering kommer — integrasjonen er ikke aktivert ennå.
+                Inntil videre lagres annonsen som upublisert kladd i EiendomsPRO.
               </div>
             )}
 
@@ -355,10 +378,12 @@ export default function AnnonseSkjema() {
             {finnResultat && (
               <div className={`rounded-lg p-3 text-xs leading-relaxed
                 ${finnResultat.type === 'feil' ? 'bg-[#DC2626]/5 border border-[#DC2626]/20 text-[#DC2626]'
+                  : finnResultat.type === 'kladd' ? 'bg-[#9A7A24]/5 border border-[#9A7A24]/20 text-[#9A7A24]'
                   : 'bg-[#15803D]/5 border border-[#15803D]/20 text-[#15803D]'}`}>
                 {finnResultat.type === 'publisert' && (finnResultat.melding || 'Annonsen er publisert på FINN!')}
                 {finnResultat.type === 'oppdatert' && 'FINN-annonsen er oppdatert.'}
                 {finnResultat.type === 'arkivert' && 'Annonsen er avpublisert fra FINN.'}
+                {finnResultat.type === 'kladd' && finnResultat.melding}
                 {finnResultat.type === 'feil' && `Feil: ${finnResultat.melding}`}
               </div>
             )}

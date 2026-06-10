@@ -1,13 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock } from 'lucide-react';
-import { MarketingNav, MarketingFooter, CTAStripe, M } from '../../components/Marketing';
+import { MarketingNav, MarketingFooter, CTAStripe } from '../../components/Marketing';
+import { M } from '../../components/marketing-tokens';
 import { useSEO } from '../../hooks/useSEO';
 import { ARTIKLER } from './artikler';
-
-function datoTekst(iso) {
-  try { return new Date(iso).toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' }); }
-  catch { return ''; }
-}
 
 export default function GuiderIndex() {
   useSEO({

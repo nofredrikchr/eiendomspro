@@ -30,13 +30,16 @@ export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
   const gjelderFraTekst = gjelderFra.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
   const samtykke = kontrakt.elektroniskKommunikasjon !== false;
 
-  // Hent KPI automatisk fra SSB
+  // Hent KPI automatisk fra SSB. Mangler basisdato, går vi rett til fallback via
+  // en resolvet promise (ingen synkron setState i effekten → ingen cascading render).
   useEffect(() => {
     let aktiv = true;
     const basis = kontrakt.sisteRegulering || kontrakt.startdato;
-    if (!basis) { setAuto('feil'); setKpi('3.5'); return; }
-    const basisMnd = String(basis).slice(0, 7); // 'YYYY-MM'
-    beregnKpiJustering(gjeldende || 10000, basisMnd).then((r) => {
+    const basisMnd = basis ? String(basis).slice(0, 7) : null; // 'YYYY-MM'
+    const hent = basisMnd
+      ? beregnKpiJustering(gjeldende || 10000, basisMnd)
+      : Promise.resolve({ ok: false });
+    hent.then((r) => {
       if (!aktiv) return;
       if (r.ok) {
         setKpi(r.endringPst.toFixed(1));

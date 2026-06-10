@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, Megaphone, Pencil, Trash2, ChevronRight, Search,
+  Plus, Pencil, Trash2, ChevronRight, Search,
   Eye, ExternalLink, Image as ImageIcon, Users,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -18,7 +18,7 @@ const STATUS = {
 
 export default function MineAnnonser() {
   const navigate = useNavigate();
-  const { annonser, leieobjekter, bygg, deleteAnnonse } = useApp();
+  const { annonser, deleteAnnonse } = useApp();
   const [søk, setSøk] = useState('');
   const [filter, setFilter] = useState('');
   const [slettId, setSlettId] = useState(null);
@@ -129,12 +129,12 @@ export default function MineAnnonser() {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/annonser/${a.id}`); }}
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/annonser/${a.id}`); }} aria-label="Rediger annonse"
                             className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer">
                             <Pencil size={13} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); setSlettId(a.id); }}
+                          <button onClick={(e) => { e.stopPropagation(); setSlettId(a.id); }} aria-label="Slett annonse"
                             className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
                             <Trash2 size={13} />
                           </button>

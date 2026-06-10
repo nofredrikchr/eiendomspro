@@ -102,7 +102,6 @@ function evaluerBoliger(valgte) {
 }
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { formatKr } from '../../utils/format';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function pct(n, decimals = 1) {
@@ -111,9 +110,6 @@ function pct(n, decimals = 1) {
 function kr(n) {
   if (!isFinite(n) || isNaN(n)) return '–';
   return new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(n);
-}
-function num(n) {
-  return new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 }).format(n);
 }
 function parseNum(v) {
   const s = String(v).replace(/\s/g, '').replace(',', '.');
@@ -290,7 +286,7 @@ function beregn(inp) {
 
   // 10-år prognose
   const prognose = [];
-  let gjeldRest = lånBeløp;
+  let gjeldRest; // settes per år i løkken under før den leses
   const r = rente / 100 / 12;
   const n = lopetid * 12;
   for (let år = 1; år <= 10; år++) {
@@ -318,7 +314,7 @@ function beregn(inp) {
     totalCashInn, maxMuligSluttlån, sluttlånDekkerKostnad,
     cashIkkeHentetUt, maxCashUt, ekstraMedMaksLån,
     dokAvgift, tinglysing, totaleOmkostninger, totalInvestering,
-    termMnd, renterMnd, avdragMnd, stressTermMnd, stressRente,
+    termMnd, renterMnd, avdragMnd, stressTermMnd, stressRente, stressKontantstrøm,
     bruttoLeieMnd, bruttoLeieÅr, effektivLeieÅr, ledighetMnd, ledighetÅr,
     felleskostnaderÅr, husforsikringÅr, kommunaleÅr, vedlikeholdÅr, vedlikeholdPst, vedlikeholdMnd, tilleggÅr,
     totaleKostÅr, nettoLeieÅr, nettoLeieMnd,
@@ -335,7 +331,6 @@ function beregn(inp) {
 function genererAnalyse(inp, t) {
   const adresse = inp.adresse || 'Eiendommen';
   const vurdering = t.nettoYield >= 4 ? 'god' : t.nettoYield >= 2.5 ? 'moderat' : 'svak';
-  const kontantOk = t.kontantstrømMnd >= 0;
   const stressOk = t.stressKontantstrøm >= 0;
 
   return `INVESTERINGSANALYSE – ${adresse.toUpperCase()}

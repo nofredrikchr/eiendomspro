@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Bug, Lightbulb, MessageCircle, Send, Gift, Check, X, Shield, Search, ArrowLeft,
+  Bug, Lightbulb, MessageCircle, Send, Gift, X, Shield, Search,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import {
@@ -73,7 +73,7 @@ function AdminChat({ sakId, onEndret }) {
     })();
     const av = abonner(() => hentSak(sakId).then((s) => aktiv && setSak(s)));
     return () => { aktiv = false; av(); };
-  }, [sakId]);
+  }, [sakId, onEndret]);
   useEffect(() => { bunn.current?.scrollIntoView({ behavior: 'smooth' }); }, [sak?.meldinger.length]);
 
   if (!sak) return <div className="flex items-center justify-center h-full text-sm text-[#7A7D83]">Laster…</div>;
@@ -172,12 +172,12 @@ export default function AdminFeedback() {
   const [filterStatus, setFilterStatus] = useState('alle');
   const [søk, setSøk] = useState('');
 
-  function oppfrisk() { hentSaker().then(setSaker); }
+  const oppfrisk = useCallback(() => { hentSaker().then(setSaker); }, []);
   useEffect(() => {
     oppfrisk();
     const av = abonner(oppfrisk);
     return av;
-  }, []);
+  }, [oppfrisk]);
 
   const filtrert = saker.filter((s) => {
     if (filterType !== 'alle' && s.type !== filterType) return false;

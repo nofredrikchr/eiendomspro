@@ -1,7 +1,17 @@
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { calcTerminbelop } from './format';
+
+// xlsx og jspdf er tunge biblioteker — de lastes dynamisk først når en
+// eksport faktisk kjøres, slik at de holdes utenfor hovedbundelen.
+async function lastXLSX() {
+  return import('xlsx');
+}
+async function lastJsPDF() {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+  return { jsPDF, autoTable };
+}
 
 function fmtN(v) {
   return Math.round(v || 0);
@@ -28,7 +38,7 @@ function calcLoanScheduleExport(laan, rentesats, aar, years = 10) {
   return schedule;
 }
 
-export function buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr, terminbelop) {
+export function buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr) {
   const YEARS = 10;
   const laan = Number(form.laanebelop || 0);
   const loanSchedule = form.laanModus === 'kalkulert'
@@ -56,7 +66,8 @@ export function buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr, termin
     const nettoLeieinntekt = nettoLeie - drift - vedlikehold;
 
     const { renter, avdrag, balance } = loanSchedule[y];
-    let skatt = 0, rentefradrag = 0;
+    let skatt;
+    let rentefradrag = 0;
     if (skattemodus === 'privat') {
       skatt = Math.max(0, nettoLeieinntekt) * 0.22;
       rentefradrag = renter * 0.22;
@@ -128,7 +139,8 @@ function beregnByggelaan(form) {
   return { poster, sumBudsjettert, sumFaktisk, ufProsent, uforutsett, brukBL, blMnd, blRente, byggelaanRenter, etableringsgebyr, totalBudsjett, grupper };
 }
 
-export function exportByggelaanExcel(form, adresse) {
+export async function exportByggelaanExcel(form, adresse) {
+  const XLSX = await lastXLSX();
   const b = beregnByggelaan(form);
   const rest = (bud, brukt) => Math.round((bud || 0) - (brukt || 0));
 
@@ -165,7 +177,8 @@ export function exportByggelaanExcel(form, adresse) {
   XLSX.writeFile(wb, `byggelaansbudsjett-${(adresse || 'bygg').replace(/\s+/g, '-').toLowerCase()}.xlsx`);
 }
 
-export function exportByggelaanPDF(form, adresse) {
+export async function exportByggelaanPDF(form, adresse) {
+  const { jsPDF, autoTable } = await lastJsPDF();
   const b = beregnByggelaan(form);
   const kr = krAscii;
   const rest = (bud, brukt) => kr((bud || 0) - (brukt || 0));
@@ -247,8 +260,9 @@ export function exportByggelaanPDF(form, adresse) {
   doc.save(`byggelaansbudsjett-${(adresse || 'bygg').replace(/\s+/g, '-').toLowerCase()}.pdf`);
 }
 
-export function exportExcel({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader }) {
-  const rows = buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr, terminbelop);
+export async function exportExcel({ form, totalLeie, faste, vedlikeholdKr, netto, totalKostnader }) {
+  const XLSX = await lastXLSX();
+  const rows = buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr);
   const adresse = `${form.gatenavn || ''} ${form.gatenummer || ''}, ${form.poststed || ''}`.trim();
 
   // Månedlig oppsummering
@@ -281,8 +295,9 @@ export function exportExcel({ form, totalLeie, faste, vedlikeholdKr, terminbelop
   XLSX.writeFile(wb, `utleier-pro-${(adresse || 'budsjett').replace(/\s+/g, '-').toLowerCase()}.xlsx`);
 }
 
-export function exportPDF({ form, totalLeie, faste, vedlikeholdKr, terminbelop, netto, totalKostnader }) {
-  const rows = buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr, terminbelop);
+export async function exportPDF({ form, totalLeie, faste, vedlikeholdKr, netto, totalKostnader }) {
+  const { jsPDF, autoTable } = await lastJsPDF();
+  const rows = buildPrognoseRader(form, totalLeie, faste, vedlikeholdKr);
   const adresse = `${form.gatenavn || ''} ${form.gatenummer || ''}, ${form.poststed || ''}`.trim();
 
   const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });

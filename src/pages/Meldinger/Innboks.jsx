@@ -94,7 +94,7 @@ export default function Innboks() {
         <div className="text-center py-12 text-[#7A7D83] text-sm">Ingen treff på søket</div>
       ) : (
         <div className="space-y-1">
-          {tråder.map(({ kontrakt: k, siste, ulisteTall, meldAntall, adresse }) => (
+          {tråder.map(({ kontrakt: k, siste, ulisteTall, adresse }) => (
             <button
               key={k.id}
               type="button"

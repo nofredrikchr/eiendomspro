@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ArrowLeft, Plus, Send, Bug, Lightbulb, MessageCircle, Gift, ChevronRight, LifeBuoy,
 } from 'lucide-react';
@@ -85,8 +85,6 @@ function SakChat({ sakId, onTilbake, onEndret }) {
   const [tekst, setTekst] = useState('');
   const bunn = useRef(null);
 
-  async function lastSak() { setSak(await hentSak(sakId)); }
-
   useEffect(() => {
     let aktiv = true;
     (async () => {
@@ -97,7 +95,7 @@ function SakChat({ sakId, onTilbake, onEndret }) {
     })();
     const av = abonner(() => hentSak(sakId).then((s) => aktiv && setSak(s)));
     return () => { aktiv = false; av(); };
-  }, [sakId]);
+  }, [sakId, onEndret]);
   useEffect(() => { bunn.current?.scrollIntoView({ behavior: 'smooth' }); }, [sak?.meldinger.length]);
 
   if (!sak) return null;
@@ -195,8 +193,8 @@ export default function Feedback() {
   const [aktivSak, setAktivSak] = useState(null);
   const [saker, setSaker] = useState([]);
 
-  function oppfrisk() { hentSaker().then(setSaker); }
-  useEffect(() => { oppfrisk(); }, []);
+  const oppfrisk = useCallback(() => { hentSaker().then(setSaker); }, []);
+  useEffect(() => { oppfrisk(); }, [oppfrisk]);
 
   if (visning === 'ny') {
     return (

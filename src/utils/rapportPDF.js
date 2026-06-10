@@ -1,4 +1,5 @@
-import { jsPDF } from 'jspdf';
+// jspdf lastes dynamisk i genererRapportPDF — holder biblioteket
+// utenfor hovedbundelen til PDF faktisk genereres.
 
 /**
  * Generisk rapport-PDF for EiendomsPRO.
@@ -28,6 +29,7 @@ function lastLogo(url) {
 }
 
 export async function genererRapportPDF({ tittel, undertittel, filnavn, kpis = [], seksjoner = [], notat }) {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const mL = 16, mR = 194, W = mR - mL;
   let y = 0;

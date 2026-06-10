@@ -94,12 +94,12 @@ function UtleierKort({ utleier, onRediger, onSlett }) {
           {utleier.kontonummer && <span>Konto: <span className="num">{utleier.kontonummer}</span></span>}
         </div>
       </div>
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={() => onRediger(utleier)}
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        <button onClick={() => onRediger(utleier)} aria-label="Rediger utleier"
           className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer">
           <Pencil size={13} />
         </button>
-        <button onClick={() => onSlett(utleier.id)}
+        <button onClick={() => onSlett(utleier.id)} aria-label="Slett utleier"
           className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
           <Trash2 size={13} />
         </button>

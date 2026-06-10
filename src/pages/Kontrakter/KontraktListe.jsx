@@ -153,12 +153,12 @@ export default function KontraktListe() {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             <button onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/meldinger/${k.id}`);
                             }}
-                              title="Meldinger"
+                              title="Meldinger" aria-label="Meldinger"
                               className="p-1.5 text-[#7A7D83] hover:text-[#2563EB] hover:bg-[#2563EB]/8 rounded-md transition-all cursor-pointer">
                               <MessageSquare size={13} />
                             </button>
@@ -167,15 +167,15 @@ export default function KontraktListe() {
                               const utleier = utleiere.find((u) => u.id === k.utleierNavn);
                               genererKontraktPDF({ kontrakt: k, leieobjekt: info?.obj, bygg: info?.b, utleier });
                             }}
-                              title="Last ned PDF"
+                              title="Last ned PDF" aria-label="Last ned PDF"
                               className="p-1.5 text-[#7A7D83] hover:text-[#9A7A24] hover:bg-[#9A7A24]/8 rounded-md transition-all cursor-pointer">
                               <Download size={13} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/kontrakter/${k.id}/rediger`); }}
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/kontrakter/${k.id}/rediger`); }} aria-label="Rediger kontrakt"
                               className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer">
                               <Pencil size={13} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setSlettId(k.id); }}
+                            <button onClick={(e) => { e.stopPropagation(); setSlettId(k.id); }} aria-label="Slett kontrakt"
                               className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
                               <Trash2 size={13} />
                             </button>

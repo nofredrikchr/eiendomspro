@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { byggApi, leieobjektApi } from '../services/eiendomApi';
 import {
   kontraktApi, fakturaApi, annonseApi, meldingApi, protokollApi,
@@ -21,26 +21,54 @@ export function AppProvider({ children }) {
   const [utleiere, setUtleiere] = useState([]);
   const [faktiskeTall, setFaktiskeTallState] = useState({});
   const [lasterEiendom, setLasterEiendom] = useState(true);
+  // lastefeil: melding hvis én eller flere entiteter feilet ved lasting (ellers null).
+  const [lastefeil, setLastefeil] = useState(null);
+  // faktiskeTall er en samlet blob (PUT overskriver alt). Feilet lastingen, må vi
+  // NEKTE å lagre — ellers overskrives eksisterende tall i Neon med en tom blob.
+  const [faktiskeTallLastet, setFaktiskeTallLastet] = useState(false);
 
-  // Last alt fra API ved oppstart (parallelt). setState skjer i promise-callback.
-  // Ved 401 (ikke innlogget) feiler Promise.all → alt forblir tomt.
-  useEffect(() => {
-    let aktiv = true;
-    Promise.all([
-      byggApi.list(), leieobjektApi.list(), kontraktApi.list(), fakturaApi.list(),
-      annonseApi.list(), meldingApi.list(), protokollApi.list(), notatApi.list(),
-      utleggApi.list(), utleierApi.list(), faktiskeTallApi.hent(),
-    ])
-      .then(([b, l, k, f, a, m, p, n, u, ut, ft]) => {
-        if (!aktiv) return;
-        setBygg(b); setLeieobjekter(l); setKontrakter(k); setFakturaer(f);
-        setAnnonser(a); setMeldinger(m); setProtokoller(p); setNotater(n);
-        setUtlegg(u); setUtleiere(ut); setFaktiskeTallState(ft);
+  // Last alt fra API (parallelt, per entitet via allSettled). Feiler én entitet,
+  // beholder den fallback (tomt) og lastefeil settes — appen blir ikke stille tom.
+  // NB: ingen synkron setState her — fetchene startes, første state-oppdatering
+  // skjer først etter `await` (slik unngås cascading-render i mount-effekten).
+  const lastAlt = useCallback(() => {
+    const oppgaver = [
+      [byggApi.list(), setBygg],
+      [leieobjektApi.list(), setLeieobjekter],
+      [kontraktApi.list(), setKontrakter],
+      [fakturaApi.list(), setFakturaer],
+      [annonseApi.list(), setAnnonser],
+      [meldingApi.list(), setMeldinger],
+      [protokollApi.list(), setProtokoller],
+      [notatApi.list(), setNotater],
+      [utleggApi.list(), setUtlegg],
+      [utleierApi.list(), setUtleiere],
+      [faktiskeTallApi.hent(), (ft) => { setFaktiskeTallState(ft); setFaktiskeTallLastet(true); }],
+    ];
+    // Promise-kjede (ikke async/await): all setState skjer i .then/.catch/.finally
+    // etter at fetchene er ferdige — aldri synkront i mount-effekten under.
+    return Promise.allSettled(oppgaver.map(([p]) => p))
+      .then((resultater) => {
+        let feilet = 0;
+        resultater.forEach((r, i) => {
+          if (r.status === 'fulfilled') oppgaver[i][1](r.value);
+          else feilet += 1;
+        });
+        setLastefeil(feilet > 0 ? `Kunne ikke laste alle data (${feilet} av ${oppgaver.length} feilet).` : null);
       })
-      .catch(() => { /* ikke innlogget e.l. → alt tomt (default) */ })
-      .finally(() => { if (aktiv) setLasterEiendom(false); });
-    return () => { aktiv = false; };
+      .catch(() => setLastefeil('Kunne ikke laste data.'))
+      .finally(() => setLasterEiendom(false));
   }, []);
+
+  // Eksplisitt ny-lasting (fra «Prøv igjen»-knapp) — her er synkron setState trygt
+  // siden det ikke skjer i en effekt.
+  const lastPaaNytt = useCallback(() => {
+    setLasterEiendom(true);
+    setLastefeil(null);
+    lastAlt();
+  }, [lastAlt]);
+
+  useEffect(() => { lastAlt(); }, [lastAlt]);
 
   // Generisk eier-scoped CRUD mot API + lokal speiling. Funksjonene gjenskapes
   // per render (ufarlig: ingen brukes i effect-deps; AppProvider re-rendrer kun
@@ -103,14 +131,25 @@ export function AppProvider({ children }) {
 
   // ─── faktiskeTall (blob; støtter funksjons-oppdatering) ──────────────────────
   const setFaktiskeTall = async (data) => {
+    // Sikkerhetslås: blobben PUT-es i sin helhet. Feilet lastingen, ville en
+    // lagring overskrive eksisterende tall i Neon med tomme data — nekt.
+    if (!faktiskeTallLastet) {
+      setLastefeil('Faktiske tall ble ikke lastet — lagring er stoppet for å unngå datatap. Prøv igjen.');
+      return;
+    }
     const next = typeof data === 'function' ? data(faktiskeTall) : data;
     setFaktiskeTallState(next);
-    try { await faktiskeTallApi.lagre(next); } catch { /* lokal verdi beholdes */ }
+    try {
+      await faktiskeTallApi.lagre(next);
+    } catch {
+      setLastefeil('Kunne ikke lagre faktiske tall — endringen er ikke lagret i skyen.');
+    }
   };
 
   return (
     <AppContext.Provider value={{
-      bygg, leieobjekter, lasterEiendom, kontrakter, utleiere, faktiskeTall, fakturaer,
+      bygg, leieobjekter, lasterEiendom, lastefeil, lastPaaNytt,
+      kontrakter, utleiere, faktiskeTall, fakturaer,
       meldinger, sendMelding, markerLest, oppdaterVedlikeholdStatus,
       protokoller, addProtokoll: protokollCrud.add, updateProtokoll: protokollCrud.update, deleteProtokoll: protokollCrud.remove,
       notater, addNotat: notatCrud.add, updateNotat: notatCrud.update, deleteNotat: notatCrud.remove,

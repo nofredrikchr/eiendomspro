@@ -1,43 +1,57 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
-import LandingPage from './pages/LandingPage';
-import Kalkulator from './pages/Kalkulator';
-import GuiderIndex from './pages/Guider/GuiderIndex';
-import GuideArtikkel from './pages/Guider/GuideArtikkel';
 import Login from './pages/Auth/Login';
-import ResetPage from './pages/Auth/ResetPage';
-import VerifyPage from './pages/Auth/VerifyPage';
-import Dashboard from './pages/Dashboard';
-import ByggListe from './pages/Bygg/ByggListe';
-import ByggSkjema from './pages/Bygg/ByggSkjema';
-import LeieobjektListe from './pages/Leieobjekter/LeieobjektListe';
-import LeieobjektSkjema from './pages/Leieobjekter/LeieobjektSkjema';
-import KontraktListe from './pages/Kontrakter/KontraktListe';
-import KontraktSkjema from './pages/Kontrakter/KontraktSkjema';
-import LeieforholdDetalj from './pages/Kontrakter/LeieforholdDetalj';
-import Rapporter from './pages/Rapporter';
-import KpiRegulering from './pages/Kpi/KpiRegulering';
-import BoliganalyseKalkulator from './pages/Boliganalyse/BoliganalyseKalkulator';
-import MinKonto from './pages/Innstillinger/MinKonto';
-import IntegrasjonsSide from './pages/Integrasjoner/IntegrasjonsSide';
-import Innboks from './pages/Meldinger/Innboks';
-import Samtale from './pages/Meldinger/Samtale';
-import OvertakelsesProtokoll from './pages/Protokoll/OvertakelsesProtokoll';
-import LeietakerPortal from './pages/Leietaker/LeietakerPortal';
-import LeietakerHjem from './pages/Leietaker/LeietakerHjem';
-import MineAnnonser from './pages/Annonser/MineAnnonser';
-import AnnonseSkjema from './pages/Annonser/AnnonseSkjema';
-import Varsler from './pages/Varsler/Varsler';
-import Feedback from './pages/Feedback/Feedback';
-import AdminFeedback from './pages/Admin/AdminFeedback';
-import { AdminLayout } from './pages/Admin/AdminLayout';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import AdminBrukere from './pages/Admin/AdminBrukere';
-import AdminLogg from './pages/Admin/AdminLogg';
+
+// Rute-komponenter lastes ved behov (code-splitting) — kun Login og Layout
+// ligger i hovedchunken. Tunge biblioteker (recharts, jspdf, xlsx) følger
+// dermed sidene som bruker dem.
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Kalkulator = lazy(() => import('./pages/Kalkulator'));
+const GuiderIndex = lazy(() => import('./pages/Guider/GuiderIndex'));
+const GuideArtikkel = lazy(() => import('./pages/Guider/GuideArtikkel'));
+const ResetPage = lazy(() => import('./pages/Auth/ResetPage'));
+const VerifyPage = lazy(() => import('./pages/Auth/VerifyPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ByggListe = lazy(() => import('./pages/Bygg/ByggListe'));
+const ByggSkjema = lazy(() => import('./pages/Bygg/ByggSkjema'));
+const LeieobjektListe = lazy(() => import('./pages/Leieobjekter/LeieobjektListe'));
+const LeieobjektSkjema = lazy(() => import('./pages/Leieobjekter/LeieobjektSkjema'));
+const KontraktListe = lazy(() => import('./pages/Kontrakter/KontraktListe'));
+const KontraktSkjema = lazy(() => import('./pages/Kontrakter/KontraktSkjema'));
+const LeieforholdDetalj = lazy(() => import('./pages/Kontrakter/LeieforholdDetalj'));
+const Rapporter = lazy(() => import('./pages/Rapporter'));
+const KpiRegulering = lazy(() => import('./pages/Kpi/KpiRegulering'));
+const BoliganalyseKalkulator = lazy(() => import('./pages/Boliganalyse/BoliganalyseKalkulator'));
+const MinKonto = lazy(() => import('./pages/Innstillinger/MinKonto'));
+const IntegrasjonsSide = lazy(() => import('./pages/Integrasjoner/IntegrasjonsSide'));
+const Innboks = lazy(() => import('./pages/Meldinger/Innboks'));
+const Samtale = lazy(() => import('./pages/Meldinger/Samtale'));
+const OvertakelsesProtokoll = lazy(() => import('./pages/Protokoll/OvertakelsesProtokoll'));
+const LeietakerPortal = lazy(() => import('./pages/Leietaker/LeietakerPortal'));
+const LeietakerHjem = lazy(() => import('./pages/Leietaker/LeietakerHjem'));
+const MineAnnonser = lazy(() => import('./pages/Annonser/MineAnnonser'));
+const AnnonseSkjema = lazy(() => import('./pages/Annonser/AnnonseSkjema'));
+const Varsler = lazy(() => import('./pages/Varsler/Varsler'));
+const Feedback = lazy(() => import('./pages/Feedback/Feedback'));
+const AdminFeedback = lazy(() => import('./pages/Admin/AdminFeedback'));
+const AdminLayout = lazy(() => import('./pages/Admin/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminBrukere = lazy(() => import('./pages/Admin/AdminBrukere'));
+const AdminLogg = lazy(() => import('./pages/Admin/AdminLogg'));
 
 const LANDING_PATHS = ['/'];
+
+// Lys lasteskjerm — brukes både ved sesjonssjekk og som Suspense-fallback
+function Laster() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F6F6F4]">
+      <div className="text-sm text-[#7A7D83]">Laster…</div>
+    </div>
+  );
+}
 
 function AppRoutes() {
   const { pathname } = useLocation();
@@ -82,11 +96,7 @@ function AppRoutes() {
 
   // Vent på sesjonssjekk før vi avgjør
   if (laster) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#09090b]">
-        <div className="text-sm text-[#52525b]">Laster…</div>
-      </div>
-    );
+    return <Laster />;
   }
 
   // Rutebeskyttelse: krev innlogging når auth er aktivt (ikke i demo-modus)
@@ -139,6 +149,7 @@ function AppRoutes() {
           <Route path="/meldinger/:kontraktId" element={<Samtale />} />
           <Route path="/protokoll/ny" element={<OvertakelsesProtokoll />} />
           <Route path="/protokoll/:protokollId" element={<OvertakelsesProtokoll />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
       </Layout>
     </AppProvider>
@@ -149,7 +160,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Suspense fallback={<Laster />}>
+          <AppRoutes />
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

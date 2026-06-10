@@ -2,12 +2,12 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Home, FileText, TrendingUp, Settings,
   Menu, X, BarChart3, Megaphone, MessageSquare, Bell, Zap, LifeBuoy, Percent,
-  ArrowLeftRight, MailWarning,
+  ArrowLeftRight, MailWarning, AlertTriangle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 import { antallUlestForBruker, abonner } from '../services/feedbackService';
 
 // ─── Utleier-modus: aktive sider ──────────────────────────────────────────────
@@ -139,23 +139,40 @@ function EpostBanner() {
   );
 }
 
+// ─── Lastefeil-banner (data fra Neon kunne ikke hentes) ───────────────────────
+function LastefeilBanner() {
+  const { lastefeil, lastPaaNytt, lasterEiendom } = useApp();
+  if (!lastefeil) return null;
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#DC2626]/25 bg-[#DC2626]/8 px-4 py-3">
+      <AlertTriangle size={16} className="text-[#DC2626] shrink-0" />
+      <div className="flex-1 text-sm text-[#991B1B]">{lastefeil}</div>
+      <button onClick={() => lastPaaNytt()} disabled={lasterEiendom}
+        className="text-xs font-medium text-[#DC2626] hover:underline cursor-pointer disabled:opacity-50">
+        {lasterEiendom ? 'Laster…' : 'Prøv igjen'}
+      </button>
+    </div>
+  );
+}
+
 export function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const lukk = () => setMobileOpen(false);
-  const { pathname } = useLocation();
   const { aktivModus } = useAuth();
   const [ulestFeedback, setUlestFeedback] = useState(0);
 
   const erLeietaker = aktivModus === 'leietaker';
   const navItems = erLeietaker ? leietakerNavItems : utleierNavItems;
 
+  // Ulest-teller: én lasting ved montering + rolig polling (60 s).
+  // Ingen refetch per navigasjon — telleren er ikke kritisk fersk.
   useEffect(() => {
     let aktiv = true;
     const oppdater = () => antallUlestForBruker().then((n) => { if (aktiv) setUlestFeedback(n); });
     oppdater();
-    const av = abonner(oppdater);
+    const av = abonner(oppdater, 60000);
     return () => { aktiv = false; av(); };
-  }, [pathname]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#F6F6F4]">
@@ -213,6 +230,7 @@ export function Layout({ children }) {
       <div className="fixed top-0 left-0 right-0 z-30 lg:hidden bg-white border-b border-[#E9E8E2] px-4 h-14 flex items-center justify-between">
         <Logo variant="dark" height={26} />
         <button onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Lukk meny' : 'Åpne meny'} aria-expanded={mobileOpen}
           className="text-[#65696F] hover:text-[#1A1B1E] transition-colors cursor-pointer p-1">
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
@@ -222,6 +240,7 @@ export function Layout({ children }) {
       <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen">
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
           <EpostBanner />
+          <LastefeilBanner />
           {children}
         </div>
       </main>

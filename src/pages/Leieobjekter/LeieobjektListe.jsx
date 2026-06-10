@@ -151,15 +151,17 @@ export default function LeieobjektListe() {
                       <div className="text-xs text-[#7A7D83]">Forventet leie/mnd</div>
                       <div className="text-sm font-medium text-[#15803D] num mt-0.5">{formatKr(l.forventetLeie || 0)}</div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => { e.stopPropagation(); navigate(`/leieobjekter/${l.id}`); }}
+                        aria-label="Rediger leieobjekt"
                         className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer"
                       >
                         <Pencil size={13} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setSlettId(l.id); }}
+                        aria-label="Slett leieobjekt"
                         className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer"
                       >
                         <Trash2 size={13} />
