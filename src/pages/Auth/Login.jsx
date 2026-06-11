@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, KeyRound, User, Phone, ArrowRight, AlertCircle, Building2, Home, Check } from 'lucide-react';
+import { ArrowRight, AlertCircle, Building2, Home, Check, ShieldCheck, Heart, CreditCard } from 'lucide-react';
 import { Logo } from '../../components/Logo';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EiendomsPRO — innlogging / registrering (redesign 2026)
+   Varmt kremlerret, hvitt kort med teal-CTA, og en mint merkevare-panel på
+   desktop. Håndterer tre modi: innlogg | registrer | glemt. Ingen emoji.
+   ──────────────────────────────────────────────────────────────────────────── */
 
 const FEIL_TEKST = {
   google_ikke_konfigurert: 'Google-innlogging er ikke aktivert ennå.',
@@ -55,121 +63,158 @@ export default function Login({ startModus = 'innlogg' }) {
     navigate('/app');
   }
 
-  const tittel = modus === 'registrer' ? 'Opprett konto' : modus === 'glemt' ? 'Tilbakestill passord' : 'Logg inn';
+  const tittel = modus === 'registrer' ? 'Opprett konto' : modus === 'glemt' ? 'Tilbakestill passord' : 'Velkommen tilbake';
+  const undertittel = modus === 'registrer'
+    ? 'Kom i gang med en roligere utleiehverdag.'
+    : modus === 'glemt'
+      ? 'Oppgi e-posten din, så sender vi en lenke for å velge nytt passord.'
+      : 'Logg inn med e-post eller telefon og passord.';
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F6F6F4' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 50% 50% at 50% 30%, rgba(22,40,74,0.05), transparent 70%)',
-      }} />
-
-      <div className="relative w-full max-w-sm">
-        <div className="flex justify-center mb-8"><Logo variant="dark" height={32} /></div>
-
-        <div className="rounded-2xl p-6 shadow-card-lg" style={{ background: '#FFFFFF', border: '1px solid #E9E8E2' }}>
-          <h1 className="text-lg font-semibold text-[#1A1B1E] mb-1">{tittel}</h1>
-          <p className="text-sm text-[#65696F] mb-5">
-            {modus === 'registrer' ? 'Kom i gang med EiendomsPRO.'
-              : modus === 'glemt' ? 'Oppgi e-posten din, så sender vi en lenke for å velge nytt passord.'
-              : 'Logg inn med e-post eller telefon og passord.'}
+    <div className="min-h-screen bg-canvas text-ink animate-fade-up grid lg:grid-cols-2">
+      {/* ── Merkevare-panel (desktop) ──────────────────────────────────────── */}
+      <aside className="hidden lg:flex flex-col justify-between bg-brand-deep text-white relative overflow-hidden p-[clamp(36px,4vw,56px)]">
+        <div className="absolute -top-[70px] -right-[70px] w-[260px] h-[260px] rounded-full bg-white/[0.07]" />
+        <div className="absolute -bottom-24 -left-12 w-[300px] h-[300px] rounded-full bg-white/[0.05]" />
+        <button onClick={() => navigate('/')} className="relative bg-transparent border-none p-0 cursor-pointer self-start">
+          <Logo variant="light" height={32} />
+        </button>
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 bg-white/[0.12] text-white text-[13px] font-bold px-3.5 py-[7px] rounded-full mb-6">
+            <ShieldCheck size={14} />
+            Laget for langtidsutleie i Norge
+          </div>
+          <h2 className="m-0 mb-4 font-extrabold tracking-[-0.025em] leading-[1.1] max-w-[18ch] text-balance" style={{ fontSize: 'clamp(28px, 3vw, 38px)' }}>
+            Et hjem for gode leieforhold.
+          </h2>
+          <p className="m-0 mb-8 text-[15px] leading-[1.6] text-white/80 max-w-[42ch]">
+            Rolig oversikt over bygg, kontrakter og økonomi — og en egen portal der leietakerne dine føler seg ivaretatt.
           </p>
+          <div className="grid gap-3.5">
+            {[
+              { icon: Building2, t: 'Full oversikt over bygg og økonomi' },
+              { icon: ShieldCheck, t: 'Trygge kontrakter og depositum' },
+              { icon: Heart, t: 'Leietakere som trives' },
+            ].map(({ icon: Icon, t }) => (
+              <div key={t} className="flex items-center gap-3.5">
+                <span className="w-[38px] h-[38px] rounded-[12px] bg-white/[0.12] flex items-center justify-center shrink-0"><Icon size={17} /></span>
+                <div className="text-[15px] font-semibold text-white/90">{t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="relative m-0 text-[13px] font-medium text-white/60">© 2026 Eiendomspro · Langtidsutleie, gjort enkelt</p>
+      </aside>
+
+      {/* ── Skjema-panel ───────────────────────────────────────────────────── */}
+      <main className="flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[400px]">
+          <button onClick={() => navigate('/')} className="flex justify-center w-full mb-7 lg:hidden bg-transparent border-none p-0 cursor-pointer">
+            <Logo variant="dark" height={32} />
+          </button>
+
+          <div className="bg-surface border border-line rounded-[20px] shadow-card-lg p-[clamp(24px,4vw,34px)]">
+            <h1 className="m-0 mb-1.5 text-[clamp(22px,3vw,26px)] font-extrabold tracking-[-0.025em] text-ink">{tittel}</h1>
+            <p className="m-0 mb-6 text-[14.5px] leading-relaxed text-muted">{undertittel}</p>
+
+            {erDemo && (
+              <div className="flex gap-2 p-3 rounded-xl border border-amber-line bg-amber-bg text-xs font-semibold text-amber leading-relaxed mb-5">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>Demo-modus: database er ikke konfigurert, så innlogging er deaktivert. Du kan gå rett inn.</span>
+              </div>
+            )}
+
+            {resetSendt ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-mint flex items-center justify-center mx-auto mb-3.5">
+                  <Check size={22} className="text-brand" />
+                </div>
+                <p className="text-sm text-muted leading-relaxed">
+                  Hvis det finnes en konto med den e-posten, har vi sendt en lenke for å tilbakestille passordet.
+                </p>
+                <button onClick={() => { setResetSendt(false); setModus('innlogg'); }}
+                  className="text-[13px] font-bold text-brand-ink hover:underline mt-5 cursor-pointer bg-transparent border-none">← Tilbake til innlogging</button>
+              </div>
+            ) : (
+              <>
+                {modus !== 'glemt' && (
+                  <>
+                    <a href="/api/auth/google/start"
+                      className="w-full flex items-center justify-center gap-2.5 py-[11px] rounded-xl text-sm font-bold border-[1.5px] border-line-input text-ink-2 hover:border-brand hover:text-brand-ink transition-all cursor-pointer mb-4">
+                      <GoogleIkon /> Fortsett med Google
+                    </a>
+                    <div className="flex items-center gap-3 my-4">
+                      <div className="flex-1 h-px bg-line" />
+                      <span className="text-xs font-semibold text-muted-2">eller</span>
+                      <div className="flex-1 h-px bg-line" />
+                    </div>
+                  </>
+                )}
+
+                <form onSubmit={submit} className="space-y-3.5">
+                  {modus === 'registrer' && (
+                    <>
+                      <Input label="Fullt navn" type="text" placeholder="Ola Nordmann" value={fulltNavn} onChange={(e) => setFulltNavn(e.target.value)} required />
+                      <Input label="E-post" type="email" placeholder="ola@eksempel.no" value={epost} onChange={(e) => setEpost(e.target.value)} autoComplete="email" />
+                      <Input label="Telefon (valgfritt)" type="tel" placeholder="+47 …" value={telefon} onChange={(e) => setTelefon(e.target.value)} autoComplete="tel" />
+                      <Input label="Passord (minst 8 tegn)" type="password" placeholder="••••••••" value={passord} onChange={(e) => setPassord(e.target.value)} required autoComplete="new-password" />
+                      <Input label="Bekreft passord" type="password" placeholder="••••••••" value={bekreftPassord} onChange={(e) => setBekreftPassord(e.target.value)} required autoComplete="new-password" />
+                      <RolleVelger valgt={primaryRolle} onChange={setPrimaryRolle} />
+                    </>
+                  )}
+                  {modus === 'innlogg' && (
+                    <>
+                      <Input label="E-post eller telefon" type="text" placeholder="ola@eksempel.no" value={identifikator} onChange={(e) => setIdentifikator(e.target.value)} required autoComplete="username" />
+                      <Input label="Passord" type="password" placeholder="••••••••" value={passord} onChange={(e) => setPassord(e.target.value)} required autoComplete="current-password" />
+                      <button type="button" onClick={() => { setModus('glemt'); setFeil(null); }}
+                        className="text-[13px] font-bold text-muted hover:text-ink-2 cursor-pointer bg-transparent border-none p-0">Glemt passord?</button>
+                    </>
+                  )}
+                  {modus === 'glemt' && (
+                    <Input label="E-post eller telefon" type="text" placeholder="ola@eksempel.no" value={identifikator} onChange={(e) => setIdentifikator(e.target.value)} required autoComplete="username" />
+                  )}
+
+                  {feilTekst() && (
+                    <div className="flex gap-2 text-[13px] font-semibold text-danger leading-relaxed">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" /><span>{feilTekst()}</span>
+                    </div>
+                  )}
+
+                  <Button type="submit" size="lg" disabled={jobber || (erDemo && modus !== 'glemt')} className="w-full">
+                    {jobber ? 'Jobber…' : modus === 'registrer' ? 'Opprett konto' : modus === 'glemt' ? 'Send lenke' : 'Logg inn'}
+                    {!jobber && <ArrowRight size={16} strokeWidth={2.2} />}
+                  </Button>
+                </form>
+
+                <div className="mt-6 pt-5 border-t border-line-soft text-center text-[13px] font-semibold">
+                  {modus === 'registrer' ? (
+                    <button onClick={() => { setModus('innlogg'); setFeil(null); }} className="block w-full text-muted hover:text-ink-2 cursor-pointer bg-transparent border-none">
+                      Har du konto? <span className="text-brand-ink font-bold">Logg inn</span>
+                    </button>
+                  ) : modus === 'glemt' ? (
+                    <button onClick={() => { setModus('innlogg'); setFeil(null); }} className="block w-full text-muted hover:text-ink-2 cursor-pointer bg-transparent border-none">
+                      ← Tilbake til innlogging
+                    </button>
+                  ) : (
+                    <button onClick={() => { setModus('registrer'); setFeil(null); }} className="block w-full text-muted hover:text-ink-2 cursor-pointer bg-transparent border-none">
+                      Ingen konto? <span className="text-brand-ink font-bold">Opprett en</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
           {erDemo && (
-            <div className="flex gap-2 p-3 rounded-lg border border-[#9A7A24]/25 bg-[#9A7A24]/8 text-xs text-[#9A7A24] leading-relaxed mb-4">
-              <AlertCircle size={13} className="shrink-0 mt-0.5" />
-              <span>Demo-modus: database er ikke konfigurert, så innlogging er deaktivert. Du kan gå rett inn.</span>
+            <div className="text-center mt-5">
+              <a href="/app" className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-ink hover:underline">
+                Fortsett til appen (demo)
+                <ArrowRight size={15} strokeWidth={2.2} />
+              </a>
             </div>
-          )}
-
-          {resetSendt ? (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 rounded-full bg-[#15803D]/15 flex items-center justify-center mx-auto mb-3">
-                <Check size={22} className="text-[#15803D]" />
-              </div>
-              <p className="text-sm text-[#65696F] leading-relaxed">
-                Hvis det finnes en konto med den e-posten, har vi sendt en lenke for å tilbakestille passordet.
-              </p>
-              <button onClick={() => { setResetSendt(false); setModus('innlogg'); }}
-                className="text-xs text-[#2563EB] hover:underline mt-4 cursor-pointer">← Tilbake til innlogging</button>
-            </div>
-          ) : (
-            <>
-              {modus !== 'glemt' && (
-                <>
-                  <a href="/api/auth/google/start"
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-[#DCDAD2] text-[#1A1B1E] hover:bg-[#FAF9F6] transition-all cursor-pointer mb-3">
-                    <GoogleIkon /> Fortsett med Google
-                  </a>
-                  <div className="flex items-center gap-3 my-3">
-                    <div className="flex-1 h-px bg-[#E9E8E2]" />
-                    <span className="text-xs text-[#9CA0A6]">eller</span>
-                    <div className="flex-1 h-px bg-[#E9E8E2]" />
-                  </div>
-                </>
-              )}
-
-              <form onSubmit={submit} className="space-y-3">
-                {modus === 'registrer' && (
-                  <>
-                    <Felt ikon={User} type="text" placeholder="Fullt navn" value={fulltNavn} onChange={setFulltNavn} required />
-                    <Felt ikon={Mail} type="email" placeholder="E-post" value={epost} onChange={setEpost} />
-                    <Felt ikon={Phone} type="tel" placeholder="Telefon (valgfritt)" value={telefon} onChange={setTelefon} />
-                    <Felt ikon={KeyRound} type="password" placeholder="Passord (minst 8 tegn)" value={passord} onChange={setPassord} required />
-                    <Felt ikon={KeyRound} type="password" placeholder="Bekreft passord" value={bekreftPassord} onChange={setBekreftPassord} required />
-                    <RolleVelger valgt={primaryRolle} onChange={setPrimaryRolle} />
-                  </>
-                )}
-                {modus === 'innlogg' && (
-                  <>
-                    <Felt ikon={Mail} type="text" placeholder="E-post eller telefon" value={identifikator} onChange={setIdentifikator} required />
-                    <Felt ikon={KeyRound} type="password" placeholder="Passord" value={passord} onChange={setPassord} required />
-                    <button type="button" onClick={() => { setModus('glemt'); setFeil(null); }}
-                      className="text-xs text-[#65696F] hover:text-[#1A1B1E] cursor-pointer">Glemt passord?</button>
-                  </>
-                )}
-                {modus === 'glemt' && (
-                  <Felt ikon={Mail} type="text" placeholder="E-post eller telefon" value={identifikator} onChange={setIdentifikator} required />
-                )}
-
-                {feilTekst() && (
-                  <div className="flex gap-2 text-xs text-[#DC2626] leading-relaxed">
-                    <AlertCircle size={13} className="shrink-0 mt-0.5" /><span>{feilTekst()}</span>
-                  </div>
-                )}
-
-                <button type="submit" disabled={jobber || (erDemo && modus !== 'glemt')}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: '#16284A', color: '#FFFFFF' }}>
-                  {jobber ? 'Jobber…' : modus === 'registrer' ? 'Opprett konto' : modus === 'glemt' ? 'Send lenke' : 'Logg inn'}
-                  {!jobber && <ArrowRight size={15} />}
-                </button>
-              </form>
-
-              <div className="mt-5 pt-4 border-t border-[#E9E8E2] text-center text-xs">
-                {modus === 'registrer' ? (
-                  <button onClick={() => { setModus('innlogg'); setFeil(null); }} className="block w-full text-[#65696F] hover:text-[#1A1B1E] cursor-pointer">
-                    Har du konto? <span className="text-[#15803D]">Logg inn</span>
-                  </button>
-                ) : modus === 'glemt' ? (
-                  <button onClick={() => { setModus('innlogg'); setFeil(null); }} className="block w-full text-[#65696F] hover:text-[#1A1B1E] cursor-pointer">
-                    ← Tilbake til innlogging
-                  </button>
-                ) : (
-                  <button onClick={() => { setModus('registrer'); setFeil(null); }} className="block w-full text-[#65696F] hover:text-[#1A1B1E] cursor-pointer">
-                    Ingen konto? <span className="text-[#15803D]">Opprett en</span>
-                  </button>
-                )}
-              </div>
-            </>
           )}
         </div>
-
-        {erDemo && (
-          <div className="text-center mt-4">
-            <a href="/app" className="text-sm text-[#2563EB] hover:underline">Fortsett til appen (demo) →</a>
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 }
@@ -192,32 +237,26 @@ function RolleVelger({ valgt, onChange }) {
   ];
   return (
     <div>
-      <div className="text-xs text-[#65696F] mb-2">Hva skal du primært bruke EiendomsPRO til?</div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="text-[12.5px] font-bold text-muted mb-2">Hva skal du primært bruke EiendomsPRO til?</div>
+      <div className="grid grid-cols-2 gap-2.5">
         {valg.map((v) => {
           const aktiv = valgt === v.id;
           return (
             <button type="button" key={v.id} onClick={() => onChange(v.id)}
-              className="flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all cursor-pointer"
-              style={{ borderColor: aktiv ? '#16284A' : '#DCDAD2', background: aktiv ? 'rgba(22,40,74,0.04)' : '#FFFFFF' }}>
-              <v.ikon size={16} className={aktiv ? 'text-[#16284A]' : 'text-[#9CA0A6]'} />
-              <span className="text-sm font-medium text-[#1A1B1E]">{v.tittel}</span>
-              <span className="text-xs text-[#65696F]">{v.undertekst}</span>
+              className={`flex flex-col items-start gap-1 p-3 rounded-xl border-[1.5px] text-left transition-all cursor-pointer ${
+                aktiv ? 'border-brand bg-mint-soft' : 'border-line-input bg-surface hover:border-brand/40'
+              }`}>
+              <v.ikon size={17} className={aktiv ? 'text-brand' : 'text-faint-2'} />
+              <span className="text-sm font-bold text-ink">{v.tittel}</span>
+              <span className="text-xs font-semibold text-muted-2">{v.undertekst}</span>
             </button>
           );
         })}
       </div>
-      <p className="text-[11px] text-[#9CA0A6] mt-2">Du kan enkelt bytte mellom utleier og leietaker senere.</p>
-    </div>
-  );
-}
-
-function Felt({ ikon: Ikon, type, placeholder, value, onChange, required }) {
-  return (
-    <div className="relative">
-      {Ikon && <Ikon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#65696F]" />}
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} required={required}
-        className={`w-full bg-white border border-[#DCDAD2] rounded-xl py-2.5 text-sm text-[#1A1B1E] placeholder-[#9CA0A6] outline-none focus:border-[#16284A] focus:ring-2 focus:ring-[#16284A]/10 transition-all ${Ikon ? 'pl-9 pr-4' : 'px-4'}`} />
+      <p className="text-[11.5px] font-medium text-muted-2 mt-2 flex items-center gap-1.5">
+        <CreditCard size={12} className="text-faint-2" />
+        Du kan enkelt bytte mellom utleier og leietaker senere.
+      </p>
     </div>
   );
 }

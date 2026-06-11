@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Inbox, Building2, ArrowLeftRight } from 'lucide-react';
+import {
+  Inbox, Building2, ArrowLeftRight, MapPin,
+  Wrench, MessageSquare, FileText, ChevronRight,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Button } from '../../components/ui/Button';
+import { Photo, IconTile } from '../../components/ui/kit';
 
 /**
  * Innlogget leietakers oversikt. Foreløpig minimal: innloggede leietakere er
@@ -23,38 +28,70 @@ export default function LeietakerHjem() {
     if (r.ok) navigate('/app');
   }
 
+  // Forhåndsvisning av hva som kommer når leieforhold er koblet til kontoen.
+  const kommer = [
+    { ikon: Wrench, tittel: 'Meld inn et problem', sub: 'Noe som lekker, knirker eller ikke virker' },
+    { ikon: MessageSquare, tittel: 'Kontakt utleier', sub: 'Still et spørsmål eller gi beskjed' },
+    { ikon: FileText, tittel: 'Dokumentene dine', sub: 'Kontrakt, protokoll og kvitteringer' },
+  ];
+
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-[#1A1B1E]">Hei, {fornavn} 👋</h1>
-        <p className="text-sm text-[#65696F] mt-1">Din oversikt som leietaker.</p>
+    <div className="space-y-6 animate-fade-up">
+      {/* Hero — velkommen hjem */}
+      <div className="relative overflow-hidden rounded-[24px] min-h-[200px] flex items-end">
+        <Photo src={null} alt="Hjemmet ditt" className="absolute inset-0 w-full h-full" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(18,26,23,0.74) 0%, rgba(18,26,23,0.18) 55%, rgba(18,26,23,0) 100%)' }} />
+        <div className="relative w-full p-[clamp(20px,4vw,32px)]">
+          <h1 className="m-0 mb-1.5 text-[clamp(24px,3.6vw,34px)] font-extrabold tracking-[-0.025em] text-white">
+            Velkommen hjem, {fornavn}
+          </h1>
+          <div className="flex items-center gap-1.5 text-[14px] font-semibold text-white/85">
+            <MapPin size={14} className="shrink-0" />
+            <span>Din oversikt som leietaker</span>
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-2xl bg-white border border-[#E9E8E2] p-8 text-center">
-        <div className="w-12 h-12 rounded-full bg-[#E9E8E2] flex items-center justify-center mx-auto mb-4">
-          <Inbox size={22} className="text-[#7A7D83]" />
-        </div>
-        <h2 className="text-base font-semibold text-[#1A1B1E] mb-2">Ingen aktive leieforhold ennå</h2>
-        <p className="text-sm text-[#65696F] max-w-md mx-auto leading-relaxed">
+      {/* Ingen aktive leieforhold ennå */}
+      <div className="bg-surface border border-line rounded-[20px] p-8 text-center">
+        <IconTile tone="mint" size={52} radius={16} className="mx-auto mb-4"><Inbox size={24} /></IconTile>
+        <h2 className="m-0 mb-2 text-base font-extrabold tracking-[-0.01em] text-ink">Ingen aktive leieforhold ennå</h2>
+        <p className="m-0 text-[14.5px] font-medium text-muted max-w-md mx-auto leading-relaxed">
           Når utleieren din kobler deg til et leieforhold, finner du leie, betalinger,
           meldinger og dokumenter her.
         </p>
       </div>
 
-      <div className="rounded-xl bg-[#FAF9F6] border border-[#E9E8E2] p-5 mt-4 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-[#16284A]/[0.07] flex items-center justify-center shrink-0">
-          <Building2 size={18} className="text-[#16284A]" />
+      {/* Forhåndsvisning: hva trenger du? */}
+      <div className="bg-surface border border-line rounded-[20px] p-5">
+        <h2 className="m-0 mb-3 text-base font-extrabold tracking-[-0.01em] text-ink">Hva du kan gjøre her</h2>
+        <div className="flex flex-col gap-2.5">
+          {kommer.map(({ ikon: Ikon, tittel, sub }) => (
+            <div key={tittel}
+              className="flex items-center gap-3.5 px-3.5 py-3.5 rounded-[13px] border border-line-soft bg-surface-2 opacity-70">
+              <IconTile tone="mint" size={38} radius={12}><Ikon size={17} /></IconTile>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13.5px] font-bold text-ink">{tittel}</div>
+                <div className="text-xs font-semibold text-muted-2 mt-0.5">{sub}</div>
+              </div>
+              <ChevronRight size={15} className="text-faint-2 shrink-0" />
+            </div>
+          ))}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-[#1A1B1E]">Skal du leie ut eiendom?</div>
-          <div className="text-xs text-[#65696F] mt-0.5">
+      </div>
+
+      {/* Bli/bytt til utleier */}
+      <div className="bg-sand border border-line rounded-[16px] p-5 flex items-center gap-4 flex-wrap">
+        <IconTile tone="mint" size={40} radius={12}><Building2 size={18} /></IconTile>
+        <div className="flex-1 min-w-[200px]">
+          <div className="text-sm font-bold text-ink">Skal du leie ut eiendom?</div>
+          <div className="text-[12.5px] font-medium text-muted-2 mt-0.5">
             {harUtleier ? 'Bytt til utleier-modus for å forvalte eiendommene dine.' : 'Kom i gang som utleier — forvalt bygg, leieobjekter og kontrakter.'}
           </div>
         </div>
-        <button onClick={tilUtleier} disabled={jobber}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[#16284A] text-white hover:bg-[#1E3A5F] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0">
+        <Button onClick={tilUtleier} disabled={jobber}>
           <ArrowLeftRight size={14} /> {jobber ? 'Bytter…' : harUtleier ? 'Bytt til utleier' : 'Bli utleier'}
-        </button>
+        </Button>
       </div>
     </div>
   );

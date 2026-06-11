@@ -2,59 +2,54 @@ import { useState, useEffect } from 'react';
 import { Check, ExternalLink, AlertCircle, Zap, FileSignature, CreditCard, BookOpen, ChevronDown, ChevronUp, Megaphone } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { PageHeader, IconTile, Pill } from '../../components/ui/kit';
 import { integrasjonApi } from '../../services/entitetApi';
 
-// ─── Status-badge ─────────────────────────────────────────────────────────────
+// ─── Status-pille ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const config = {
-    konfigurert:    { label: 'Konfigurert',      bg: 'bg-[#15803D]/10', text: 'text-[#15803D]', dot: 'bg-[#15803D]' },
-    ikke_konfigurert: { label: 'Ikke satt opp',  bg: 'bg-[#E9E8E2]',   text: 'text-[#7A7D83]', dot: 'bg-[#AEB0B4]' },
-    kommer:         { label: 'Kommer',            bg: 'bg-[#9A7A24]/10', text: 'text-[#9A7A24]', dot: 'bg-[#9A7A24]' },
+    konfigurert:      { label: 'Konfigurert',  tone: 'mint' },
+    ikke_konfigurert: { label: 'Ikke satt opp', tone: 'muted' },
+    kommer:           { label: 'Kommer',        tone: 'amber' },
   };
   const c = config[status] || config.ikke_konfigurert;
-  return (
-    <span className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${c.bg} ${c.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-      {c.label}
-    </span>
-  );
+  return <Pill tone={c.tone}>{c.label}</Pill>;
 }
 
 // ─── Integrasjons-kort ────────────────────────────────────────────────────────
-function IntegrasjonKort({ ikon: Ikon, ikonFarge, tittel, beskrivelse, status, lenke, children }) {
+function IntegrasjonKort({ ikon: Ikon, tone = 'mint', tittel, beskrivelse, status, lenke, children }) {
   const [åpen, setÅpen] = useState(false);
+  const kommer = status === 'kommer';
 
   return (
-    <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl overflow-hidden">
+    <div className={`border rounded-[18px] overflow-hidden transition-all ${kommer ? 'border-line bg-sand' : 'bg-surface border-line'}`}>
       <button
         type="button"
         onClick={() => setÅpen(!åpen)}
-        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-black/[0.02] transition-colors cursor-pointer text-left"
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-surface-2 transition-colors cursor-pointer text-left"
       >
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${ikonFarge}15` }}>
-          <Ikon size={18} style={{ color: ikonFarge }} />
-        </div>
+        <IconTile tone={tone} size={42} radius={13}><Ikon size={18} /></IconTile>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-medium text-[#1A1B1E]">{tittel}</span>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className={`text-[14.5px] font-extrabold tracking-[-0.01em] ${kommer ? 'text-muted' : 'text-ink'}`}>{tittel}</span>
             <StatusBadge status={status} />
           </div>
-          <p className="text-xs text-[#7A7D83] truncate">{beskrivelse}</p>
+          <p className="text-[12.5px] font-medium text-muted-2 truncate">{beskrivelse}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {lenke && (
             <a href={lenke} target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="text-[#7A7D83] hover:text-[#1A1B1E] transition-colors p-1">
-              <ExternalLink size={13} />
+              className="text-faint hover:text-brand-ink transition-colors p-1">
+              <ExternalLink size={14} />
             </a>
           )}
-          {åpen ? <ChevronUp size={15} className="text-[#7A7D83]" /> : <ChevronDown size={15} className="text-[#7A7D83]" />}
+          {åpen ? <ChevronUp size={16} className="text-muted-2" /> : <ChevronDown size={16} className="text-muted-2" />}
         </div>
       </button>
 
       {åpen && children && (
-        <div className="px-5 pb-5 pt-2 border-t border-[#E9E8E2] space-y-4">
+        <div className="px-5 pb-5 pt-4 border-t border-line-soft space-y-4">
           {children}
         </div>
       )}
@@ -64,8 +59,8 @@ function IntegrasjonKort({ ikon: Ikon, ikonFarge, tittel, beskrivelse, status, l
 
 function InfoBoks({ children }) {
   return (
-    <div className="flex gap-2.5 p-3 rounded-lg border border-blue-500/20 bg-blue-500/5 text-xs text-blue-300 leading-relaxed">
-      <AlertCircle size={13} className="shrink-0 mt-0.5" />
+    <div className="flex gap-2.5 p-3.5 rounded-[13px] border border-mint-line bg-mint-soft text-[12.5px] font-medium text-brand-ink leading-relaxed">
+      <AlertCircle size={14} className="shrink-0 mt-0.5" />
       <span>{children}</span>
     </div>
   );
@@ -73,8 +68,8 @@ function InfoBoks({ children }) {
 
 function VarselBoks({ children }) {
   return (
-    <div className="flex gap-2.5 p-3 rounded-lg border border-[#9A7A24]/20 bg-[#9A7A24]/5 text-xs text-[#9A7A24] leading-relaxed">
-      <AlertCircle size={13} className="shrink-0 mt-0.5" />
+    <div className="flex gap-2.5 p-3.5 rounded-[13px] border border-amber-line bg-amber-soft text-[12.5px] font-medium text-amber leading-relaxed">
+      <AlertCircle size={14} className="shrink-0 mt-0.5" />
       <span>{children}</span>
     </div>
   );
@@ -114,33 +109,33 @@ export default function IntegrasjonssSide() {
   const finnOk     = !!(config.finnApiKey && config.finnOrgId);
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#1A1B1E]">Integrasjoner</h1>
-        <p className="text-sm text-[#65696F] mt-1">Koble EiendomsPRO til betalingstjenester, e-signering og regnskap</p>
-      </div>
+    <div className="animate-fade-up">
+      <PageHeader
+        tittel="Integrasjoner"
+        undertittel="Koble EiendomsPRO til betalingstjenester, e-signering og regnskap"
+      />
 
       {/* Betalingsmodell-forklaring */}
-      <div className="bg-[#FFFFFF] border border-[#9A7A24]/20 rounded-xl p-5 mb-6" style={{ background: 'rgba(201,168,76,0.03)' }}>
-        <div className="flex items-start gap-3">
-          <Zap size={16} className="text-[#9A7A24] mt-0.5 shrink-0" />
+      <div className="bg-mint-soft border border-mint-line rounded-[20px] p-5 mb-6">
+        <div className="flex items-start gap-3.5">
+          <IconTile tone="mint" size={36}><Zap size={16} /></IconTile>
           <div>
-            <div className="text-sm font-semibold text-[#1A1B1E] mb-2">Hvordan betalingsflyten fungerer</div>
-            <p className="text-xs text-[#65696F] leading-relaxed mb-3">
-              EiendomsPRO berører <strong className="text-[#1A1B1E]">aldri</strong> leiebetalingene.
+            <div className="text-[14.5px] font-extrabold tracking-[-0.01em] text-ink mb-2">Hvordan betalingsflyten fungerer</div>
+            <p className="text-[13px] font-medium text-muted leading-relaxed mb-3.5">
+              EiendomsPRO berører <strong className="font-extrabold text-ink-2">aldri</strong> leiebetalingene.
               Plattformen genererer faktura med KID-nummer og sender den til leietaker via Vipps eller eFaktura.
-              Pengene går <strong className="text-[#1A1B1E]">direkte fra leietakers konto til utleiers bankkonto</strong> —
+              Pengene går <strong className="font-extrabold text-ink-2">direkte fra leietakers konto til utleiers bankkonto</strong> —
               EiendomsPRO er kun teknisk tilrettelegger, ikke et betalingsforetak.
             </p>
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="flex flex-wrap gap-2">
               {[
                 'Leietaker betaler via Vipps eller nettbank',
                 'KID-nummer matcher innbetaling til riktig kontrakt',
                 'Penger → direkte til utleiers konto',
                 'EiendomsPRO mottar kun bekreftelse via webhook',
               ].map((s, i) => (
-                <span key={i} className="flex items-center gap-1.5 bg-[#E9E8E2] px-2.5 py-1 rounded-full text-[#4B4E54]">
-                  <span className="w-1 h-1 rounded-full bg-[#9A7A24]" />
+                <span key={i} className="flex items-center gap-1.5 bg-surface border border-mint-line px-2.5 py-1 rounded-full text-[11.5px] font-bold text-ink-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand" />
                   {s}
                 </span>
               ))}
@@ -154,7 +149,7 @@ export default function IntegrasjonssSide() {
         {/* ─── SIGNICAT — BankID e-signering ─── */}
         <IntegrasjonKort
           ikon={FileSignature}
-          ikonFarge="#15803D"
+          tone="mint"
           tittel="Signicat — BankID e-signering"
           beskrivelse="Leiekontrakter signeres digitalt av begge parter med norsk BankID. Gir juridisk bindende kvalifisert elektronisk signatur (QES)."
           status={signicatOk ? 'konfigurert' : 'ikke_konfigurert'}
@@ -187,17 +182,17 @@ export default function IntegrasjonssSide() {
             onChange={set('signicatAccountId')}
             placeholder="your-account-id"
           />
-          <div className="text-xs text-[#7A7D83] space-y-1">
-            <div>• Sandkasse-URL: <code className="text-[#4B4E54]">https://api.test.signicat.com</code></div>
-            <div>• Produksjons-URL: <code className="text-[#4B4E54]">https://api.signicat.com</code></div>
-            <div>• Webhook-URL å registrere i Signicat: <code className="text-[#4B4E54]">{window.location.origin}/api/webhooks/signicat</code></div>
+          <div className="text-[12.5px] font-medium text-muted-2 space-y-1">
+            <div>• Sandkasse-URL: <code className="font-semibold text-ink-2">https://api.test.signicat.com</code></div>
+            <div>• Produksjons-URL: <code className="font-semibold text-ink-2">https://api.signicat.com</code></div>
+            <div>• Webhook-URL å registrere i Signicat: <code className="font-semibold text-ink-2">{window.location.origin}/api/webhooks/signicat</code></div>
           </div>
         </IntegrasjonKort>
 
         {/* ─── VIPPS FAKTURA ─── */}
         <IntegrasjonKort
           ikon={CreditCard}
-          ikonFarge="#f97316"
+          tone="amber"
           tittel="Vipps Faktura"
           beskrivelse="Send husleie-faktura direkte til leietakers Vipps-app. Leietaker betaler med ett trykk — penger går rett til utleiers konto."
           status={vippsOk ? 'konfigurert' : 'ikke_konfigurert'}
@@ -247,7 +242,7 @@ export default function IntegrasjonssSide() {
         {/* ─── NETS eFaktura / AvtaleGiro ─── */}
         <IntegrasjonKort
           ikon={CreditCard}
-          ikonFarge="#3b82f6"
+          tone="mint"
           tittel="Nets — eFaktura & AvtaleGiro"
           beskrivelse="eFaktura: faktura i nettbanken. AvtaleGiro: automatisk månedstrekk — leietaker setter opp én gang, betaling skjer automatisk."
           status={netsOk ? 'konfigurert' : 'ikke_konfigurert'}
@@ -273,16 +268,16 @@ export default function IntegrasjonssSide() {
               type="password"
             />
           </div>
-          <div className="text-xs text-[#7A7D83] space-y-1">
-            <div>• Testmiljø: <code className="text-[#4B4E54]">https://test.api.nets.eu</code></div>
-            <div>• Produksjon: <code className="text-[#4B4E54]">https://api.nets.eu</code></div>
+          <div className="text-[12.5px] font-medium text-muted-2 space-y-1">
+            <div>• Testmiljø: <code className="font-semibold text-ink-2">https://test.api.nets.eu</code></div>
+            <div>• Produksjon: <code className="font-semibold text-ink-2">https://api.nets.eu</code></div>
           </div>
         </IntegrasjonKort>
 
         {/* ─── FIKEN ─── */}
         <IntegrasjonKort
           ikon={BookOpen}
-          ikonFarge="#8b5cf6"
+          tone="mint"
           tittel="Fiken — regnskap"
           beskrivelse="Automatisk bokføring av husleie-fakturaer og innbetalinger. Fakturaer opprettes i Fiken og sendes til leietaker via eFaktura."
           status={fikenOk ? 'konfigurert' : 'ikke_konfigurert'}
@@ -312,7 +307,7 @@ export default function IntegrasjonssSide() {
         {/* ─── FINN.no ─── */}
         <IntegrasjonKort
           ikon={Megaphone}
-          ikonFarge="#0063fb"
+          tone="mint"
           tittel="FINN.no — annonsering"
           beskrivelse="Publiser utleieannonser til FINN.no direkte fra EiendomsPRO. Henvendelser fra interessenter kommer tilbake inn i appen."
           status={finnOk ? 'konfigurert' : 'ikke_konfigurert'}
@@ -336,7 +331,7 @@ export default function IntegrasjonssSide() {
         {/* ─── Kredittsjekk (kommer) ─── */}
         <IntegrasjonKort
           ikon={AlertCircle}
-          ikonFarge="#DC2626"
+          tone="amber"
           tittel="Kredittsjekk av leietaker"
           beskrivelse="Sjekk leietakers betalingsevne og betalingshistorikk direkte i EiendomsPRO. Integrasjon med Creditsafe eller Experian."
           status="kommer"
@@ -351,19 +346,19 @@ export default function IntegrasjonssSide() {
       </div>
 
       {/* Lagre-knapp */}
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex items-center gap-3 flex-wrap">
         <Button variant="primary" onClick={lagreConfig}>
-          {lagret === 'ok' ? <><Check size={14} className="text-[#15803D]" /> Lagret!</> : 'Lagre innstillinger'}
+          {lagret === 'ok' ? <><Check size={15} /> Lagret!</> : 'Lagre innstillinger'}
         </Button>
-        <p className="text-xs text-[#7A7D83]">
-          API-nøkler lagres lokalt i nettleseren. I produksjon bør disse lagres i en sikker backend.
+        <p className="text-[12.5px] font-medium text-muted-2">
+          API-nøkler lagres eier-scopet i Neon — aldri i nettleseren.
         </p>
       </div>
 
       {/* Status-oversikt */}
-      <div className="mt-8 bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-5">
-        <div className="text-xs font-semibold text-[#7A7D83] uppercase tracking-wider mb-4">Hva som er klart for integrering</div>
-        <div className="space-y-2">
+      <div className="mt-8 bg-surface border border-line rounded-[20px] p-[22px]">
+        <div className="text-xs font-extrabold text-muted-2 uppercase tracking-[0.12em] mb-4">Hva som er klart for integrering</div>
+        <div className="space-y-0.5">
           {[
             { label: 'KID-nummer-generator (MOD10/MOD11)', ferdig: true, info: 'Klar — src/utils/kid.js' },
             { label: 'Signicat BankID e-signering', ferdig: false, info: 'Stub klar — legg inn API-nøkler' },
@@ -376,12 +371,12 @@ export default function IntegrasjonssSide() {
             { label: 'Betalingssporing per kontrakt', ferdig: true, info: 'Klar — datamodell og UI på plass' },
             { label: 'Webhook-mottak (backend)', ferdig: false, info: 'Krever en backend/serverless API' },
           ].map(({ label, ferdig, info }) => (
-            <div key={label} className="flex items-center gap-3 text-sm">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${ferdig ? 'bg-[#15803D]/15' : 'bg-[#E9E8E2]'}`}>
-                {ferdig ? <Check size={11} className="text-[#15803D]" /> : <span className="w-1.5 h-1.5 rounded-full bg-[#AEB0B4]" />}
+            <div key={label} className="flex items-center gap-3 py-2 border-b border-line-soft last:border-0">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${ferdig ? 'bg-mint text-brand-ink' : 'bg-line-soft'}`}>
+                {ferdig ? <Check size={12} /> : <span className="w-1.5 h-1.5 rounded-full bg-faint-2" />}
               </div>
-              <span className={ferdig ? 'text-[#1A1B1E]' : 'text-[#7A7D83]'}>{label}</span>
-              <span className="text-xs text-[#AEB0B4] ml-auto">{info}</span>
+              <span className={`text-[13.5px] font-bold ${ferdig ? 'text-ink' : 'text-muted'}`}>{label}</span>
+              <span className="text-[12px] font-medium text-faint ml-auto text-right">{info}</span>
             </div>
           ))}
         </div>

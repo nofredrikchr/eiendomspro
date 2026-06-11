@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock } from 'lucide-react';
 import { MarketingNav, MarketingFooter, CTAStripe } from '../../components/Marketing';
-import { M } from '../../components/marketing-tokens';
 import { useSEO } from '../../hooks/useSEO';
 import { ARTIKLER } from './artikler';
 
@@ -13,34 +12,32 @@ export default function GuiderIndex() {
   });
 
   return (
-    <div style={{ background: M.lerret, minHeight: '100vh' }}>
+    <div className="min-h-screen bg-canvas text-ink">
       <MarketingNav />
 
-      <section className="px-6 pt-16 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 mb-4">
-          <span className="h-px w-6" style={{ background: M.gull }} />
-          <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: M.gull }}>Guider</span>
+      <section className="px-[clamp(20px,4vw,40px)] pt-16 pb-10 text-center">
+        <div className="inline-flex items-center gap-2 bg-mint text-brand-ink text-[13px] font-bold px-3.5 py-[7px] rounded-full mb-5">
+          Guider
         </div>
-        <h1 className="font-display mb-4" style={{ color: M.navy, fontSize: 'clamp(2rem,4.4vw,3.2rem)', lineHeight: 1.08, fontWeight: 600 }}>
+        <h1 className="m-0 mb-4 font-extrabold tracking-[-0.025em] text-balance" style={{ fontSize: 'clamp(2rem,4.4vw,3.2rem)', lineHeight: 1.08 }}>
           Kunnskap for norske utleiere
         </h1>
-        <p className="text-lg max-w-2xl mx-auto" style={{ color: M.tekst2 }}>
+        <p className="m-0 mx-auto text-lg max-w-2xl leading-[1.6] text-muted">
           Konkrete guider om lønnsomhet, skatt og leiekontrakter — skrevet for deg som leier ut i Norge.
         </p>
       </section>
 
-      <section className="px-6 pb-16">
+      <section className="px-[clamp(20px,4vw,40px)] pb-16">
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-5">
           {ARTIKLER.map((a) => (
             <Link key={a.slug} to={`/guider/${a.slug}`}
-              className="group bg-white rounded-2xl p-6 shadow-card hover:shadow-card-lg transition-all flex flex-col"
-              style={{ border: `1px solid ${M.kant}` }}>
-              <span className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: M.gull }}>{a.kategori}</span>
-              <h2 className="font-display text-xl mb-2" style={{ color: M.navy, fontWeight: 600, lineHeight: 1.2 }}>{a.tittel}</h2>
-              <p className="text-sm leading-relaxed flex-1" style={{ color: M.tekst2 }}>{a.ingress}</p>
-              <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: `1px solid ${M.kant}` }}>
-                <span className="flex items-center gap-1.5 text-xs" style={{ color: M.tekst3 }}><Clock size={13} /> {a.lesetid}</span>
-                <span className="flex items-center gap-1 text-sm font-medium group-hover:gap-2 transition-all" style={{ color: M.navy }}>Les guide <ArrowRight size={15} /></span>
+              className="group bg-surface rounded-[20px] p-6 shadow-card border border-line hover:-translate-y-0.5 hover:shadow-card-lg transition-all flex flex-col">
+              <span className="text-xs font-extrabold uppercase tracking-[0.08em] mb-3 text-brand">{a.kategori}</span>
+              <h2 className="text-xl font-extrabold tracking-[-0.01em] mb-2 text-ink" style={{ lineHeight: 1.2 }}>{a.tittel}</h2>
+              <p className="text-sm leading-relaxed flex-1 text-muted">{a.ingress}</p>
+              <div className="flex items-center justify-between mt-5 pt-4 border-t border-line-soft">
+                <span className="flex items-center gap-1.5 text-xs text-muted-2"><Clock size={13} /> {a.lesetid}</span>
+                <span className="flex items-center gap-1 text-sm font-bold text-brand-ink group-hover:gap-2 transition-all">Les guide <ArrowRight size={15} strokeWidth={2.2} /></span>
               </div>
             </Link>
           ))}

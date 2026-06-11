@@ -1,18 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Users, Building2, Home, Shield, TrendingUp } from 'lucide-react';
+import { Users, Building2, Home, Shield, TrendingUp, AlertTriangle } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
-
-function Kort({ ikon: Ikon, label, verdi, farge = '#A1A1AA' }) {
-  return (
-    <div className="rounded-xl bg-[#16161A] border border-[#26262C] p-5">
-      <div className="flex items-center gap-2 mb-2">
-        <Ikon size={15} style={{ color: farge }} />
-        <span className="text-xs text-[#A1A1AA]">{label}</span>
-      </div>
-      <div className="text-2xl font-semibold text-white num">{verdi}</div>
-    </div>
-  );
-}
+import { PageHeader } from '../../components/ui/kit';
+import { StatCard } from '../../components/ui/Card';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -28,27 +18,27 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Oversikt</h1>
-      <p className="text-sm text-[#A1A1AA] mb-6">Systemstatistikk</p>
+      <PageHeader tittel="Oversikt" undertittel="Systemstatistikk" />
 
-      {feil && <div className="text-sm text-[#F87171] mb-4">{feil}</div>}
-      {!stats && !feil && <div className="text-sm text-[#71717A]">Laster…</div>}
+      {feil && (
+        <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-danger/25 bg-danger/[0.07] px-4 py-3">
+          <AlertTriangle size={16} className="text-danger shrink-0" />
+          <div className="flex-1 text-sm font-medium text-danger">{feil}</div>
+        </div>
+      )}
+      {!stats && !feil && <div className="text-sm font-medium text-muted-2">Laster…</div>}
 
       {stats && (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-3">
-            <Kort ikon={Users} label="Brukere totalt" verdi={stats.brukere} farge="#60A5FA" />
-            <Kort ikon={TrendingUp} label="Nye siste 7 dager" verdi={stats.nyeBrukere7} farge="#4ADE80" />
-            <Kort ikon={TrendingUp} label="Nye siste 30 dager" verdi={stats.nyeBrukere30} farge="#4ADE80" />
-            <Kort ikon={Shield} label="Admins" verdi={stats.admins} farge="#F87171" />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Kort ikon={Building2} label="Utleier-kontoer" verdi={stats.utleiere} farge="#C9A84C" />
-            <Kort ikon={Home} label="Leietaker-kontoer" verdi={stats.leietakere} farge="#C9A84C" />
-            <Kort ikon={Building2} label="Bygg" verdi={stats.bygg} />
-            <Kort ikon={Home} label="Leieobjekter" verdi={stats.leieobjekter} />
-          </div>
-        </>
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+          <StatCard label="Brukere totalt" value={stats.brukere} color="green" icon={<Users size={17} />} />
+          <StatCard label="Nye siste 7 dager" value={stats.nyeBrukere7} color="green" icon={<TrendingUp size={17} />} />
+          <StatCard label="Nye siste 30 dager" value={stats.nyeBrukere30} color="green" icon={<TrendingUp size={17} />} />
+          <StatCard label="Admins" value={stats.admins} color="amber" icon={<Shield size={17} />} />
+          <StatCard label="Utleier-kontoer" value={stats.utleiere} color="ink" icon={<Building2 size={17} />} />
+          <StatCard label="Leietaker-kontoer" value={stats.leietakere} color="ink" icon={<Home size={17} />} />
+          <StatCard label="Bygg" value={stats.bygg} color="ink" icon={<Building2 size={17} />} />
+          <StatCard label="Leieobjekter" value={stats.leieobjekter} color="ink" icon={<Home size={17} />} />
+        </div>
       )}
     </div>
   );

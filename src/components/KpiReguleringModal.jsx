@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, TrendingUp, ArrowRight, Check, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { IconTile } from './ui/kit';
 import { beregnNyLeie, nesteReguleringTekst, kanReguleresNaa } from '../utils/kpi';
 import { beregnKpiJustering, ssbMaanedTilTekst } from '../services/ssbKpi';
 import { sendKpiVarsel, tidligsteIkrafttredelse } from '../services/varslingService';
@@ -63,94 +64,96 @@ export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onLukk}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-[#FFFFFF] border border-[#E9E8E2] rounded-2xl p-6 w-full max-w-md shadow-soft space-y-5 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#9A7A24]/15 flex items-center justify-center">
-              <TrendingUp size={15} className="text-[#9A7A24]" />
-            </div>
-            <h3 className="text-base font-semibold text-[#1A1B1E]">KPI-regulering av leie</h3>
+      <div className="absolute inset-0 bg-[#141A17]/45 backdrop-blur-sm" />
+      <div
+        className="relative bg-surface border border-line rounded-3xl w-full max-w-md shadow-soft max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
+          <div className="flex items-center gap-2.5">
+            <IconTile tone="mint" size={34}><TrendingUp size={16} /></IconTile>
+            <h3 className="m-0 text-base font-extrabold tracking-[-0.01em] text-ink">KPI-regulering av leie</h3>
           </div>
-          <button type="button" onClick={onLukk} className="text-[#7A7D83] hover:text-[#1A1B1E] cursor-pointer"><X size={16} /></button>
+          <button type="button" onClick={onLukk} aria-label="Lukk" className="text-muted-2 hover:text-ink transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-[10px] hover:bg-line-soft">
+            <X size={16} />
+          </button>
         </div>
 
-        {!kanNaa && nesteDato && (
-          <div className="bg-[#B45309]/5 border border-[#B45309]/20 rounded-lg p-3 text-xs text-[#B45309] leading-relaxed">
-            Leien kan tidligst reguleres {nesteDato} (ett år etter forrige fastsettelse, jf. husleieloven § 4-2). Du kan likevel forberede reguleringen nå.
-          </div>
-        )}
-
-        {/* KPI-input — auto fra SSB, kan overstyres */}
-        <div>
-          <Input
-            label="KPI-endring (%)" type="number" step="0.1" value={kpi}
-            onChange={(e) => { setKpi(e.target.value); setAuto('ok'); }}
-            placeholder="3.5"
-          />
-          <div className="mt-1.5 text-xs flex items-center gap-1.5">
-            {auto === 'laster' && <span className="flex items-center gap-1 text-[#7A7D83]"><Loader2 size={11} className="animate-spin" /> Henter KPI fra SSB …</span>}
-            {auto === 'ok' && kilde && <span className="text-[#15803D]">✓ Hentet automatisk: {kilde}</span>}
-            {auto === 'feil' && <span className="text-[#7A7D83]">Fant ikke automatisk KPI — fyll inn manuelt (se ssb.no/kpi).</span>}
-          </div>
-        </div>
-
-        {/* Beregning */}
-        <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-center flex-1">
-              <div className="text-xs text-[#7A7D83] mb-1">Gjeldende leie</div>
-              <div className="text-lg font-bold text-[#1A1B1E] num">{formatKr(gjeldende)}</div>
+        <div className="overflow-y-auto flex-1 p-6 space-y-5">
+          {!kanNaa && nesteDato && (
+            <div className="bg-amber-soft border border-amber-line rounded-xl p-3 text-[12.5px] font-medium text-amber leading-relaxed">
+              Leien kan tidligst reguleres {nesteDato} (ett år etter forrige fastsettelse, jf. husleieloven § 4-2). Du kan likevel forberede reguleringen nå.
             </div>
-            <ArrowRight size={18} className="text-[#7A7D83] mx-3" />
-            <div className="text-center flex-1">
-              <div className="text-xs text-[#7A7D83] mb-1">Ny leie</div>
-              <div className="text-lg font-bold text-[#15803D] num">{formatKr(nyLeie)}</div>
+          )}
+
+          {/* KPI-input — auto fra SSB, kan overstyres */}
+          <div>
+            <Input
+              label="KPI-endring (%)" type="number" step="0.1" value={kpi}
+              onChange={(e) => { setKpi(e.target.value); setAuto('ok'); }}
+              placeholder="3.5"
+            />
+            <div className="mt-1.5 text-[12px] font-medium flex items-center gap-1.5">
+              {auto === 'laster' && <span className="flex items-center gap-1.5 text-muted-2"><Loader2 size={11} className="animate-spin text-brand" /> Henter KPI fra SSB …</span>}
+              {auto === 'ok' && kilde && <span className="flex items-center gap-1.5 text-brand-ink"><Check size={12} /> Hentet automatisk: {kilde}</span>}
+              {auto === 'feil' && <span className="text-muted-2">Fant ikke automatisk KPI — fyll inn manuelt (se ssb.no/kpi).</span>}
             </div>
           </div>
-          <div className="text-center mt-3 pt-3 border-t border-[#E9E8E2]">
-            <span className="text-xs text-[#7A7D83]">Økning: </span>
-            <span className="text-sm font-medium text-[#9A7A24] num">+ {formatKr(okning)}/mnd</span>
-            <span className="text-xs text-[#7A7D83]"> ({formatKr(okning * 12)}/år)</span>
-          </div>
-        </div>
 
-        {/* Varsling */}
-        {varsling !== 'sendt' ? (
-          <div className="rounded-xl border border-[#E9E8E2] p-4">
-            <div className="text-sm font-medium text-[#1A1B1E] mb-1">Varsle leietaker</div>
-            <p className="text-xs text-[#65696F] leading-relaxed mb-3">
-              {kontrakt.leietakerNavn || 'Leietaker'} får skriftlig varsel på {kontrakt.leietakerEpost ? 'e-post' : '—'}{samtykke && kontrakt.leietakerTlf ? ' og SMS' : ''}. Ny leie <strong className="text-[#1A1B1E]">{formatKr(nyLeie)}</strong> foreslås gjeldende fra <strong className="text-[#1A1B1E]">{gjelderFraTekst}</strong> (minst én måned frem).
-            </p>
-            {!kontrakt.leietakerEpost && (
-              <p className="text-xs text-[#B45309] mb-3 flex items-start gap-1.5"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> Mangler leietakers e-post på kontrakten.</p>
-            )}
-            <Button variant="primary" className="w-full justify-center" disabled={varsling === 'sender' || !kontrakt.leietakerEpost}
-              onClick={sendVarsel}>
-              {varsling === 'sender' ? <><Loader2 size={14} className="animate-spin" /> Sender varsel …</> : <><Send size={14} /> Send varsel til leietaker</>}
+          {/* Beregning */}
+          <div className="bg-sand border border-line rounded-[14px] p-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex-1 text-center">
+                <div className="text-[11.5px] font-bold text-faint mb-1">Gjeldende leie</div>
+                <div className="num text-lg font-extrabold text-ink">{formatKr(gjeldende)}</div>
+              </div>
+              <ArrowRight size={18} strokeWidth={2.2} className="text-brand shrink-0" />
+              <div className="flex-1 text-center">
+                <div className="text-[11.5px] font-bold text-faint mb-1">Ny leie</div>
+                <div className="num text-lg font-extrabold text-brand-ink">{formatKr(nyLeie)}</div>
+              </div>
+            </div>
+            <div className="mt-3.5 pt-3 border-t border-line text-center text-[13px] font-semibold text-muted">
+              Økning <span className="num font-extrabold text-brand-ink">+{formatKr(okning)}/mnd</span>
+              <span> ({formatKr(okning * 12)}/år)</span>
+            </div>
+          </div>
+
+          {/* Varsling */}
+          {varsling !== 'sendt' ? (
+            <div className="rounded-[14px] border border-line p-4">
+              <div className="text-sm font-bold text-ink mb-1">Varsle leietaker</div>
+              <p className="text-[12.5px] font-medium text-muted leading-relaxed mb-3">
+                {kontrakt.leietakerNavn || 'Leietaker'} får skriftlig varsel på {kontrakt.leietakerEpost ? 'e-post' : '—'}{samtykke && kontrakt.leietakerTlf ? ' og SMS' : ''}. Ny leie <strong className="font-bold text-ink">{formatKr(nyLeie)}</strong> foreslås gjeldende fra <strong className="font-bold text-ink">{gjelderFraTekst}</strong> (minst én måned frem).
+              </p>
+              {!kontrakt.leietakerEpost && (
+                <p className="text-[12px] font-medium text-amber mb-3 flex items-start gap-1.5"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> Mangler leietakers e-post på kontrakten.</p>
+              )}
+              <Button variant="primary" className="w-full justify-center" disabled={varsling === 'sender' || !kontrakt.leietakerEpost} onClick={sendVarsel}>
+                {varsling === 'sender' ? <><Loader2 size={14} className="animate-spin" /> Sender varsel …</> : <><Send size={14} /> Send varsel til leietaker</>}
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-[14px] border border-mint-line bg-mint-soft p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-6 h-6 rounded-full bg-mint flex items-center justify-center shrink-0"><Check size={14} className="text-brand-ink" /></span>
+                <span className="text-sm font-bold text-ink">Leietaker varslet</span>
+              </div>
+              <div className="text-[12.5px] font-medium text-muted leading-relaxed space-y-1">
+                <div>Sendt på <strong className="font-bold text-ink">{kanalTekst}</strong> {new Date(resultat.sendtTidspunkt).toLocaleString('nb-NO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.</div>
+                <div>Ny leie <strong className="font-bold text-ink">{formatKr(nyLeie)}</strong> gjelder fra <strong className="font-bold text-ink">{gjelderFraTekst}</strong>.</div>
+                <div className="text-muted-2">Du har fått bekreftelse som utleier.</div>
+                {resultat.simulert && <div className="text-amber mt-1">Demo: faktisk utsending aktiveres når e-post/SMS-tjeneste er koblet på.</div>}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2.5">
+            <Button variant="secondary" className="flex-1 justify-center" onClick={onLukk}>Avbryt</Button>
+            <Button variant="primary" className="flex-1 justify-center" onClick={() => onLagre(nyLeie)}>
+              Oppdater leie til {formatKr(nyLeie)}
             </Button>
           </div>
-        ) : (
-          <div className="rounded-xl border border-[#15803D]/25 bg-[#15803D]/5 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-[#15803D]/15 flex items-center justify-center"><Check size={14} className="text-[#15803D]" /></div>
-              <span className="text-sm font-medium text-[#1A1B1E]">Leietaker varslet</span>
-            </div>
-            <div className="text-xs text-[#65696F] leading-relaxed space-y-1">
-              <div>Sendt på <strong className="text-[#1A1B1E]">{kanalTekst}</strong> {new Date(resultat.sendtTidspunkt).toLocaleString('nb-NO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.</div>
-              <div>Ny leie <strong className="text-[#1A1B1E]">{formatKr(nyLeie)}</strong> gjelder fra <strong className="text-[#1A1B1E]">{gjelderFraTekst}</strong>.</div>
-              <div className="text-[#7A7D83]">Du har fått bekreftelse som utleier.</div>
-              {resultat.simulert && <div className="text-[#B45309] mt-1">Demo: faktisk utsending aktiveres når e-post/SMS-tjeneste er koblet på.</div>}
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <Button variant="secondary" className="flex-1 justify-center" onClick={onLukk}>Avbryt</Button>
-          <Button variant="primary" className="flex-1 justify-center" onClick={() => onLagre(nyLeie)}>
-            Oppdater leie til {formatKr(nyLeie)}
-          </Button>
         </div>
       </div>
     </div>

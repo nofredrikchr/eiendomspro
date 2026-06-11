@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Logo } from './Logo';
+import { Avatar } from './ui/kit';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { antallUlestForBruker, abonner } from '../services/feedbackService';
@@ -46,19 +47,20 @@ function NavItem({ to, icon: Icon, label, onNavigate, badge }) {
       end={to === '/app'}
       onClick={onNavigate}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group
-        ${isActive
-          ? 'bg-[#16284A]/[0.07] text-[#16284A] font-semibold'
-          : 'text-[#65696F] hover:text-[#16284A] hover:bg-black/[0.03]'
-        }`
+        `relative flex items-center gap-3 px-3 py-2.5 rounded-[11px] transition-colors duration-150
+        ${isActive ? 'bg-mint' : 'hover:bg-line-soft'}`
       }
     >
-      <Icon size={16} className="shrink-0" />
-      <span className="flex-1">{label}</span>
-      {badge > 0 && (
-        <span className="w-5 h-5 rounded-full bg-[#2563EB] text-[#F6F6F4] text-xs font-bold flex items-center justify-center shrink-0">
-          {badge > 9 ? '9+' : badge}
-        </span>
+      {({ isActive }) => (
+        <>
+          <Icon size={17} className={`shrink-0 ${isActive ? 'text-brand' : 'text-[#5F6A63]'}`} />
+          <span className="flex-1 text-sm font-semibold text-ink-2">{label}</span>
+          {badge > 0 && (
+            <span className="w-5 h-5 rounded-full bg-brand text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
+              {badge > 9 ? '9+' : badge}
+            </span>
+          )}
+        </>
       )}
     </NavLink>
   );
@@ -67,12 +69,12 @@ function NavItem({ to, icon: Icon, label, onNavigate, badge }) {
 function KommerNavItem({ icon: Icon, label }) {
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#AEB0B4] cursor-not-allowed select-none"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-[11px] cursor-default select-none"
       title="Kommer snart"
     >
-      <Icon size={16} className="shrink-0 opacity-60" />
-      <span className="flex-1">{label}</span>
-      <span className="text-[10px] font-medium text-[#7A7D83] bg-[#E9E8E2] px-1.5 py-0.5 rounded-full shrink-0">
+      <Icon size={17} className="shrink-0 text-faint-2" />
+      <span className="flex-1 text-sm font-semibold text-[#AEB5AF]">{label}</span>
+      <span className="text-[10px] font-bold text-faint bg-line-soft px-2 py-0.5 rounded-full shrink-0">
         Kommer
       </span>
     </div>
@@ -100,14 +102,19 @@ function ModusVelger({ onNavigate }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#E9E8E2] bg-[#FAF9F6] p-3 mb-3">
-      <div className="text-[10px] font-semibold text-[#AEB0B4] uppercase tracking-widest mb-1">Modus</div>
-      <div className="text-sm font-semibold text-[#16284A] mb-2">
-        {aktivModus === 'utleier' ? 'Utleier' : 'Leietaker'}
+    <div className="rounded-[14px] border border-line-soft bg-sand p-[13px] mb-3.5">
+      <div className="flex items-center justify-between mb-2.5">
+        <div>
+          <div className="text-[10.5px] font-extrabold text-faint uppercase tracking-[0.1em]">Modus</div>
+          <div className="text-[14.5px] font-bold text-ink">{aktivModus === 'utleier' ? 'Utleier' : 'Leietaker'}</div>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-mint text-brand flex items-center justify-center">
+          <ArrowLeftRight size={15} />
+        </div>
       </div>
       <button onClick={bytt} disabled={jobber}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-[#DCDAD2] text-[#4B4E54] hover:text-[#16284A] hover:border-[#16284A]/30 hover:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-        <ArrowLeftRight size={13} /> {jobber ? 'Bytter…' : byttLabel}
+        className="w-full px-2.5 py-2 rounded-[10px] text-[13px] font-bold text-ink-2 bg-surface border-[1.5px] border-line-input hover:border-brand hover:text-brand-ink transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        {jobber ? 'Bytter…' : byttLabel}
       </button>
     </div>
   );
@@ -126,13 +133,13 @@ function EpostBanner() {
     if (r.ok) setSendt(true);
   }
   return (
-    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#9A7A24]/25 bg-[#9A7A24]/8 px-4 py-3">
-      <MailWarning size={16} className="text-[#9A7A24] shrink-0" />
-      <div className="flex-1 text-sm text-[#7a611c]">Bekreft e-posten din ({bruker.epost}) for full tilgang.</div>
+    <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-amber-line bg-amber-soft px-4 py-3">
+      <MailWarning size={16} className="text-amber shrink-0" />
+      <div className="flex-1 text-sm font-medium text-[#7a611c]">Bekreft e-posten din ({bruker.epost}) for full tilgang.</div>
       {sendt
-        ? <span className="text-xs text-[#15803D]">Sendt!</span>
+        ? <span className="text-xs font-bold text-brand-ink">Sendt!</span>
         : <button onClick={send} disabled={jobber}
-            className="text-xs font-medium text-[#9A7A24] hover:underline cursor-pointer disabled:opacity-50">
+            className="text-xs font-bold text-amber hover:underline cursor-pointer disabled:opacity-50">
             {jobber ? 'Sender…' : 'Send på nytt'}
           </button>}
     </div>
@@ -144,14 +151,71 @@ function LastefeilBanner() {
   const { lastefeil, lastPaaNytt, lasterEiendom } = useApp();
   if (!lastefeil) return null;
   return (
-    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#DC2626]/25 bg-[#DC2626]/8 px-4 py-3">
-      <AlertTriangle size={16} className="text-[#DC2626] shrink-0" />
-      <div className="flex-1 text-sm text-[#991B1B]">{lastefeil}</div>
+    <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-danger/25 bg-danger/[0.07] px-4 py-3">
+      <AlertTriangle size={16} className="text-danger shrink-0" />
+      <div className="flex-1 text-sm font-medium text-danger">{lastefeil}</div>
       <button onClick={() => lastPaaNytt()} disabled={lasterEiendom}
-        className="text-xs font-medium text-[#DC2626] hover:underline cursor-pointer disabled:opacity-50">
+        className="text-xs font-bold text-danger hover:underline cursor-pointer disabled:opacity-50">
         {lasterEiendom ? 'Laster…' : 'Prøv igjen'}
       </button>
     </div>
+  );
+}
+
+// ─── Bruker-kort (bunn av sidemeny) ───────────────────────────────────────────
+function BrukerKort() {
+  const { bruker, loggUt } = useAuth();
+  const navigate = useNavigate();
+  const navn = bruker?.navn || bruker?.epost || 'Min konto';
+  async function ut() { await loggUt(); navigate('/'); }
+  return (
+    <div className="flex items-center gap-2.5 px-3 pt-3 pb-1">
+      <Avatar navn={navn} size={34} />
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-ink truncate">{navn}</div>
+        <button onClick={ut} className="text-[11.5px] font-semibold text-faint hover:text-brand-ink cursor-pointer">
+          Logg ut
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidemeny-innhold (delt av desktop-aside og mobil-drawer) ─────────────────
+function MenyInnhold({ erLeietaker, navItems, ulestFeedback, onNavigate }) {
+  return (
+    <>
+      <ModusVelger onNavigate={onNavigate} />
+
+      <nav className="flex flex-col gap-0.5">
+        {navItems.map((item) => (
+          <NavItem key={item.to} {...item} onNavigate={onNavigate} />
+        ))}
+      </nav>
+
+      {!erLeietaker && (
+        <>
+          <div className="mt-7 mb-1.5 px-3 text-[10.5px] font-extrabold text-faint-2 uppercase tracking-[0.12em]">
+            Kommer snart
+          </div>
+          <div className="flex flex-col gap-0.5">
+            {kommerNavItems.map((item) => (
+              <KommerNavItem key={item.label} {...item} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="flex-1 min-h-6" />
+
+      <div className="border-t border-line-soft pt-2.5 flex flex-col gap-0.5">
+        {bottomNavItems.map((item) => (
+          <NavItem key={item.to} {...item} onNavigate={onNavigate}
+            badge={item.to === '/tilbakemelding' ? ulestFeedback : undefined} />
+        ))}
+        <BrukerKort />
+      </div>
+    </>
   );
 }
 
@@ -165,7 +229,6 @@ export function Layout({ children }) {
   const navItems = erLeietaker ? leietakerNavItems : utleierNavItems;
 
   // Ulest-teller: én lasting ved montering + rolig polling (60 s).
-  // Ingen refetch per navigasjon — telleren er ikke kritisk fersk.
   useEffect(() => {
     let aktiv = true;
     const oppdater = () => antallUlestForBruker().then((n) => { if (aktiv) setUlestFeedback(n); });
@@ -175,75 +238,56 @@ export function Layout({ children }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#F6F6F4]">
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={lukk} />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full z-50 w-60 bg-white border-r border-[#E9E8E2] flex flex-col
-        transition-transform duration-250 lg:translate-x-0
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-
-        {/* Logo */}
-        <div className="h-14 px-4 flex items-center border-b border-[#E9E8E2] shrink-0">
-          <Logo variant="dark" height={26} />
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
-          {/* Modus-veksler */}
-          <ModusVelger onNavigate={lukk} />
-
-          {navItems.map((item) => (
-            <NavItem key={item.to} {...item} onNavigate={lukk} />
-          ))}
-
-          {/* Kommer snart — kun i utleier-modus */}
-          {!erLeietaker && (
-            <>
-              <div className="mt-8 mb-2 px-3">
-                <span className="text-[10px] font-semibold text-[#AEB0B4] uppercase tracking-widest">
-                  Kommer snart
-                </span>
-              </div>
-              {kommerNavItems.map((item) => (
-                <KommerNavItem key={item.label} {...item} />
-              ))}
-            </>
-          )}
-        </nav>
-
-        {/* Bunn-nav */}
-        <div className="px-3 pb-3 border-t border-[#E9E8E2] pt-3 flex flex-col gap-0.5 shrink-0">
-          {bottomNavItems.map((item) => (
-            <NavItem key={item.to} {...item} onNavigate={lukk}
-              badge={item.to === '/tilbakemelding' ? ulestFeedback : undefined} />
-          ))}
-          <div className="px-1 pt-2">
-            <span className="text-xs text-[#AEB0B4]">v1.0.0</span>
-          </div>
-        </div>
-      </aside>
-
+    <div className="min-h-screen bg-canvas">
       {/* Mobil topbar */}
-      <div className="fixed top-0 left-0 right-0 z-30 lg:hidden bg-white border-b border-[#E9E8E2] px-4 h-14 flex items-center justify-between">
-        <Logo variant="dark" height={26} />
-        <button onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? 'Lukk meny' : 'Åpne meny'} aria-expanded={mobileOpen}
-          className="text-[#65696F] hover:text-[#1A1B1E] transition-colors cursor-pointer p-1">
-          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+      <div className="lg:hidden sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b border-line h-[60px] flex items-center gap-3 px-4">
+        <button onClick={() => setMobileOpen(true)}
+          aria-label="Åpne meny" aria-expanded={mobileOpen}
+          className="w-10 h-10 rounded-[11px] flex items-center justify-center text-ink-2 hover:bg-line-soft cursor-pointer">
+          <Menu size={20} />
         </button>
+        <Logo variant="dark" height={28} />
       </div>
 
-      {/* Innhold */}
-      <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen">
-        <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-          <EpostBanner />
-          <LastefeilBanner />
-          {children}
-        </div>
-      </main>
+      <div className="flex items-stretch">
+        {/* Sidemeny (desktop) */}
+        <aside className="hidden lg:flex w-[264px] shrink-0 bg-surface border-r border-line sticky top-0 h-screen overflow-y-auto flex-col px-3.5 pt-5 pb-3.5">
+          <div className="px-2">
+            <Logo variant="dark" height={32} />
+          </div>
+          <div className="mt-[18px] flex flex-col flex-1">
+            <MenyInnhold erLeietaker={erLeietaker} navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={undefined} />
+          </div>
+        </aside>
+
+        {/* Mobil drawer */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[60] lg:hidden">
+            <div className="absolute inset-0 bg-[#141A17]/45" onClick={lukk} />
+            <div className="absolute top-0 left-0 bottom-0 w-[292px] bg-surface px-3.5 py-4 overflow-y-auto shadow-soft flex flex-col animate-fade-up">
+              <div className="flex items-center gap-2.5 px-2 mb-4">
+                <Logo variant="dark" height={30} />
+                <button onClick={lukk} aria-label="Lukk meny"
+                  className="ml-auto w-9 h-9 rounded-[10px] flex items-center justify-center text-muted hover:bg-line-soft cursor-pointer">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex flex-col flex-1">
+                <MenyInnhold erLeietaker={erLeietaker} navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={lukk} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hovedinnhold */}
+        <main className="flex-1 min-w-0">
+          <div className="max-w-[1140px] mx-auto px-[clamp(16px,3.5vw,44px)] pt-[clamp(20px,3.5vw,44px)] pb-[clamp(48px,6vw,72px)]">
+            <EpostBanner />
+            <LastefeilBanner />
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

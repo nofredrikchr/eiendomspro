@@ -1,21 +1,62 @@
-/* Fontene (Inter, DM Mono, Fraunces) lastes via <link> i index.html —
-   det starter nedlastingen tidligere enn en CSS-@import. */
+/* Plus Jakarta Sans lastes via <link> i index.html — det starter nedlastingen
+   tidligere enn en CSS-@import. */
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   EiendomsPRO — lyst designsystem
-   Rolig, lyst og «finans/eiendom-seriøst». Navy som merkevarefarge,
-   dempet gull som detalj, grønn kun for positive tall.
+   EiendomsPRO — «Varmt & friskt» designsystem (redesign 2026)
+   Lyst, varmt kremlerret, friske teal-aksenter og en myk mint-tint for
+   positive/aktive tilstander. Dempet amber for «krever oppfølging».
+   Humanistisk sans (Plus Jakarta Sans). Airbnb-vibe for langtidsutleie.
    ─────────────────────────────────────────────────────────────────────────── */
 
-:root {
-  --bg: #F6F6F4;          /* lerret */
-  --surface: #FFFFFF;     /* kort */
-  --border: #E9E8E2;      /* hårfin kant */
-  --text: #1A1B1E;        /* primærtekst */
-  --brand: #16284A;       /* navy — primær handling/merkevare */
-  --brand-hover: #1E3A5F;
-  --gold: #9A7A24;        /* detalj */
+@theme {
+  /* Flater */
+  --color-canvas: #F6F4EF;       /* lerret */
+  --color-surface: #FFFFFF;      /* kort */
+  --color-surface-2: #FBFAF7;    /* svakt nedtonet kort/rad */
+  --color-sand: #F9F8F4;         /* rolig seksjonsflate */
+
+  /* Kanter */
+  --color-line: #EAE6DD;         /* standard hårfin kant */
+  --color-line-soft: #F1EEE6;    /* enda mykere skille */
+  --color-line-input: #E3DECF;   /* input-kant */
+
+  /* Merkevare — fresh teal */
+  --color-brand: #0E9384;
+  --color-brand-hover: #0B7D6E;
+  --color-brand-deep: #0C7F72;   /* mørk teal (CTA-flater, hero) */
+  --color-brand-ink: #0A6B5F;    /* teal-tekst på lyst */
+
+  /* Mint — positiv/aktiv tint */
+  --color-mint: #E3F3F0;
+  --color-mint-soft: #F1F9F7;
+  --color-mint-line: #C8E7E1;
+
+  /* Amber — krever oppfølging */
+  --color-amber: #B97D10;
+  --color-amber-bg: #FBF3E2;
+  --color-amber-soft: #FDFAF2;
+  --color-amber-line: #F3E8CF;
+  --color-amber-line-strong: #E8D5A4;
+
+  /* Tekst */
+  --color-ink: #212724;          /* primær */
+  --color-ink-2: #2B332E;        /* sterk sekundær */
+  --color-muted: #66706B;        /* brødtekst dempet */
+  --color-muted-2: #8A938D;      /* etiketter */
+  --color-faint: #98A19B;        /* svak */
+  --color-faint-2: #B5BCB6;      /* svakest (ikoner) */
+
+  /* Rød — destruktiv/feil (beholdt dempet) */
+  --color-danger: #C2410C;
+
+  /* Font */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Radius-skala som matcher designet */
+  --radius-xl: 18px;
+  --radius-2xl: 20px;
+  --radius-3xl: 22px;
 }
 
 * { box-sizing: border-box; }
@@ -23,9 +64,9 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background-color: #F6F6F4;
-  color: #1A1B1E;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #F6F4EF;
+  color: #212724;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -34,17 +75,19 @@ body {
 
 #root { width: 100%; min-height: 100vh; }
 
-::selection { background: rgba(22, 40, 74, 0.12); }
+::selection { background: #0E9384; color: #fff; }
 
-/* Diskret rullefelt som passer lyst tema */
+input, button, select, textarea { font-family: inherit; }
+
+/* Diskret rullefelt som passer det lyse, varme temaet */
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #D7D6CD;
+  background: #DCD7CB;
   border-radius: 7px;
-  border: 3px solid #F6F6F4;
+  border: 3px solid #F6F4EF;
 }
-::-webkit-scrollbar-thumb:hover { background: #C2C1B6; }
+::-webkit-scrollbar-thumb:hover { background: #C8C2B3; }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -52,19 +95,43 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 
-/* Tall i DM Mono med tabularfigurer (linjerer pent i tabeller) */
-.num { font-family: 'DM Mono', monospace; font-feature-settings: 'tnum' 1; }
+/* Tall: tabularfigurer linjerer pent i tabeller/nøkkeltall. Plus Jakarta Sans
+   har tnum, så vi trenger ikke et eget monospace-snitt lenger. */
+.num { font-feature-settings: 'tnum' 1; letter-spacing: -0.01em; }
 
-/* Serif-display til forsiden — gir redaksjonell/«byrå»-følelse, ikke AI-generisk */
-.font-display { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; }
+/* Display-tekst (forside/overskrifter) — samme snitt, tung vekt og stram knip. */
+.font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: -0.03em; }
 
-/* Myk elevasjon for kort på lyst lerret — gir dybde uten tunge skygger */
+/* ── Elevasjon — myke skygger på lyst, varmt lerret ───────────────────────── */
 .shadow-card {
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 1px 2px rgba(32, 40, 35, 0.04), 0 1px 3px rgba(32, 40, 35, 0.05);
 }
 .shadow-card-lg {
-  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.07), 0 2px 6px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 18px 36px -20px rgba(32, 40, 35, 0.25);
+}
+.shadow-lift {
+  box-shadow: 0 20px 44px -24px rgba(32, 40, 35, 0.32);
 }
 .shadow-soft {
-  box-shadow: 0 10px 40px rgba(16, 24, 40, 0.10), 0 4px 12px rgba(16, 24, 40, 0.05);
+  box-shadow: 0 10px 40px rgba(32, 40, 35, 0.12), 0 4px 12px rgba(32, 40, 35, 0.06);
+}
+.shadow-brand {
+  box-shadow: 0 6px 18px -6px rgba(14, 147, 132, 0.5);
+}
+
+/* ── Foto-plassholder: rolig, varm flate når et bygg/objekt mangler bilde ──── */
+.foto-plassholder {
+  background:
+    radial-gradient(120% 120% at 0% 0%, #EEF6F4 0%, #E8E4DB 55%, #E2DDD1 100%);
+}
+
+/* ── Animasjoner ──────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-fade-up { animation: fadeUp 0.4s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; }
 }

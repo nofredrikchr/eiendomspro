@@ -4,6 +4,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, Eye, X, ClipboardLi
 import { useApp } from '../../context/AppContext';
 import { Input, Select, Textarea, Toggle } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Pill } from '../../components/ui/kit';
 import { formatKr } from '../../utils/format';
 import { genererKontraktPDF } from '../../utils/kontraktPDF';
 import { Logo } from '../../components/Logo';
@@ -62,34 +63,35 @@ const SEKSJONER = [
 function SeksjonHeader({ nr, tittel, open, onClick, ferdig }) {
   return (
     <button type="button" onClick={onClick}
-      className="w-full flex items-center justify-between p-5 hover:bg-black/[0.02] transition-colors cursor-pointer">
+      className="w-full flex items-center justify-between p-5 hover:bg-surface-2 transition-colors cursor-pointer">
       <div className="flex items-center gap-3">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors
-          ${ferdig ? 'bg-[#15803D]/15 text-[#15803D]' : open ? 'bg-black/[0.06] text-[#1A1B1E]' : 'bg-[#E9E8E2] text-[#7A7D83]'}`}>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 transition-colors num
+          ${ferdig ? 'bg-mint text-brand-ink' : open ? 'bg-line-soft text-ink' : 'bg-line-soft text-muted-2'}`}>
           {ferdig ? <Check size={13} /> : nr}
         </div>
-        <span className={`text-sm font-medium transition-colors ${open ? 'text-[#1A1B1E]' : 'text-[#65696F]'}`}>{tittel}</span>
+        <span className={`text-sm font-bold transition-colors ${open ? 'text-ink' : 'text-muted'}`}>{tittel}</span>
       </div>
-      {open ? <ChevronUp size={15} className="text-[#7A7D83]" /> : <ChevronDown size={15} className="text-[#AEB0B4]" />}
+      {open ? <ChevronUp size={15} className="text-muted-2" /> : <ChevronDown size={15} className="text-faint-2" />}
     </button>
   );
 }
-function Divider() { return <div className="h-px bg-[#E9E8E2] mx-5" />; }
+function Divider() { return <div className="h-px bg-line-soft mx-5" />; }
 function FeltRad({ children }) { return <div className="px-5 pb-5 space-y-4">{children}</div>; }
 
 function RadioKort({ value, current, onChange, label, sub }) {
+  const aktiv = current === value;
   return (
     <button type="button" onClick={() => onChange(value)}
-      className={`p-3 rounded-lg border text-left text-sm transition-all cursor-pointer w-full
-        ${current === value ? 'border-black/[0.10] bg-black/[0.045] text-[#1A1B1E]' : 'border-[#E9E8E2] text-[#65696F] hover:border-[#DCDAD2]'}`}>
-      <div className="flex items-center gap-2">
-        <div className={`w-3.5 h-3.5 rounded-full border-2 shrink-0 flex items-center justify-center
-          ${current === value ? 'border-white' : 'border-[#AEB0B4]'}`}>
-          {current === value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+      className={`p-3.5 rounded-xl border-[1.5px] text-left text-sm transition-all cursor-pointer w-full
+        ${aktiv ? 'border-brand bg-mint-soft text-ink' : 'border-line text-muted hover:border-line-input'}`}>
+      <div className="flex items-center gap-2.5">
+        <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center
+          ${aktiv ? 'border-brand' : 'border-faint-2'}`}>
+          {aktiv && <div className="w-2 h-2 rounded-full bg-brand" />}
         </div>
-        <span className="font-medium">{label}</span>
+        <span className="font-bold">{label}</span>
       </div>
-      {sub && <div className="text-xs opacity-60 mt-1 pl-5">{sub}</div>}
+      {sub && <div className="text-xs font-medium text-muted-2 mt-1 pl-[26px]">{sub}</div>}
     </button>
   );
 }
@@ -127,12 +129,12 @@ function KontraktPreviewModal({ kontrakt, leieobjekt, bygg, utleier, onLukk }) {
       <div className="relative w-full max-w-3xl">
         {/* Lukk-knapp */}
         <button onClick={onLukk}
-          className="fixed top-4 right-4 z-60 bg-[#E9E8E2] hover:bg-[#DCDAD2] text-[#1A1B1E] rounded-full p-2 transition-colors cursor-pointer">
+          className="fixed top-4 right-4 z-60 bg-surface hover:bg-line-soft text-ink rounded-full p-2 shadow-soft transition-colors cursor-pointer">
           <X size={18} />
         </button>
 
-        {/* A4-lignende dokument */}
-        <div className="bg-white mx-4 rounded-xl overflow-hidden shadow-2xl" style={{ fontFamily: 'Georgia, serif', color: '#111' }}>
+        {/* A4-lignende dokument — matcher generert PDF (eget visuelt språk) */}
+        <div className="bg-white mx-4 rounded-[18px] overflow-hidden shadow-soft" style={{ fontFamily: 'Georgia, serif', color: '#111' }}>
 
           {/* Header */}
           <div style={{ background: '#fff', padding: '18px 36px 14px', borderBottom: '2px solid #162840', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -411,7 +413,7 @@ export default function KontraktSkjema() {
   };
 
   return (
-    <>
+    <div className="animate-fade-up">
       {visPreview && (
         <KontraktPreviewModal
           kontrakt={form}
@@ -424,22 +426,22 @@ export default function KontraktSkjema() {
 
       <form onSubmit={handleSubmit}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start gap-4 flex-wrap mb-6">
+          <div className="flex items-start gap-3 flex-1 min-w-[220px]">
             <button type="button" onClick={() => navigate('/kontrakter')}
-              className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg transition-all cursor-pointer">
+              className="mt-1 p-1.5 text-muted hover:text-ink hover:bg-line-soft rounded-lg transition-all cursor-pointer">
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-[#1A1B1E]">
+              <h1 className="m-0 text-[clamp(24px,3vw,30px)] font-extrabold tracking-[-0.025em] text-ink">
                 {existing ? form.leietakerNavn || 'Leiekontrakt' : 'Ny leiekontrakt'}
               </h1>
-              <p className="text-sm text-[#65696F] mt-0.5">
+              <p className="mt-1.5 mb-0 text-[14.5px] font-medium text-muted">
                 {valgtBygg ? `${valgtBygg.gatenavn} ${valgtBygg.gatenummer}` : 'Fyll inn kontraktsinformasjon'}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2.5 flex-wrap">
             <Button type="button" variant="secondary" onClick={() => navigate('/kontrakter')}>Avbryt</Button>
             <Button type="button" variant="ghost" onClick={() => setVisPreview(true)}>
               <Eye size={14} /> Forhåndsvis
@@ -455,12 +457,12 @@ export default function KontraktSkjema() {
           </div>
         </div>
 
-        {/* Navigasjonstabs — Hybel-stil */}
+        {/* Navigasjonstabs */}
         {existing && (() => {
           const innProtokoll = protokoller.find((p) => p.kontraktId === id && p.type === 'innflytting');
           const utProtokoll = protokoller.find((p) => p.kontraktId === id && p.type === 'utflytting');
           return (
-            <div className="flex items-center gap-1 mb-6 border-b border-[#E9E8E2] pb-0 overflow-x-auto">
+            <div className="flex items-center gap-1 mb-6 border-b border-line pb-0 overflow-x-auto">
               {[
                 { label: 'Leiekontrakt', ikon: FileText, aktiv: true, onClick: null },
                 {
@@ -481,35 +483,35 @@ export default function KontraktSkjema() {
                     ? navigate(`/protokoll/${utProtokoll.id}`)
                     : navigate(`/protokoll/ny?kontraktId=${id}&type=utflytting`),
                 },
-              ].map(({ label, ikon: Ikon, aktiv, ferdig, onClick }) => (
+              ].map(({ label, ikon: Ikon, aktiv, ferdig: tabFerdig, onClick }) => (
                 <button
                   key={label}
                   type="button"
                   onClick={onClick || undefined}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer
                     ${aktiv
-                      ? 'border-white text-[#1A1B1E]'
-                      : ferdig
-                        ? 'border-transparent text-[#15803D] hover:text-[#15803D]/80'
-                        : 'border-transparent text-[#7A7D83] hover:text-[#4B4E54]'
+                      ? 'border-brand text-ink'
+                      : tabFerdig
+                        ? 'border-transparent text-brand-ink hover:text-brand-hover'
+                        : 'border-transparent text-muted-2 hover:text-ink-2'
                     } ${!onClick ? 'cursor-default' : ''}`}
                 >
                   <Ikon size={14} />
                   {label}
-                  {ferdig && <span className="w-1.5 h-1.5 rounded-full bg-[#15803D]" />}
+                  {tabFerdig && <span className="w-1.5 h-1.5 rounded-full bg-brand" />}
                 </button>
               ))}
             </div>
           );
         })()}
 
-        <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="grid lg:grid-cols-[1fr_320px] gap-[18px] items-start">
           {/* Skjema */}
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl divide-y divide-[#E9E8E2] overflow-hidden">
+          <div className="bg-surface border border-line rounded-[20px] divide-y divide-line-soft overflow-hidden">
 
             {/* Utleier */}
-            <div className="px-5 py-4 bg-[#F1F1ED] flex items-center gap-4 flex-wrap">
-              <span className="text-xs font-medium text-[#7A7D83] uppercase tracking-widest whitespace-nowrap">Utleier</span>
+            <div className="px-5 py-4 bg-sand flex items-center gap-4 flex-wrap">
+              <span className="text-[11px] font-bold text-muted-2 uppercase tracking-widest whitespace-nowrap">Utleier</span>
               <div className="flex-1 min-w-48">
                 <Select
                   value={form.utleierNavn}
@@ -519,7 +521,7 @@ export default function KontraktSkjema() {
                 />
               </div>
               {utleiere.length === 0 && (
-                <a href="/innstillinger" className="text-xs text-[#9A7A24] hover:underline">
+                <a href="/innstillinger" className="text-xs font-bold text-brand-ink hover:underline">
                   Legg til utleier i Innstillinger →
                 </a>
               )}
@@ -561,11 +563,11 @@ export default function KontraktSkjema() {
                       placeholder={leieobjekter.length === 0 ? 'Ingen leieobjekter registrert' : 'Velg leieobjekt...'}
                     />
                     {valgtObj && valgtBygg && (
-                      <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-lg p-4 grid grid-cols-2 gap-3 text-xs">
-                        <div><div className="text-[#7A7D83] mb-0.5">Adresse</div><div className="text-[#1A1B1E]">{valgtBygg.gatenavn} {valgtBygg.gatenummer}</div></div>
-                        {valgtObj.betegnelse && <div><div className="text-[#7A7D83] mb-0.5">Betegnelse</div><div className="text-[#1A1B1E]">{valgtObj.betegnelse}</div></div>}
-                        {valgtObj.areal && <div><div className="text-[#7A7D83] mb-0.5">Areal</div><div className="text-[#1A1B1E] num">{valgtObj.areal} m²</div></div>}
-                        {valgtObj.forventetLeie && <div><div className="text-[#7A7D83] mb-0.5">Forventet leie</div><div className="text-[#15803D] num">{formatKr(valgtObj.forventetLeie)}/mnd</div></div>}
+                      <div className="bg-sand border border-line rounded-xl p-4 grid grid-cols-2 gap-3 text-xs">
+                        <div><div className="text-muted-2 font-semibold mb-0.5">Adresse</div><div className="text-ink font-bold">{valgtBygg.gatenavn} {valgtBygg.gatenummer}</div></div>
+                        {valgtObj.betegnelse && <div><div className="text-muted-2 font-semibold mb-0.5">Betegnelse</div><div className="text-ink font-bold">{valgtObj.betegnelse}</div></div>}
+                        {valgtObj.areal && <div><div className="text-muted-2 font-semibold mb-0.5">Areal</div><div className="text-ink font-bold num">{valgtObj.areal} m²</div></div>}
+                        {valgtObj.forventetLeie && <div><div className="text-muted-2 font-semibold mb-0.5">Forventet leie</div><div className="text-brand-ink font-bold num">{formatKr(valgtObj.forventetLeie)}/mnd</div></div>}
                       </div>
                     )}
                   </FeltRad>
@@ -597,7 +599,7 @@ export default function KontraktSkjema() {
                     <Input label="Kontonummer for innbetaling" value={form.kontonummer} onChange={set('kontonummer')} placeholder="1234.56.78901" />
 
                     <div>
-                      <div className="text-xs font-medium text-[#65696F] mb-3">Inkludert i leien</div>
+                      <div className="text-[12.5px] font-bold text-muted mb-3">Inkludert i leien</div>
                       <div className="grid grid-cols-2 gap-3">
                         <Toggle checked={form.inkludererStrom} onChange={toggle('inkludererStrom')} label="Strøm og oppvarming" />
                         <Toggle checked={form.inkludererVann} onChange={toggle('inkludererVann')} label="Vann og avløp" />
@@ -619,13 +621,13 @@ export default function KontraktSkjema() {
 
                     <Toggle checked={form.indeksregulering} onChange={toggle('indeksregulering')} label="Automatisk KPI-indeksregulering (1 gang per år)" />
                     {form.indeksregulering && (
-                      <div className="mt-3 rounded-lg border border-[#E9E8E2] bg-[#F1F1ED] p-4 space-y-3">
-                        <p className="text-xs leading-relaxed text-[#65696F]">
-                          <strong className="text-[#1A1B1E]">Slik fungerer varslingen:</strong> EiendomsPRO varsler deg når leien kan reguleres (tidligst 12 måneder etter siste fastsettelse). Ny leie beregnes automatisk på siste publiserte KPI fra SSB. Leietaker får skriftlig varsel på e-post{form.leietakerTlf ? ' og SMS' : ''} minst én måned før økningen trer i kraft, og du får bekreftelse på når det er varslet og hva ny leie blir.
+                      <div className="mt-3 rounded-xl border border-mint-line bg-mint-soft p-4 space-y-3">
+                        <p className="text-xs leading-relaxed font-medium text-muted">
+                          <strong className="text-ink font-bold">Slik fungerer varslingen:</strong> EiendomsPRO varsler deg når leien kan reguleres (tidligst 12 måneder etter siste fastsettelse). Ny leie beregnes automatisk på siste publiserte KPI fra SSB. Leietaker får skriftlig varsel på e-post{form.leietakerTlf ? ' og SMS' : ''} minst én måned før økningen trer i kraft, og du får bekreftelse på når det er varslet og hva ny leie blir.
                         </p>
                         <Toggle checked={form.elektroniskKommunikasjon} onChange={toggle('elektroniskKommunikasjon')} label="Leietaker samtykker til elektronisk varsling (e-post/SMS)" />
-                        {!form.elektroniskKommunikasjon && <p className="text-xs text-[#B45309]">Uten samtykke må varsel sendes på papir for å være gyldig som skriftlig melding.</p>}
-                        {form.elektroniskKommunikasjon && !form.leietakerTlf && <p className="text-xs text-[#7A7D83]">Tips: legg inn leietakers telefon i seksjon 1 for å sende SMS-varsel i tillegg til e-post.</p>}
+                        {!form.elektroniskKommunikasjon && <p className="text-xs font-semibold text-amber">Uten samtykke må varsel sendes på papir for å være gyldig som skriftlig melding.</p>}
+                        {form.elektroniskKommunikasjon && !form.leietakerTlf && <p className="text-xs font-medium text-muted-2">Tips: legg inn leietakers telefon i seksjon 1 for å sende SMS-varsel i tillegg til e-post.</p>}
                       </div>
                     )}
                   </FeltRad>
@@ -644,15 +646,18 @@ export default function KontraktSkjema() {
                       {[
                         { value: 'tidsubestemt', label: 'Tidsubestemt', sub: 'Løper til oppsigelse' },
                         { value: 'tidsbestemt', label: 'Tidsbestemt', sub: 'Med fastsatt sluttdato' },
-                      ].map((opt) => (
-                        <button key={opt.value} type="button"
-                          onClick={() => setForm((f) => ({ ...f, kontraktstype: opt.value }))}
-                          className={`p-3.5 rounded-lg border text-sm font-medium transition-all cursor-pointer text-left
-                            ${form.kontraktstype === opt.value ? 'border-black/[0.10] bg-black/[0.045] text-[#1A1B1E]' : 'border-[#E9E8E2] text-[#65696F] hover:border-[#DCDAD2]'}`}>
-                          <div className="font-semibold mb-1">{opt.label}</div>
-                          <div className="text-xs opacity-70">{opt.sub}</div>
-                        </button>
-                      ))}
+                      ].map((opt) => {
+                        const aktiv = form.kontraktstype === opt.value;
+                        return (
+                          <button key={opt.value} type="button"
+                            onClick={() => setForm((f) => ({ ...f, kontraktstype: opt.value }))}
+                            className={`p-3.5 rounded-xl border-[1.5px] text-sm font-bold transition-all cursor-pointer text-left
+                              ${aktiv ? 'border-brand bg-mint-soft text-ink' : 'border-line text-muted hover:border-line-input'}`}>
+                            <div className="font-bold mb-1">{opt.label}</div>
+                            <div className="text-xs font-medium text-muted-2">{opt.sub}</div>
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <Input label="Startdato" type="date" value={form.startdato} onChange={set('startdato')} required />
@@ -662,18 +667,20 @@ export default function KontraktSkjema() {
                         required={form.kontraktstype === 'tidsbestemt'}
                       />
                     </div>
-                    <Select
-                      label="Oppsigelsestid"
-                      value={form.oppsigelsestid}
-                      onChange={set('oppsigelsestid')}
-                      options={[
-                        { value: '1', label: '1 måned' },
-                        { value: '2', label: '2 måneder' },
-                        { value: '3', label: '3 måneder (standard)' },
-                        { value: '6', label: '6 måneder' },
-                      ]}
-                    />
-                    <p className="text-xs text-[#7A7D83] -mt-2">Regnes fra 1. i måneden etter oppsigelsen</p>
+                    <div>
+                      <Select
+                        label="Oppsigelsestid"
+                        value={form.oppsigelsestid}
+                        onChange={set('oppsigelsestid')}
+                        options={[
+                          { value: '1', label: '1 måned' },
+                          { value: '2', label: '2 måneder' },
+                          { value: '3', label: '3 måneder (standard)' },
+                          { value: '6', label: '6 måneder' },
+                        ]}
+                      />
+                      <p className="text-xs font-medium text-muted-2 mt-1.5">Regnes fra 1. i måneden etter oppsigelsen</p>
+                    </div>
                   </FeltRad>
                 </>
               )}
@@ -687,7 +694,7 @@ export default function KontraktSkjema() {
                   <Divider />
                   <FeltRad>
                     <div>
-                      <div className="text-xs font-medium text-[#65696F] mb-3">Type sikkerhet</div>
+                      <div className="text-[12.5px] font-bold text-muted mb-3">Type sikkerhet</div>
                       <div className="space-y-2">
                         <RadioKort value="depositumskonto" current={form.sikkerhetsType}
                           onChange={(v) => setForm((f) => ({ ...f, sikkerhetsType: v }))}
@@ -712,12 +719,12 @@ export default function KontraktSkjema() {
                     {form.sikkerhetsType === 'garanti' && (
                       <div className="grid grid-cols-2 gap-4">
                         <Input label="Navn på garantiutsteder" value={form.garantiUtsteder} onChange={set('garantiUtsteder')} placeholder="f.eks. Tryg Forsikring" />
-                        <Input label="Garantikostnad (kr)" type="number" value={form.garantiKostnad} onChange={set('garantiKostnad')} placeholder="0" />
+                        <Input label="Garantikostnad" type="number" value={form.garantiKostnad} onChange={set('garantiKostnad')} suffix="kr" placeholder="0" />
                       </div>
                     )}
 
                     {form.sikkerhetsType === 'depositumskonto' && form.maanedligLeie && (
-                      <p className="text-xs text-[#7A7D83]">
+                      <p className="text-xs font-medium text-muted-2">
                         Maks tillatt: {formatKr(Number(form.maanedligLeie) * 6)} (6 mnd leie, jf. husleieloven § 3-5)
                       </p>
                     )}
@@ -734,7 +741,7 @@ export default function KontraktSkjema() {
                   <Divider />
                   <FeltRad>
                     <div>
-                      <div className="text-xs font-medium text-[#65696F] mb-3">Ordensregler</div>
+                      <div className="text-[12.5px] font-bold text-muted mb-3">Ordensregler</div>
                       <div className="space-y-3">
                         <Toggle checked={form.royking} onChange={toggle('royking')} label="Røyking tillatt innendørs" />
                         <Toggle checked={form.husdyr} onChange={toggle('husdyr')} label="Husdyr tillatt" />
@@ -755,35 +762,37 @@ export default function KontraktSkjema() {
           </div>
 
           {/* Høyre: oppsummering */}
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-5 space-y-4 sticky top-6">
-            <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-widest mb-4">Oppsummering</div>
+          <div className="bg-surface border border-line rounded-[20px] p-[22px] space-y-4 sticky top-6">
+            <div className="text-[11px] font-bold text-muted-2 uppercase tracking-widest">Oppsummering</div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {SEKSJONER.map((s) => (
                 <div key={s.nr} className="flex items-center justify-between text-sm">
-                  <span className={ferdig[s.nr] ? 'text-[#1A1B1E]' : 'text-[#7A7D83]'}>{s.nr}. {s.tittel}</span>
-                  {ferdig[s.nr] ? <Check size={13} className="text-[#15803D]" /> : <span className="text-xs text-[#AEB0B4]">Ikke fylt</span>}
+                  <span className={`font-semibold ${ferdig[s.nr] ? 'text-ink' : 'text-muted-2'}`}>{s.nr}. {s.tittel}</span>
+                  {ferdig[s.nr]
+                    ? <Check size={14} className="text-brand-ink" />
+                    : <span className="text-xs font-semibold text-faint">Ikke fylt</span>}
                 </div>
               ))}
             </div>
 
             {(form.leietakerNavn || form.maanedligLeie || form.startdato) && (
               <>
-                <div className="h-px bg-[#E9E8E2]" />
-                <div className="space-y-2 text-sm">
-                  {form.leietakerNavn && <div><div className="text-xs text-[#7A7D83]">Leietaker</div><div className="text-[#1A1B1E] mt-0.5">{form.leietakerNavn}</div></div>}
-                  {form.maanedligLeie && <div><div className="text-xs text-[#7A7D83]">Månedlig leie</div><div className="text-[#15803D] num mt-0.5">{formatKr(form.maanedligLeie)}</div></div>}
-                  {form.sikkerhetsType !== 'ingen' && form.depositum && <div><div className="text-xs text-[#7A7D83]">Depositum</div><div className="text-[#1A1B1E] num mt-0.5">{formatKr(form.depositum)}</div></div>}
-                  {form.startdato && <div><div className="text-xs text-[#7A7D83]">Startdato</div><div className="text-[#1A1B1E] mt-0.5">{datoLang(form.startdato)}</div></div>}
-                  {form.kontraktstype && <div><div className="text-xs text-[#7A7D83]">Type</div><div className="text-[#1A1B1E] mt-0.5">{form.kontraktstype === 'tidsubestemt' ? 'Tidsubestemt' : 'Tidsbestemt'}</div></div>}
+                <div className="h-px bg-line-soft" />
+                <div className="space-y-3 text-sm">
+                  {form.leietakerNavn && <div><div className="text-xs font-semibold text-muted-2">Leietaker</div><div className="text-ink font-bold mt-0.5">{form.leietakerNavn}</div></div>}
+                  {form.maanedligLeie && <div><div className="text-xs font-semibold text-muted-2">Månedlig leie</div><div className="text-brand-ink font-bold num mt-0.5">{formatKr(form.maanedligLeie)}</div></div>}
+                  {form.sikkerhetsType !== 'ingen' && form.depositum && <div><div className="text-xs font-semibold text-muted-2">Depositum</div><div className="text-ink font-bold num mt-0.5">{formatKr(form.depositum)}</div></div>}
+                  {form.startdato && <div><div className="text-xs font-semibold text-muted-2">Startdato</div><div className="text-ink font-bold mt-0.5">{datoLang(form.startdato)}</div></div>}
+                  {form.kontraktstype && <div><div className="text-xs font-semibold text-muted-2">Type</div><div className="mt-1"><Pill tone={form.kontraktstype === 'tidsubestemt' ? 'neutral' : 'mint'}>{form.kontraktstype === 'tidsubestemt' ? 'Tidsubestemt' : 'Tidsbestemt'}</Pill></div></div>}
                 </div>
               </>
             )}
 
-            <div className="h-px bg-[#E9E8E2]" />
+            <div className="h-px bg-line-soft" />
 
             {feil && (
-              <div className="flex items-center gap-2 text-xs text-[#DC2626] bg-[#DC2626]/8 border border-[#DC2626]/20 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-danger bg-danger/[0.06] border border-danger/25 rounded-xl px-3 py-2.5">
                 {feil}
               </div>
             )}
@@ -805,6 +814,6 @@ export default function KontraktSkjema() {
           </div>
         </div>
       </form>
-    </>
+    </div>
   );
 }

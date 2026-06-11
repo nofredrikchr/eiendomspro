@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Input';
+import { IconTile, PageHeader } from '../../components/ui/kit';
 import {
   hentSaker, hentSak, opprettSak, sendMelding, markerLest, abonner,
   TYPE_INFO, STATUS_INFO,
@@ -25,7 +26,7 @@ const TYPE_IKON = { feil: Bug, onske: Lightbulb, sporsmal: MessageCircle };
 function StatusBrikke({ status }) {
   const s = STATUS_INFO[status] || STATUS_INFO.ny;
   return (
-    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${s.farge}18`, color: s.farge }}>
+    <span className="text-[11.5px] px-2 py-0.5 rounded-full font-extrabold" style={{ background: `${s.farge}1F`, color: s.farge }}>
       {s.label}
     </span>
   );
@@ -40,20 +41,16 @@ function NySak({ onLagret, onAvbryt }) {
   return (
     <div className="max-w-xl space-y-5">
       <div>
-        <div className="text-xs font-medium text-[#65696F] mb-2">Hva gjelder det?</div>
+        <div className="text-[12.5px] font-bold text-muted mb-2">Hva gjelder det?</div>
         <div className="grid grid-cols-3 gap-2">
           {Object.entries(TYPE_INFO).map(([key, info]) => {
             const Ikon = TYPE_IKON[key];
             const valgt = type === key;
             return (
               <button key={key} type="button" onClick={() => setType(key)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border text-sm transition-all cursor-pointer"
-                style={{
-                  borderColor: valgt ? info.farge + '60' : '#E9E8E2',
-                  background: valgt ? info.farge + '12' : 'transparent',
-                  color: valgt ? '#fff' : '#65696F',
-                }}>
-                <Ikon size={18} style={{ color: valgt ? info.farge : '#7A7D83' }} />
+                className={`flex flex-col items-center gap-1.5 p-3.5 rounded-[14px] border text-[13px] font-bold transition-all cursor-pointer
+                  ${valgt ? 'border-brand bg-mint text-brand-ink' : 'border-line text-muted hover:border-line-input'}`}>
+                <Ikon size={18} style={{ color: valgt ? info.farge : undefined }} className={valgt ? '' : 'text-faint'} />
                 {info.label}
               </button>
             );
@@ -111,19 +108,20 @@ function SakChat({ sakId, onTilbake, onEndret }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-9rem)]">
+    <div className="flex flex-col h-[calc(100vh-9rem)] animate-fade-up">
       {/* Header */}
-      <div className="flex items-start gap-3 pb-4 border-b border-[#E9E8E2] shrink-0">
-        <button onClick={onTilbake} className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg transition-all cursor-pointer mt-0.5">
+      <div className="flex items-start gap-3 pb-4 border-b border-line shrink-0">
+        <button onClick={onTilbake} aria-label="Tilbake"
+          className="p-1.5 text-muted hover:text-ink hover:bg-line-soft rounded-lg transition-all cursor-pointer mt-0.5">
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[#1A1B1E]">{sak.tittel}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${TInfo.farge}18`, color: TInfo.farge }}>{TInfo.label}</span>
+            <span className="text-base font-extrabold tracking-[-0.01em] text-ink">{sak.tittel}</span>
+            <span className="text-[11.5px] px-2 py-0.5 rounded-full font-extrabold" style={{ background: `${TInfo.farge}1F`, color: TInfo.farge }}>{TInfo.label}</span>
             <StatusBrikke status={sak.status} />
           </div>
-          <div className="text-xs text-[#7A7D83] mt-0.5">Opprettet {relativTid(sak.opprettet)}</div>
+          <div className="text-xs font-medium text-muted-2 mt-0.5">Opprettet {relativTid(sak.opprettet)}</div>
         </div>
       </div>
 
@@ -132,15 +130,15 @@ function SakChat({ sakId, onTilbake, onEndret }) {
         {sak.meldinger.map((m) => {
           const egen = m.avsender === 'bruker';
           if (m.type === 'status') {
-            return <div key={m.id} className="text-center text-xs text-[#7A7D83] py-1">{m.tekst}</div>;
+            return <div key={m.id} className="text-center text-xs font-medium text-muted-2 py-1">{m.tekst}</div>;
           }
           if (m.type === 'belonning') {
             return (
               <div key={m.id} className="flex justify-center">
-                <div className="rounded-xl border border-[#9A7A24]/30 bg-[#9A7A24]/8 px-4 py-3 text-center max-w-sm">
-                  <Gift size={18} className="text-[#9A7A24] mx-auto mb-1.5" />
-                  <div className="text-sm font-semibold text-[#9A7A24]">Takk for hjelpen! 🎉</div>
-                  <div className="text-xs text-[#e4d9b8] mt-1">{m.tekst}</div>
+                <div className="rounded-[16px] border border-amber-line bg-amber-soft px-4 py-3 text-center max-w-sm">
+                  <Gift size={18} className="text-amber mx-auto mb-1.5" />
+                  <div className="text-sm font-extrabold text-amber">Takk for hjelpen!</div>
+                  <div className="text-xs font-medium text-muted mt-1">{m.tekst}</div>
                 </div>
               </div>
             );
@@ -148,12 +146,12 @@ function SakChat({ sakId, onTilbake, onEndret }) {
           return (
             <div key={m.id} className={`flex ${egen ? 'justify-end' : 'justify-start'}`}>
               <div className="max-w-[80%]">
-                {!egen && <div className="text-xs text-[#7A7D83] mb-1 px-1">EiendomsPRO-teamet</div>}
-                <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed
-                  ${egen ? 'bg-[#16284A] text-white rounded-br-sm' : 'bg-[#E9E8E2] text-[#1A1B1E] rounded-bl-sm'}`}>
+                {!egen && <div className="text-xs font-bold text-muted-2 mb-1 px-1">EiendomsPRO-teamet</div>}
+                <div className={`rounded-2xl px-4 py-2.5 text-sm font-medium leading-relaxed
+                  ${egen ? 'bg-brand-deep text-white rounded-br-sm' : 'bg-sand text-ink rounded-bl-sm border border-line'}`}>
                   {m.tekst}
                 </div>
-                <div className={`text-xs text-[#AEB0B4] mt-1 ${egen ? 'text-right' : 'text-left'}`}>{relativTid(m.tidspunkt)}</div>
+                <div className={`text-xs font-medium text-faint mt-1 ${egen ? 'text-right' : 'text-left'}`}>{relativTid(m.tidspunkt)}</div>
               </div>
             </div>
           );
@@ -163,22 +161,23 @@ function SakChat({ sakId, onTilbake, onEndret }) {
 
       {/* Skriv */}
       {sak.status === 'lost' || sak.status === 'avvist' ? (
-        <div className="shrink-0 pt-3 border-t border-[#E9E8E2] text-center text-xs text-[#7A7D83] py-3">
+        <div className="shrink-0 pt-3 border-t border-line text-center text-xs font-medium text-muted-2 py-3">
           Saken er {STATUS_INFO[sak.status].label.toLowerCase()}. Skriv en ny melding for å gjenåpne dialogen.
           <form onSubmit={send} className="flex gap-2 mt-3">
             <input value={tekst} onChange={(e) => setTekst(e.target.value)} placeholder="Skriv en melding..."
-              className="flex-1 bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl px-4 py-2.5 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2]" />
-            <button type="submit" disabled={!tekst.trim()} className="w-10 h-10 rounded-xl bg-[#16284A] text-white flex items-center justify-center disabled:opacity-30 cursor-pointer"><Send size={14} /></button>
+              className="flex-1 bg-surface-2 border-[1.5px] border-line-input rounded-xl px-4 py-2.5 text-sm font-bold text-ink placeholder:font-medium placeholder:text-faint outline-none focus:border-brand focus:bg-surface transition-all" />
+            <button type="submit" disabled={!tekst.trim()} aria-label="Send melding"
+              className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center disabled:opacity-30 cursor-pointer hover:bg-brand-hover transition-all"><Send size={14} /></button>
           </form>
         </div>
       ) : (
-        <form onSubmit={send} className="shrink-0 pt-3 border-t border-[#E9E8E2] flex gap-2">
+        <form onSubmit={send} className="shrink-0 pt-3 border-t border-line flex gap-2">
           <textarea value={tekst} onChange={(e) => setTekst(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Skriv en melding til oss..." rows={2}
-            className="flex-1 bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl px-4 py-3 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] resize-none" />
-          <button type="submit" disabled={!tekst.trim()}
-            className="w-10 h-10 self-end rounded-xl bg-[#16284A] text-white flex items-center justify-center hover:bg-[#1E3A5F] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0">
+            className="flex-1 bg-surface-2 border-[1.5px] border-line-input rounded-xl px-4 py-3 text-sm font-bold text-ink placeholder:font-medium placeholder:text-faint outline-none focus:border-brand focus:bg-surface resize-none transition-all" />
+          <button type="submit" disabled={!tekst.trim()} aria-label="Send melding"
+            className="w-10 h-10 self-end rounded-xl bg-brand text-white flex items-center justify-center hover:bg-brand-hover disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0">
             <Send size={14} />
           </button>
         </form>
@@ -198,10 +197,11 @@ export default function Feedback() {
 
   if (visning === 'ny') {
     return (
-      <div>
+      <div className="animate-fade-up">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => setVisning('liste')} className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg cursor-pointer"><ArrowLeft size={18} /></button>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Ny tilbakemelding</h1>
+          <button onClick={() => setVisning('liste')} aria-label="Tilbake"
+            className="p-1.5 text-muted hover:text-ink hover:bg-line-soft rounded-lg cursor-pointer transition-all"><ArrowLeft size={18} /></button>
+          <h1 className="text-[clamp(22px,2.6vw,28px)] font-extrabold tracking-[-0.025em] text-ink">Ny tilbakemelding</h1>
         </div>
         <NySak onAvbryt={() => setVisning('liste')} onLagret={() => { oppfrisk(); setVisning('liste'); }} />
       </div>
@@ -213,22 +213,19 @@ export default function Feedback() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Tilbakemelding</h1>
-          <p className="text-sm text-[#65696F] mt-1">Meld fra om feil, foreslå forbedringer, eller still spørsmål — vi svarer deg her.</p>
-        </div>
+    <div className="animate-fade-up">
+      <PageHeader tittel="Tilbakemelding"
+        undertittel="Meld fra om feil, foreslå forbedringer, eller still spørsmål — vi svarer deg her.">
         <Button variant="primary" onClick={() => setVisning('ny')}><Plus size={14} /> Ny sak</Button>
-      </div>
+      </PageHeader>
 
       {saker.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-14 h-14 rounded-full bg-[#E9E8E2] flex items-center justify-center mx-auto mb-4">
-            <LifeBuoy size={24} className="text-[#7A7D83]" />
-          </div>
-          <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen saker ennå</div>
-          <div className="text-xs text-[#7A7D83] mb-5 max-w-sm mx-auto">Fant du en feil eller har et ønske? Vi vil gjerne høre fra deg — og du får ofte svar samme dag.</div>
+          <IconTile tone="mint" size={56} radius={28} className="mx-auto mb-4">
+            <LifeBuoy size={24} />
+          </IconTile>
+          <div className="text-base font-extrabold text-ink mb-1">Ingen saker ennå</div>
+          <div className="text-[13.5px] font-medium text-muted mb-5 max-w-sm mx-auto">Fant du en feil eller har et ønske? Vi vil gjerne høre fra deg — og du får ofte svar samme dag.</div>
           <Button variant="primary" onClick={() => setVisning('ny')}><Plus size={14} /> Send din første tilbakemelding</Button>
         </div>
       ) : (
@@ -240,22 +237,22 @@ export default function Feedback() {
             const sisteMelding = s.meldinger[s.meldinger.length - 1];
             return (
               <button key={s.id} onClick={() => { setAktivSak(s.id); setVisning('chat'); }}
-                className="w-full flex items-center gap-4 px-4 py-4 rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] hover:border-[#DCDAD2] hover:bg-[#FAF9F6] transition-all text-left group">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TInfo.farge}15` }}>
+                className="w-full flex items-center gap-4 px-4 py-4 rounded-[18px] border border-line bg-surface hover:border-line-input hover:bg-surface-2 transition-all text-left group">
+                <span className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0" style={{ background: `${TInfo.farge}1A` }}>
                   <Ikon size={16} style={{ color: TInfo.farge }} />
-                </div>
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-medium text-[#1A1B1E] truncate">{s.tittel}</span>
+                    <span className="text-sm font-extrabold tracking-[-0.01em] text-ink truncate">{s.tittel}</span>
                     <StatusBrikke status={s.status} />
-                    {uleste > 0 && <span className="w-5 h-5 rounded-full bg-[#2563EB] text-[#F6F6F4] text-xs font-bold flex items-center justify-center shrink-0">{uleste}</span>}
+                    {uleste > 0 && <span className="w-5 h-5 rounded-full bg-brand text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 num">{uleste}</span>}
                   </div>
-                  <div className="text-xs text-[#7A7D83] truncate">
-                    {sisteMelding?.type === 'belonning' ? '🎁 Du fikk en belønning' : sisteMelding?.avsender === 'admin' ? `Svar: ${sisteMelding.tekst}` : sisteMelding?.tekst}
+                  <div className="text-xs font-medium text-muted-2 truncate">
+                    {sisteMelding?.type === 'belonning' ? 'Du fikk en belønning' : sisteMelding?.avsender === 'admin' ? `Svar: ${sisteMelding.tekst}` : sisteMelding?.tekst}
                   </div>
                 </div>
-                <div className="text-xs text-[#AEB0B4] shrink-0">{relativTid(s.oppdatert)}</div>
-                <ChevronRight size={15} className="text-[#AEB0B4] group-hover:text-[#65696F] shrink-0" />
+                <div className="text-xs font-medium text-faint shrink-0">{relativTid(s.oppdatert)}</div>
+                <ChevronRight size={15} className="text-faint-2 group-hover:text-muted-2 shrink-0" />
               </button>
             );
           })}

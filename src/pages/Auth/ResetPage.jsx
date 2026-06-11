@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { KeyRound, AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Check, ArrowRight } from 'lucide-react';
 import { Logo } from '../../components/Logo';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EiendomsPRO — velg nytt passord (redesign 2026)
+   Sentrert hvitt kort på kremlerret. Kun presentasjon endret.
+   ──────────────────────────────────────────────────────────────────────────── */
 
 export default function ResetPage() {
   const navigate = useNavigate();
@@ -30,44 +37,43 @@ export default function ResetPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F6F6F4' }}>
-      <div className="relative w-full max-w-sm">
-        <div className="flex justify-center mb-8"><Logo variant="dark" height={32} /></div>
-        <div className="rounded-2xl p-6 shadow-card-lg" style={{ background: '#FFFFFF', border: '1px solid #E9E8E2' }}>
+    <div className="min-h-screen bg-canvas text-ink animate-fade-up flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-[400px]">
+        <button onClick={() => navigate('/')} className="flex justify-center w-full mb-7 bg-transparent border-none p-0 cursor-pointer">
+          <Logo variant="dark" height={32} />
+        </button>
+        <div className="bg-surface border border-line rounded-[20px] shadow-card-lg p-[clamp(24px,4vw,34px)]">
           {ferdig ? (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 rounded-full bg-[#15803D]/15 flex items-center justify-center mx-auto mb-3"><Check size={22} className="text-[#15803D]" /></div>
-              <h1 className="text-base font-semibold text-[#1A1B1E] mb-2">Passordet er endret</h1>
-              <button onClick={() => navigate('/login')} className="text-sm text-[#2563EB] hover:underline cursor-pointer">Logg inn</button>
+            <div className="text-center py-2">
+              <div className="w-12 h-12 rounded-full bg-mint flex items-center justify-center mx-auto mb-3.5"><Check size={22} className="text-brand" /></div>
+              <h1 className="m-0 mb-1.5 text-[clamp(20px,3vw,24px)] font-extrabold tracking-[-0.025em] text-ink">Passordet er endret</h1>
+              <p className="m-0 mb-5 text-sm text-muted leading-relaxed">Du kan nå logge inn med det nye passordet ditt.</p>
+              <Button onClick={() => navigate('/login')} size="lg" className="w-full">
+                Logg inn
+                <ArrowRight size={16} strokeWidth={2.2} />
+              </Button>
             </div>
           ) : !token ? (
-            <p className="text-sm text-[#65696F]">Mangler eller ugyldig lenke. Be om en ny fra innloggingssiden.</p>
+            <div className="text-center py-2">
+              <div className="w-12 h-12 rounded-full bg-amber-bg flex items-center justify-center mx-auto mb-3.5"><AlertCircle size={22} className="text-amber" /></div>
+              <h1 className="m-0 mb-1.5 text-[clamp(20px,3vw,24px)] font-extrabold tracking-[-0.025em] text-ink">Ugyldig lenke</h1>
+              <p className="m-0 mb-5 text-sm text-muted leading-relaxed">Lenken mangler eller er ugyldig. Be om en ny fra innloggingssiden.</p>
+              <Button onClick={() => navigate('/login')} variant="secondary" size="lg" className="w-full">Til innlogging</Button>
+            </div>
           ) : (
             <>
-              <h1 className="text-lg font-semibold text-[#1A1B1E] mb-1">Velg nytt passord</h1>
-              <p className="text-sm text-[#65696F] mb-5">Skriv inn et nytt passord for kontoen din.</p>
-              <form onSubmit={submit} className="space-y-3">
-                <Felt placeholder="Nytt passord (minst 8 tegn)" value={passord} onChange={setPassord} />
-                <Felt placeholder="Bekreft nytt passord" value={bekreft} onChange={setBekreft} />
-                {feil && <div className="flex gap-2 text-xs text-[#DC2626]"><AlertCircle size={13} className="shrink-0 mt-0.5" /><span>{feil}</span></div>}
-                <button type="submit" disabled={jobber}
-                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-40"
-                  style={{ background: '#16284A', color: '#FFFFFF' }}>{jobber ? 'Lagrer…' : 'Lagre nytt passord'}</button>
+              <h1 className="m-0 mb-1.5 text-[clamp(22px,3vw,26px)] font-extrabold tracking-[-0.025em] text-ink">Velg nytt passord</h1>
+              <p className="m-0 mb-6 text-[14.5px] leading-relaxed text-muted">Skriv inn et nytt passord for kontoen din.</p>
+              <form onSubmit={submit} className="space-y-3.5">
+                <Input label="Nytt passord (minst 8 tegn)" type="password" placeholder="••••••••" value={passord} onChange={(e) => setPassord(e.target.value)} required autoComplete="new-password" />
+                <Input label="Bekreft nytt passord" type="password" placeholder="••••••••" value={bekreft} onChange={(e) => setBekreft(e.target.value)} required autoComplete="new-password" />
+                {feil && <div className="flex gap-2 text-[13px] font-semibold text-danger leading-relaxed"><AlertCircle size={14} className="shrink-0 mt-0.5" /><span>{feil}</span></div>}
+                <Button type="submit" size="lg" disabled={jobber} className="w-full">{jobber ? 'Lagrer…' : 'Lagre nytt passord'}</Button>
               </form>
             </>
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Felt({ placeholder, value, onChange }) {
-  return (
-    <div className="relative">
-      <KeyRound size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#65696F]" />
-      <input type="password" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} required
-        className="w-full bg-white border border-[#DCDAD2] rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#1A1B1E] placeholder-[#9CA0A6] outline-none focus:border-[#16284A] focus:ring-2 focus:ring-[#16284A]/10 transition-all" />
     </div>
   );
 }

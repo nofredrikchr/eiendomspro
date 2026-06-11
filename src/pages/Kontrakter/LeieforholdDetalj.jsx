@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, FileText, ClipboardList, MessageSquare,
-  Phone, Mail, Home, Hash, Calendar, TrendingUp, Shield,
+  ChevronLeft, FileText, ClipboardList, MessageSquare,
+  Phone, Mail, Home, TrendingUp, Shield,
   Plus, Pencil, Trash2, Check, X, Download,
-  StickyNote, Receipt,
-  Share2,
+  StickyNote, Receipt, ChevronRight, Share2, Building2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
-import { Badge } from '../../components/ui/Card';
 import { BekreftModal } from '../../components/ui/BekreftModal';
 import { KpiReguleringModal } from '../../components/KpiReguleringModal';
+import { Photo, Avatar, Pill, IconTile, SectionCard, DataRow } from '../../components/ui/kit';
 import { formatKr } from '../../utils/format';
 import { genererKontraktPDF } from '../../utils/kontraktPDF';
 import { leietakerLenke } from '../../utils/leietakerToken';
 import { alleFakturaerForKontrakt, fakturaSummer } from '../../utils/faktura';
-import { nesteReguleringTekst } from '../../utils/kpi';
+import { nesteReguleringTekst, kanReguleresNaa, beregnNyLeie } from '../../utils/kpi';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function datoFmt(d) {
@@ -32,12 +31,11 @@ function dagerTil(dato) {
   return Math.round((new Date(dato) - new Date()) / 86400000);
 }
 function kontraktStatus(k) {
-  if (k.kontraktstype === 'tidsubestemt' || !k.sluttdato) return { label: 'Aktiv', color: 'green' };
+  if (k.kontraktstype === 'tidsubestemt' || !k.sluttdato) return { label: 'Aktiv', tone: 'mint' };
   const d = dagerTil(k.sluttdato);
-  if (d < 0) return { label: 'Utløpt', color: 'red' };
-  if (d < 30) return { label: `${d}d igjen`, color: 'red' };
-  if (d < 90) return { label: `${d}d igjen`, color: 'yellow' };
-  return { label: 'Aktiv', color: 'green' };
+  if (d < 0) return { label: 'Utløpt', tone: 'amber' };
+  if (d < 90) return { label: `${d}d igjen`, tone: 'amber' };
+  return { label: 'Aktiv', tone: 'mint' };
 }
 
 const UTLEGG_KATEGORIER = [
@@ -63,17 +61,17 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onLukk}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-[#FFFFFF] border border-[#DCDAD2] rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative bg-surface border border-line rounded-[20px] p-6 w-full max-w-md shadow-soft space-y-4"
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-[#1A1B1E]">Nytt utlegg</h3>
-          <button type="button" onClick={onLukk} className="text-[#7A7D83] hover:text-[#1A1B1E] cursor-pointer"><X size={16} /></button>
+          <h3 className="text-base font-extrabold tracking-[-0.01em] text-ink">Nytt utlegg</h3>
+          <button type="button" onClick={onLukk} className="text-muted-2 hover:text-ink cursor-pointer"><X size={16} /></button>
         </div>
 
         {/* Utleggstype */}
         <div>
-          <div className="text-xs font-medium text-[#65696F] mb-2">Utleggstype</div>
+          <div className="text-xs font-semibold text-muted mb-2">Utleggstype</div>
           <div className="space-y-2">
             {[
               ['leietaker_betaler', 'Leietaker skal faktureres for utleiers utlegg'],
@@ -82,10 +80,10 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
               <button key={v} type="button" onClick={() => setForm((p) => ({ ...p, utleggstype: v }))}
                 className="flex items-center gap-2.5 w-full text-left cursor-pointer">
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0
-                  ${form.utleggstype === v ? 'border-white' : 'border-[#AEB0B4]'}`}>
-                  {form.utleggstype === v && <div className="w-2 h-2 rounded-full bg-white" />}
+                  ${form.utleggstype === v ? 'border-brand' : 'border-line-input'}`}>
+                  {form.utleggstype === v && <div className="w-2 h-2 rounded-full bg-brand" />}
                 </div>
-                <span className="text-sm text-[#1A1B1E]">{l}</span>
+                <span className="text-sm text-ink">{l}</span>
               </button>
             ))}
           </div>
@@ -98,7 +96,7 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
         <div>
           <Input label="Beskrivelse" value={form.beskrivelse} onChange={set('beskrivelse')}
             placeholder="Beskrivelse vises på faktura" />
-          <p className="text-xs text-[#7A7D83] mt-1">Beskrivelse vises på faktura</p>
+          <p className="text-xs text-muted-2 mt-1">Beskrivelse vises på faktura</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -108,7 +106,7 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
 
         {/* Faktureringsmetode */}
         <div>
-          <div className="text-xs font-medium text-[#65696F] mb-2">Hvordan skal utlegget faktureres?</div>
+          <div className="text-xs font-semibold text-muted mb-2">Hvordan skal utlegget faktureres?</div>
           <div className="space-y-2">
             {[
               ['neste_faktura', 'Inkluder på neste leie-faktura'],
@@ -117,16 +115,16 @@ function UtleggModal({ kontraktId, onLagre, onLukk }) {
               <button key={v} type="button" onClick={() => setForm((p) => ({ ...p, faktureringsmetode: v }))}
                 className="flex items-center gap-2.5 w-full text-left cursor-pointer">
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0
-                  ${form.faktureringsmetode === v ? 'border-white' : 'border-[#AEB0B4]'}`}>
-                  {form.faktureringsmetode === v && <div className="w-2 h-2 rounded-full bg-white" />}
+                  ${form.faktureringsmetode === v ? 'border-brand' : 'border-line-input'}`}>
+                  {form.faktureringsmetode === v && <div className="w-2 h-2 rounded-full bg-brand" />}
                 </div>
-                <span className="text-sm text-[#1A1B1E]">{l}</span>
+                <span className="text-sm text-ink">{l}</span>
               </button>
             ))}
           </div>
           {form.faktureringsmetode === 'neste_faktura' && (
-            <p className="text-xs text-[#7A7D83] mt-2">
-              Utlegget vil bli inkludert på <strong className="text-[#1A1B1E]">neste leie-faktura</strong>, og bokført i regnskapet.
+            <p className="text-xs text-muted-2 mt-2">
+              Utlegget vil bli inkludert på <strong className="text-ink">neste leie-faktura</strong>, og bokført i regnskapet.
             </p>
           )}
         </div>
@@ -177,9 +175,9 @@ export default function LeieforholdDetalj() {
   if (!kontrakt) {
     return (
       <div className="text-center py-20">
-        <div className="text-sm text-[#7A7D83]">Kontrakt ikke funnet</div>
-        <button onClick={() => navigate('/kontrakter')} className="text-xs text-[#65696F] hover:text-[#1A1B1E] mt-2 cursor-pointer">
-          ← Tilbake til kontrakter
+        <div className="text-sm text-muted">Kontrakt ikke funnet</div>
+        <button onClick={() => navigate('/kontrakter')} className="text-xs font-semibold text-brand-ink hover:underline mt-2 cursor-pointer">
+          Tilbake til kontrakter
         </button>
       </div>
     );
@@ -238,9 +236,21 @@ export default function LeieforholdDetalj() {
   ];
 
   const adresse = b ? `${b.gatenavn} ${b.gatenummer}, ${b.postnummer} ${b.poststed}` : '—';
+  const kontraktstypeLabel = (kontrakt.kontraktstype === 'tidsubestemt' || !kontrakt.sluttdato)
+    ? 'Tidsubestemt' : 'Tidsbestemt';
+  const metaDeler = [
+    b ? `${b.gatenavn} ${b.gatenummer}` : null,
+    obj?.betegnelse || null,
+    obj?.type || null,
+    kontrakt.startdato ? `Leietaker siden ${datoLang(kontrakt.startdato)}` : null,
+  ].filter(Boolean);
+
+  // KPI-callout (kun for KPI-regulerte kontrakter)
+  const kanKpi = kontrakt.indeksregulering && kontrakt.startdato && kanReguleresNaa(kontrakt);
+  const nyKpiLeie = kanKpi ? beregnNyLeie(kontrakt.maanedligLeie, 3.1) : null;
 
   return (
-    <>
+    <div className="animate-fade-up">
       {visUtleggModal && (
         <UtleggModal kontraktId={id} onLagre={lagreUtlegg} onLukk={() => setVisUtleggModal(false)} />
       )}
@@ -256,39 +266,47 @@ export default function LeieforholdDetalj() {
         onAvbryt={() => setSlettKontraktVis(false)}
       />
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate('/kontrakter')}
-            className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg transition-all cursor-pointer">
-            <ArrowLeft size={18} />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-[#1A1B1E]">{kontrakt.leietakerNavn}</h1>
-            <p className="text-sm text-[#65696F] mt-0.5">{adresse}</p>
+      {/* Tilbake-lenke */}
+      <button type="button" onClick={() => navigate('/kontrakter')}
+        className="inline-flex items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-brand-ink mb-[18px] cursor-pointer transition-colors">
+        <ChevronLeft size={15} /> Alle leiekontrakter
+      </button>
+
+      {/* Header-kort */}
+      <div className="bg-surface border border-line rounded-[22px] p-[22px] flex items-center gap-[18px] flex-wrap mb-5">
+        <Photo src={obj?.bilde} alt={kontrakt.leietakerNavn}
+          className="w-24 h-[84px] rounded-[15px] shrink-0"
+          icon={<Building2 size={24} strokeWidth={1.6} />} />
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2.5 flex-wrap mb-1">
+            <h1 className="m-0 text-[clamp(20px,2.6vw,26px)] font-extrabold tracking-[-0.02em] text-ink">{kontrakt.leietakerNavn}</h1>
+            <Pill tone={status.tone}>{status.label}</Pill>
+            <Pill tone="neutral">{kontraktstypeLabel}</Pill>
           </div>
+          <div className="text-sm font-semibold text-muted-2">{metaDeler.join(' · ') || '—'}</div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" onClick={() => navigate(`/meldinger/${id}`)}>
-            <MessageSquare size={14} />
-            Melding
+        <div className="flex gap-2.5 flex-wrap">
+          <Button variant="secondary" onClick={() => navigate(`/meldinger/${id}`)}>
+            <MessageSquare size={15} /> Send melding
             {ulesteMeldinger > 0 && (
-              <span className="w-4 h-4 rounded-full bg-[#2563EB] text-[#F6F6F4] text-xs font-bold flex items-center justify-center">
+              <span className="w-4 h-4 rounded-full bg-brand text-white text-[10px] font-extrabold flex items-center justify-center num">
                 {ulesteMeldinger}
               </span>
             )}
           </Button>
           <Button variant="secondary" onClick={() => kopier(leietakerLenke(id), 'portal')}>
-            {kopiert === 'portal' ? <><Check size={14} className="text-[#15803D]" /> Lenke kopiert</> : <><Share2 size={14} /> Del portal</>}
+            {kopiert === 'portal'
+              ? <><Check size={15} className="text-brand" /> Lenke kopiert</>
+              : <><Share2 size={15} /> Del portal</>}
           </Button>
-          <Button variant="secondary" onClick={() => genererKontraktPDF({ kontrakt, leieobjekt: obj, bygg: b, utleier })}>
-            <Download size={14} /> PDF
+          <Button variant="primary" onClick={() => genererKontraktPDF({ kontrakt, leieobjekt: obj, bygg: b, utleier })}>
+            <Download size={15} /> Last ned kontrakt
           </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-0 mb-6 border-b border-[#E9E8E2] overflow-x-auto">
+      <div className="flex items-center gap-1 mb-6 border-b border-line overflow-x-auto">
         {tabs.map(({ id: tabId, label, ikon: Ikon, ferdig }) => (
           <button key={tabId} type="button" onClick={() => {
             if (tabId === 'innflytting') {
@@ -299,266 +317,302 @@ export default function LeieforholdDetalj() {
               setAktivTab(tabId);
             }
           }}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer
+            className={`flex items-center gap-2 px-4 py-3 text-[13.5px] font-bold border-b-2 -mb-px transition-all whitespace-nowrap cursor-pointer
               ${aktivTab === tabId
-                ? 'border-white text-[#1A1B1E]'
-                : 'border-transparent text-[#7A7D83] hover:text-[#4B4E54]'
+                ? 'border-brand text-ink'
+                : 'border-transparent text-muted-2 hover:text-ink-2'
               }`}
           >
             <Ikon size={14} />
             {label}
-            {ferdig && <span className="w-1.5 h-1.5 rounded-full bg-[#15803D]" />}
+            {ferdig && <span className="w-1.5 h-1.5 rounded-full bg-brand" />}
           </button>
         ))}
       </div>
 
       {/* ══ OVERSIKT-TAB ══════════════════════════════════════════════════════ */}
       {aktivTab === 'oversikt' && (
-        <div className="space-y-6">
+        <div className="grid gap-[18px]" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))' }}>
 
-          {/* Leietaker-kort */}
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-5">
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="w-14 h-14 rounded-full bg-[#E9E8E2] flex items-center justify-center text-xl font-bold text-[#7A7D83] shrink-0">
-                {(kontrakt.leietakerNavn || '?')[0].toUpperCase()}
-              </div>
+          {/* ── Venstre kolonne ──────────────────────────────────────────── */}
+          <div className="flex flex-col gap-[18px]">
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg font-bold text-[#1A1B1E]">{kontrakt.leietakerNavn}</span>
-                  <Badge color={status.color}>{status.label}</Badge>
+            {/* Betalinger */}
+            <SectionCard
+              tittel={
+                <span className="flex items-center gap-2.5">
+                  Betalinger
+                  {totalUbetalt === 0
+                    ? <Pill tone="mint">Alt betalt</Pill>
+                    : <Pill tone="amber">{formatKr(totalUbetalt)} utestående</Pill>}
+                </span>
+              }
+              action={
+                <Button variant="secondary" size="sm" onClick={() => setVisUtleggModal(true)}>
+                  <Plus size={13} /> Nytt utlegg
+                </Button>
+              }
+            >
+              {/* Totaloversikt */}
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1 rounded-[13px] border border-line-soft bg-surface-2 px-4 py-3">
+                  <div className="text-[12px] font-semibold text-muted-2">Fakturert totalt</div>
+                  <div className="text-base font-extrabold text-ink num mt-0.5">{formatKr(totalFakturert)}</div>
                 </div>
-
-                <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
-                  {kontrakt.maanedligLeie && (
-                    <InfoRad ikon={TrendingUp} farge="#15803D">
-                      <span className="text-[#15803D] font-semibold num">{formatKr(kontrakt.maanedligLeie)}</span>
-                      <span className="text-[#7A7D83]"> / måned</span>
-                    </InfoRad>
-                  )}
-                  {kontrakt.startdato && (
-                    <InfoRad ikon={Calendar} farge="#65696F">
-                      <span className="text-[#1A1B1E]">{datoFmt(kontrakt.startdato)}</span>
-                      {kontrakt.sluttdato && <span className="text-[#7A7D83]"> — {datoFmt(kontrakt.sluttdato)}</span>}
-                      {!kontrakt.sluttdato && <span className="text-[#7A7D83]"> — løpende</span>}
-                    </InfoRad>
-                  )}
-                  {kontrakt.depositum && kontrakt.sikkerhetsType !== 'ingen' && (
-                    <InfoRad ikon={Shield} farge="#2563EB">
-                      <span className="text-[#1A1B1E]">Depositum: </span>
-                      <span className="text-[#2563EB] num">{formatKr(kontrakt.depositum)}</span>
-                    </InfoRad>
-                  )}
-                  {b && (
-                    <InfoRad ikon={Home} farge="#65696F">
-                      <span className="text-[#1A1B1E]">{adresse}</span>
-                    </InfoRad>
-                  )}
-                  {obj?.betegnelse && (
-                    <InfoRad ikon={Hash} farge="#65696F">
-                      <span className="text-[#4B4E54]">{obj.betegnelse}</span>
-                    </InfoRad>
-                  )}
-                  {kontrakt.leietakerTlf && (
-                    <InfoRad ikon={Phone} farge="#65696F">
-                      <a href={`tel:${kontrakt.leietakerTlf}`} className="text-[#1A1B1E] hover:text-[#2563EB] transition-colors">
-                        {kontrakt.leietakerTlf}
-                      </a>
-                    </InfoRad>
-                  )}
-                  {kontrakt.leietakerEpost && (
-                    <InfoRad ikon={Mail} farge="#65696F">
-                      <a href={`mailto:${kontrakt.leietakerEpost}`} className="text-[#1A1B1E] hover:text-[#2563EB] transition-colors truncate">
-                        {kontrakt.leietakerEpost}
-                      </a>
-                    </InfoRad>
-                  )}
-                  {kontrakt.indeksregulering && kontrakt.startdato && (
-                    <InfoRad ikon={TrendingUp} farge="#9A7A24">
-                      <button type="button" onClick={() => setVisKpiModal(true)}
-                        className="text-[#9A7A24] hover:underline cursor-pointer text-left">
-                        KPI-reguleres {nesteReguleringTekst(kontrakt)} →
-                      </button>
-                    </InfoRad>
-                  )}
+                <div className="flex-1 rounded-[13px] border border-line-soft bg-surface-2 px-4 py-3">
+                  <div className="text-[12px] font-semibold text-muted-2">Ubetalt</div>
+                  <div className={`text-base font-extrabold num mt-0.5 ${totalUbetalt > 0 ? 'text-amber' : 'text-brand-ink'}`}>
+                    {formatKr(totalUbetalt)}
+                  </div>
                 </div>
               </div>
 
-              {/* Handlinger */}
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <button type="button" onClick={() => setAktivTab('leiekontrakt')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] transition-all cursor-pointer">
-                  <Pencil size={12} /> Rediger
-                </button>
-                <button type="button" onClick={() => setSlettKontraktVis(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 transition-all cursor-pointer">
-                  <Trash2 size={12} /> Slett
-                </button>
-              </div>
-            </div>
-          </div>
+              {alleFakturaer.length === 0 ? (
+                <p className="text-sm text-muted-2 italic py-2">Ingen fakturaer ennå</p>
+              ) : (
+                <div className="flex flex-col">
+                  {alleFakturaer.map((f, i) => {
+                    const forfalt = f.status === 'ubetalt' && new Date(f.forfall) < new Date();
+                    const betalt = f.status === 'betalt';
+                    return (
+                      <div key={f.id}
+                        className={`flex items-center gap-3 py-3 ${i === alleFakturaer.length - 1 ? '' : 'border-b border-line-soft'}`}>
+                        <IconTile tone={betalt ? 'mint' : forfalt ? 'amber' : 'sand'} size={34}>
+                          {betalt ? <Check size={15} strokeWidth={2.4} /> : <Receipt size={15} />}
+                        </IconTile>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13.5px] font-bold text-ink truncate">{f.beskrivelse}</div>
+                          <div className="text-[12px] font-semibold text-muted-2 mt-0.5">
+                            {betalt ? 'Betalt' : forfalt ? 'Forfalt' : 'Forfaller'} {datoFmt(f.forfall)}
+                            {f.kategori ? ` · ${f.kategori}` : ''}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          {f.type === 'utlegg' && (
+                            <button type="button" onClick={() => markerBetalt(f)}
+                              className="text-[11.5px] font-bold text-muted-2 hover:text-brand-ink border border-line hover:border-mint-line px-2 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap">
+                              {betalt ? 'Marker ubetalt' : 'Marker betalt'}
+                            </button>
+                          )}
+                          <span className="text-[13.5px] font-extrabold text-ink num">{formatKr(f.belop)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-          {/* Notater */}
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9E8E2]">
-              <div className="flex items-center gap-2">
-                <StickyNote size={14} className="text-[#7A7D83]" />
-                <span className="text-sm font-semibold text-[#1A1B1E]">Notater</span>
+              {mineUtlegg.length > 0 && (
+                <p className="text-xs text-muted-2 mt-3 pt-3 border-t border-line-soft">
+                  Husleie-fakturaer er auto-genererte fra kontrakten. Utlegg kan markeres betalt manuelt.
+                  Banktilkobling (Vipps/eFaktura) aktiveres under Integrasjoner.
+                </p>
+              )}
+            </SectionCard>
+
+            {/* Dokumenter */}
+            <SectionCard tittel="Dokumenter">
+              <div className="flex flex-col gap-2.5">
+                <button type="button"
+                  onClick={() => genererKontraktPDF({ kontrakt, leieobjekt: obj, bygg: b, utleier })}
+                  className="flex items-center gap-3.5 px-3.5 py-3 rounded-[13px] border border-line-soft bg-surface-2 hover:border-mint-line transition-all cursor-pointer text-left">
+                  <IconTile tone="mint" size={36}><FileText size={16} /></IconTile>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-bold text-ink">Leiekontrakt.pdf</div>
+                    <div className="text-[12px] font-semibold text-muted-2">
+                      {kontrakt.startdato ? `Gjelder fra ${datoLang(kontrakt.startdato)}` : 'Leiekontrakt'}
+                    </div>
+                  </div>
+                  <Download size={16} className="text-muted-2 shrink-0" />
+                </button>
+
+                {innProtokoll && (
+                  <button type="button" onClick={() => navigate(`/protokoll/${innProtokoll.id}`)}
+                    className="flex items-center gap-3.5 px-3.5 py-3 rounded-[13px] border border-line-soft bg-surface-2 hover:border-mint-line transition-all cursor-pointer text-left">
+                    <IconTile tone="mint" size={36}><ClipboardList size={16} /></IconTile>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13.5px] font-bold text-ink">Innflyttingsprotokoll</div>
+                      <div className="text-[12px] font-semibold text-muted-2">Registrert {datoLang(innProtokoll.opprettet || kontrakt.startdato)}</div>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-2 shrink-0" />
+                  </button>
+                )}
+
+                {utProtokoll && (
+                  <button type="button" onClick={() => navigate(`/protokoll/${utProtokoll.id}`)}
+                    className="flex items-center gap-3.5 px-3.5 py-3 rounded-[13px] border border-line-soft bg-surface-2 hover:border-mint-line transition-all cursor-pointer text-left">
+                    <IconTile tone="mint" size={36}><ClipboardList size={16} /></IconTile>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13.5px] font-bold text-ink">Utflyttingsprotokoll</div>
+                      <div className="text-[12px] font-semibold text-muted-2">Registrert {datoLang(utProtokoll.opprettet)}</div>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-2 shrink-0" />
+                  </button>
+                )}
+
+                {!innProtokoll && (
+                  <button type="button" onClick={() => navigate(`/protokoll/ny?kontraktId=${id}&type=innflytting`)}
+                    className="flex items-center gap-3.5 px-3.5 py-3 rounded-[13px] border border-dashed border-line-input hover:border-brand transition-all cursor-pointer text-left">
+                    <IconTile tone="sand" size={36}><Plus size={16} /></IconTile>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13.5px] font-bold text-ink-2">Lag innflyttingsprotokoll</div>
+                      <div className="text-[12px] font-semibold text-muted-2">Dokumenter boligens tilstand ved innflytting</div>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-2 shrink-0" />
+                  </button>
+                )}
               </div>
-            </div>
-            <div className="px-5 py-4 space-y-3">
-              {/* Ny notat input */}
-              <div className="flex gap-2">
+            </SectionCard>
+
+            {/* Notater */}
+            <SectionCard tittel={<span className="flex items-center gap-2"><StickyNote size={15} className="text-muted-2" /> Notater</span>}>
+              <div className="flex gap-2 mb-3">
                 <textarea
                   value={nyttNotat}
                   onChange={(e) => setNyttNotat(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && e.metaKey) leggTilNotat(); }}
-                  placeholder="Legg til notat om denne leietakeren... (⌘+Enter for å lagre)"
+                  placeholder="Legg til notat om denne leietakeren… (⌘+Enter for å lagre)"
                   rows={2}
-                  className="flex-1 bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl px-4 py-2.5 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] resize-none transition-colors"
+                  className="flex-1 bg-surface-2 border border-line-input rounded-xl px-4 py-2.5 text-sm text-ink placeholder-faint outline-none focus:border-brand resize-none transition-colors"
                 />
                 <button type="button" onClick={leggTilNotat} disabled={!nyttNotat.trim()}
-                  className="px-3 py-2 rounded-xl bg-black/[0.055] text-[#1A1B1E] hover:bg-black/[0.07] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer self-end">
-                  <Plus size={14} />
+                  className="px-3 py-2 rounded-xl bg-mint text-brand-ink hover:bg-mint-line disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer self-end">
+                  <Plus size={15} />
                 </button>
               </div>
 
               {mineNotater.length === 0 ? (
-                <p className="text-sm text-[#AEB0B4] italic">Du har ikke opprettet notater på denne leietakeren</p>
+                <p className="text-sm text-muted-2 italic">Du har ikke opprettet notater på denne leietakeren</p>
               ) : (
                 <div className="space-y-2">
                   {mineNotater.map((n) => (
-                    <div key={n.id} className="group flex items-start gap-3 bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl px-4 py-3">
+                    <div key={n.id} className="group flex items-start gap-3 bg-surface-2 border border-line-soft rounded-xl px-4 py-3">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#1A1B1E] whitespace-pre-wrap">{n.tekst}</p>
-                        <p className="text-xs text-[#AEB0B4] mt-1">{datoLang(n.opprettet)}</p>
+                        <p className="text-sm text-ink whitespace-pre-wrap">{n.tekst}</p>
+                        <p className="text-xs text-muted-2 mt-1">{datoLang(n.opprettet)}</p>
                       </div>
                       <button type="button" onClick={() => deleteNotat(n.id)} aria-label="Slett notat"
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-[#7A7D83] hover:text-[#DC2626] transition-all cursor-pointer shrink-0 p-0.5">
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-muted-2 hover:text-danger transition-all cursor-pointer shrink-0 p-0.5">
                         <Trash2 size={13} />
                       </button>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </SectionCard>
           </div>
 
-          {/* Fakturaer og utlegg */}
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9E8E2]">
-              <div className="flex items-center gap-2">
-                <Receipt size={14} className="text-[#7A7D83]" />
-                <span className="text-sm font-semibold text-[#1A1B1E]">Fakturaer og utlegg</span>
-              </div>
-              <Button variant="secondary" size="sm" onClick={() => setVisUtleggModal(true)}>
-                <Plus size={12} /> Nytt utlegg
-              </Button>
-            </div>
+          {/* ── Høyre kolonne ────────────────────────────────────────────── */}
+          <div className="flex flex-col gap-[18px]">
 
-            {/* Totaloversikt */}
-            <div className="grid grid-cols-2 divide-x divide-[#E9E8E2] border-b border-[#E9E8E2]">
-              <div className="px-5 py-3">
-                <div className="text-xs text-[#7A7D83]">Fakturert totalt</div>
-                <div className="text-base font-semibold text-[#1A1B1E] num">{formatKr(totalFakturert)}</div>
+            {/* Leiedetaljer */}
+            <SectionCard tittel="Leiedetaljer">
+              <div className="flex flex-col">
+                {kontrakt.maanedligLeie && (
+                  <DataRow label="Månedsleie" value={formatKr(kontrakt.maanedligLeie)} />
+                )}
+                {kontrakt.depositum && kontrakt.sikkerhetsType !== 'ingen' && (
+                  <DataRow label="Depositum" value={formatKr(kontrakt.depositum)} />
+                )}
+                {kontrakt.startdato && (
+                  <DataRow label="Innflytting" value={datoLang(kontrakt.startdato)} />
+                )}
+                <DataRow label="Kontraktstype" value={kontraktstypeLabel} />
+                {kontrakt.sluttdato && (
+                  <DataRow label="Utløper" value={datoLang(kontrakt.sluttdato)} />
+                )}
+                {kontrakt.oppsigelsestid && (
+                  <DataRow label="Oppsigelsestid" value={`${kontrakt.oppsigelsestid} måneder`} />
+                )}
+                {b && <DataRow label="Adresse" value={adresse} valueClass="text-right" />}
+                {(kontrakt.sisteRegulering || kontrakt.startdato) && (
+                  <DataRow label="Sist KPI-regulert" value={datoLang(kontrakt.sisteRegulering || kontrakt.startdato)} last />
+                )}
               </div>
-              <div className="px-5 py-3">
-                <div className="text-xs text-[#7A7D83]">Ubetalt</div>
-                <div className={`text-base font-semibold num ${totalUbetalt > 0 ? 'text-[#DC2626]' : 'text-[#15803D]'}`}>
-                  {formatKr(totalUbetalt)}
+
+              {/* KPI-callout */}
+              {kontrakt.indeksregulering && kontrakt.startdato && (
+                <div className="mt-3 border border-mint-line bg-mint-soft rounded-[14px] p-3.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp size={15} className="text-brand" />
+                    <span className="text-[13px] font-extrabold text-brand-ink">
+                      {kanKpi ? 'Kan KPI-justeres' : 'KPI-regulering'}
+                    </span>
+                  </div>
+                  <div className="text-[12.5px] font-semibold text-muted mb-2.5">
+                    {kanKpi && nyKpiLeie
+                      ? `KPI +3,1 % → ny leie ${formatKr(nyKpiLeie)}`
+                      : `Neste regulering ${nesteReguleringTekst(kontrakt) || 'ikke fastsatt'}`}
+                  </div>
+                  <Button variant="primary" size="sm" className="w-full" onClick={() => setVisKpiModal(true)}>
+                    Start regulering
+                  </Button>
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Kontakt */}
+            <SectionCard tittel="Kontakt">
+              <div className="flex items-center gap-3 mb-3.5">
+                <Avatar navn={kontrakt.leietakerNavn || '?'} size={44} />
+                <div>
+                  <div className="text-sm font-extrabold text-ink">{kontrakt.leietakerNavn}</div>
+                  <div className="text-[12.5px] font-semibold text-muted-2">
+                    {kontrakt.startdato ? `Leietaker siden ${new Date(kontrakt.startdato).getFullYear()}` : 'Leietaker'}
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="flex flex-col gap-2">
+                {kontrakt.leietakerTlf && (
+                  <a href={`tel:${kontrakt.leietakerTlf}`}
+                    className="flex items-center gap-2.5 text-[13.5px] font-semibold text-ink-2 hover:text-brand-ink transition-colors">
+                    <Phone size={15} className="text-muted-2 shrink-0" /> {kontrakt.leietakerTlf}
+                  </a>
+                )}
+                {kontrakt.leietakerEpost && (
+                  <a href={`mailto:${kontrakt.leietakerEpost}`}
+                    className="flex items-center gap-2.5 text-[13.5px] font-semibold text-ink-2 hover:text-brand-ink transition-colors truncate">
+                    <Mail size={15} className="text-muted-2 shrink-0" /> {kontrakt.leietakerEpost}
+                  </a>
+                )}
+                {!kontrakt.leietakerTlf && !kontrakt.leietakerEpost && (
+                  <p className="text-[13px] font-medium text-muted-2 italic">Ingen kontaktinfo registrert</p>
+                )}
+              </div>
+              {kontrakt.depositum && kontrakt.sikkerhetsType !== 'ingen' && (
+                <div className="flex items-center gap-2.5 mt-3.5 pt-3.5 border-t border-line-soft text-[12.5px] font-semibold text-muted-2">
+                  <Shield size={14} className="text-brand shrink-0" />
+                  Depositum {formatKr(kontrakt.depositum)} sikret
+                </div>
+              )}
+            </SectionCard>
 
-            {/* Faktura-tabell */}
-            {alleFakturaer.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-[#AEB0B4] italic">
-                Ingen fakturaer ennå
+            {/* Handlinger */}
+            <SectionCard tittel="Administrer">
+              <div className="flex flex-col gap-2.5">
+                <Button variant="secondary" className="w-full justify-start" onClick={() => navigate(`/kontrakter/${id}/rediger`)}>
+                  <Pencil size={15} /> Rediger kontrakt
+                </Button>
+                <Button variant="danger" className="w-full justify-start" onClick={() => setSlettKontraktVis(true)}>
+                  <Trash2 size={15} /> Slett kontrakt
+                </Button>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#E9E8E2]">
-                      {['Forfall', 'Beskrivelse', 'Beløp', 'Ubetalt', 'Status', ''].map((h) => (
-                        <th key={h} className="text-left px-5 py-3 text-xs font-medium text-[#7A7D83]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alleFakturaer.map((f) => {
-                      const forfalt = f.status === 'ubetalt' && new Date(f.forfall) < new Date();
-                      const statusFarge = f.status === 'betalt' ? 'text-[#15803D]' : forfalt ? 'text-[#DC2626]' : 'text-[#B45309]';
-                      const statusLabel = f.status === 'betalt' ? 'BETALT' : forfalt ? 'FORFALT' : 'UBETALT';
-                      return (
-                        <tr key={f.id} className="border-b border-[#E9E8E2]/50 hover:bg-black/[0.02] transition-colors">
-                          <td className="px-5 py-3 text-[#65696F] num whitespace-nowrap">{datoFmt(f.forfall)}</td>
-                          <td className="px-5 py-3 text-[#1A1B1E]">
-                            <div>{f.beskrivelse}</div>
-                            {f.kategori && <div className="text-xs text-[#7A7D83]">{f.kategori}</div>}
-                          </td>
-                          <td className="px-5 py-3 text-[#1A1B1E] num whitespace-nowrap">{formatKr(f.belop)}</td>
-                          <td className="px-5 py-3 num whitespace-nowrap">
-                            <span className={f.status === 'betalt' ? 'text-[#7A7D83]' : 'text-[#DC2626]'}>
-                              {f.status === 'betalt' ? formatKr(0) : formatKr(f.belop)}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className={`text-xs font-semibold ${statusFarge}`}>{statusLabel}</span>
-                          </td>
-                          <td className="px-5 py-3">
-                            {f.type === 'utlegg' && (
-                              <button type="button"
-                                onClick={() => markerBetalt(f)}
-                                className="text-xs text-[#7A7D83] hover:text-[#1A1B1E] border border-[#E9E8E2] hover:border-[#DCDAD2] px-2 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap">
-                                {f.status === 'betalt' ? 'Marker ubetalt' : 'Marker betalt'}
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {mineUtlegg.length > 0 && (
-              <div className="px-5 py-3 border-t border-[#E9E8E2]">
-                <p className="text-xs text-[#AEB0B4]">
-                  Husleie-fakturaer er auto-genererte fra kontrakten. Utlegg kan markeres betalt manuelt.
-                  Banktilkobling (Vipps/eFaktura) aktiveres under Integrasjoner.
-                </p>
-              </div>
-            )}
+            </SectionCard>
           </div>
         </div>
       )}
 
       {/* ══ LEIEKONTRAKT-TAB ═══════════════════════════════════════════════════ */}
       {aktivTab === 'leiekontrakt' && (
-        <div className="text-center py-12 space-y-3">
-          <FileText size={28} className="text-[#AEB0B4] mx-auto" />
-          <div className="text-sm font-medium text-[#1A1B1E]">Rediger kontraktsinnhold</div>
-          <div className="text-xs text-[#7A7D83]">Åpner redigeringsskjemaet for denne kontrakten</div>
+        <SectionCard className="text-center py-12">
+          <FileText size={28} className="text-faint-2 mx-auto mb-3" />
+          <div className="text-sm font-bold text-ink mb-1">Rediger kontraktsinnhold</div>
+          <div className="text-xs font-medium text-muted-2 mb-4">Åpner redigeringsskjemaet for denne kontrakten</div>
           <Button variant="primary" onClick={() => navigate(`/kontrakter/${id}/rediger`)}>
-            <Pencil size={14} /> Åpne kontraktseditor
+            <Pencil size={15} /> Åpne kontraktseditor
           </Button>
-        </div>
+        </SectionCard>
       )}
-    </>
-  );
-}
-
-// ─── InfoRad helper ───────────────────────────────────────────────────────────
-function InfoRad({ ikon: Ikon, farge, children }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Ikon size={13} style={{ color: farge }} className="shrink-0" />
-      <span className="text-sm">{children}</span>
     </div>
   );
 }
-
