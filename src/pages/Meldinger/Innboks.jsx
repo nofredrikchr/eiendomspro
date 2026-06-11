@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Wrench, Search, ChevronRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { EmptyState } from '../../components/ui/Card';
+import { Avatar, Pill, PageHeader } from '../../components/ui/kit';
 
 function datoFmt(iso) {
   const d = new Date(iso);
@@ -19,8 +21,8 @@ function datoFmt(iso) {
 }
 
 function TypeIkon({ type }) {
-  if (type === 'vedlikehold') return <Wrench size={12} className="text-[#B45309]" />;
-  return <MessageSquare size={12} className="text-[#2563EB]" />;
+  if (type === 'vedlikehold') return <Wrench size={12} className="text-amber" />;
+  return <MessageSquare size={12} className="text-brand" />;
 }
 
 export default function Innboks() {
@@ -58,85 +60,72 @@ export default function Innboks() {
   const totaltUlest = meldinger.filter((m) => !m.lest && m.avsender === 'leietaker').length;
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Innboks</h1>
-          <p className="text-sm text-[#65696F] mt-1">
-            {totaltUlest > 0
-              ? `${totaltUlest} ulest${totaltUlest > 1 ? 'e' : ''} melding${totaltUlest > 1 ? 'er' : ''}`
-              : 'Meldinger med dine leietakere'}
-          </p>
-        </div>
-      </div>
+    <div className="animate-fade-up">
+      <PageHeader
+        tittel="Innboks"
+        undertittel={totaltUlest > 0
+          ? `${totaltUlest} ulest${totaltUlest > 1 ? 'e' : ''} melding${totaltUlest > 1 ? 'er' : ''}`
+          : 'Meldinger med dine leietakere'}
+      />
 
       {/* Søk */}
       {kontrakter.length > 4 && (
         <div className="relative mb-5">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7D83]" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
           <input
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
             placeholder="Søk etter leietaker eller adresse..."
-            className="w-full bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] transition-colors"
+            className="w-full bg-surface-2 border-[1.5px] border-line-input rounded-xl pl-10 pr-4 py-[11px] text-sm font-bold text-ink placeholder:font-medium placeholder:text-faint outline-none focus:border-brand focus:bg-surface transition-all"
           />
         </div>
       )}
 
       {kontrakter.length === 0 ? (
-        <div className="text-center py-20">
-          <MessageSquare size={32} className="text-[#AEB0B4] mx-auto mb-3" />
-          <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen leietakere ennå</div>
-          <div className="text-xs text-[#7A7D83]">Opprett en leiekontrakt for å starte en samtale med leietaker</div>
-        </div>
+        <EmptyState
+          icon={<MessageSquare size={26} />}
+          title="Ingen leietakere ennå"
+          description="Opprett en leiekontrakt for å starte en samtale med leietaker."
+        />
       ) : tråder.length === 0 ? (
-        <div className="text-center py-12 text-[#7A7D83] text-sm">Ingen treff på søket</div>
+        <div className="text-center py-12 text-muted text-sm font-medium">Ingen treff på søket</div>
       ) : (
-        <div className="space-y-1">
-          {tråder.map(({ kontrakt: k, siste, ulisteTall, adresse }) => (
+        <div className="bg-surface border border-line rounded-[20px] overflow-hidden">
+          {tråder.map(({ kontrakt: k, siste, ulisteTall, adresse }, i) => (
             <button
               key={k.id}
               type="button"
               onClick={() => navigate(`/meldinger/${k.id}`)}
-              className="w-full flex items-center gap-4 px-4 py-4 rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] hover:border-[#DCDAD2] hover:bg-[#FAF9F6] transition-all text-left group"
+              className={`w-full flex items-center gap-4 px-[18px] py-4 hover:bg-surface-2 transition-colors text-left group ${i === 0 ? '' : 'border-t border-line-soft'}`}
             >
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-[#E9E8E2] flex items-center justify-center shrink-0 text-sm font-semibold text-[#65696F]">
-                {(k.leietakerNavn || '?')[0].toUpperCase()}
-              </div>
+              <Avatar navn={k.leietakerNavn || '?'} tone={ulisteTall > 0 ? 'mint' : 'sand'} size={42} />
 
-              {/* Innhold */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className={`text-sm font-medium ${ulisteTall > 0 ? 'text-[#1A1B1E]' : 'text-[#4B4E54]'}`}>
+                <div className="flex items-center justify-between gap-3 mb-0.5">
+                  <span className={`text-[14.5px] truncate ${ulisteTall > 0 ? 'font-extrabold text-ink' : 'font-bold text-ink-2'}`}>
                     {k.leietakerNavn || '—'}
                   </span>
                   <div className="flex items-center gap-2 shrink-0">
                     {siste && (
-                      <span className="text-xs text-[#AEB0B4]">{datoFmt(siste.opprettet)}</span>
+                      <span className="text-xs font-semibold text-faint">{datoFmt(siste.opprettet)}</span>
                     )}
-                    {ulisteTall > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-[#2563EB] text-[#F6F6F4] text-xs font-bold flex items-center justify-center">
-                        {ulisteTall}
-                      </span>
-                    )}
+                    {ulisteTall > 0 && <Pill tone="dark">{ulisteTall}</Pill>}
                   </div>
                 </div>
-                <div className="text-xs text-[#7A7D83] truncate mb-1">{adresse}</div>
+                <div className="text-[12.5px] font-semibold text-muted-2 truncate mb-1">{adresse}</div>
                 {siste ? (
-                  <div className="flex items-center gap-1.5 text-xs text-[#7A7D83] truncate">
+                  <div className="flex items-center gap-1.5 text-[12.5px] truncate">
                     <TypeIkon type={siste.type} />
-                    <span className={ulisteTall > 0 ? 'text-[#4B4E54]' : ''}>
+                    <span className={`truncate ${ulisteTall > 0 ? 'font-semibold text-ink-2' : 'font-medium text-muted-2'}`}>
                       {siste.avsender === 'utleier' ? 'Du: ' : ''}{siste.tekst}
                     </span>
                   </div>
                 ) : (
-                  <div className="text-xs text-[#AEB0B4] italic">Ingen meldinger ennå — start samtalen</div>
+                  <div className="text-[12.5px] font-medium text-faint italic">Ingen meldinger ennå — start samtalen</div>
                 )}
               </div>
 
-              <ChevronRight size={14} className="text-[#AEB0B4] group-hover:text-[#65696F] shrink-0" />
+              <ChevronRight size={16} className="text-faint-2 group-hover:text-muted-2 shrink-0 transition-colors" />
             </button>
           ))}
         </div>

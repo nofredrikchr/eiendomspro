@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Download, Check,
-  Camera, CheckCircle2, AlertCircle,
+  Camera, CheckCircle2, AlertCircle, ClipboardList,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Input, Textarea } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Photo, IconTile, DataRow } from '../../components/ui/kit';
 import { genererProtokollPDF } from '../../utils/protokollPDF';
 
 // ─── Sjekkliste (fra Husleieloven og bransjestandard) ─────────────────────────
@@ -58,17 +59,17 @@ function defaultProtokoll(type) {
 // ─── Tall-input ───────────────────────────────────────────────────────────────
 function KrInput({ label, value, onChange }) {
   return (
-    <div>
-      <div className="text-xs text-[#65696F] mb-1.5">{label}</div>
-      <div className="flex items-center gap-2 bg-[#F6F6F4] border border-[#E9E8E2] rounded-lg px-3 py-2.5">
-        <span className="text-[#7A7D83] text-sm">kr</span>
+    <div className="flex flex-col gap-1.5">
+      <div className="text-[12.5px] font-bold text-muted">{label}</div>
+      <div className="flex items-center gap-2 bg-surface-2 border-[1.5px] border-line-input rounded-xl px-3.5 py-[11px] focus-within:border-brand focus-within:bg-surface transition-all">
+        <span className="text-muted-2 text-sm font-semibold">kr</span>
         <input
           type="number"
           min="0"
           step="0.01"
           value={value}
           onChange={onChange}
-          className="flex-1 bg-transparent text-sm text-[#1A1B1E] outline-none num"
+          className="flex-1 bg-transparent text-sm font-bold text-ink outline-none num"
         />
       </div>
     </div>
@@ -78,12 +79,12 @@ function KrInput({ label, value, onChange }) {
 // ─── Seksjon ─────────────────────────────────────────────────────────────────
 function Seksjon({ tittel, children, sub }) {
   return (
-    <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#E9E8E2] bg-[#F1F1ED]">
-        <div className="text-sm font-semibold text-[#1A1B1E]">{tittel}</div>
-        {sub && <div className="text-xs text-[#7A7D83] mt-0.5">{sub}</div>}
+    <div className="bg-surface border border-line rounded-[20px] overflow-hidden">
+      <div className="px-[22px] py-4 border-b border-line-soft bg-sand">
+        <div className="text-base font-extrabold tracking-[-0.01em] text-ink">{tittel}</div>
+        {sub && <div className="text-[12.5px] font-medium text-muted-2 mt-0.5">{sub}</div>}
       </div>
-      <div className="px-5 py-4 space-y-4">{children}</div>
+      <div className="px-[22px] py-5 space-y-4">{children}</div>
     </div>
   );
 }
@@ -172,30 +173,34 @@ export default function OvertakelsesProtokoll() {
   }
 
   const ukjekket = prot.sjekkliste.filter((s) => !s.ok).length;
+  const sjekketAntall = prot.sjekkliste.filter((s) => s.ok).length;
+  const sjekkProsent = Math.round((sjekketAntall / prot.sjekkliste.length) * 100);
+
+  const oppgjorKr = (n) => `kr ${n.toLocaleString('nb-NO', { minimumFractionDigits: 2 })}`;
 
   return (
-    <div>
+    <div className="animate-fade-up">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)}
-            className="p-1.5 text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-lg transition-all cursor-pointer">
+      <div className="flex items-start gap-4 flex-wrap justify-between mb-6">
+        <div className="flex items-start gap-3 min-w-[220px]">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Tilbake"
+            className="p-1.5 text-muted hover:text-ink hover:bg-line-soft rounded-lg transition-all cursor-pointer mt-1">
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-semibold text-[#1A1B1E]">
+            <h1 className="m-0 text-[clamp(22px,2.6vw,28px)] font-extrabold tracking-[-0.025em] text-ink">
               {erInn ? 'Innflyttingsprotokoll' : 'Utflyttingsprotokoll'}
             </h1>
-            <p className="text-sm text-[#65696F] mt-0.5">
+            <p className="mt-1.5 mb-0 text-[14.5px] font-medium text-muted">
               {kontrakt
                 ? `${kontrakt.leietakerNavn}${b ? ` — ${b.gatenavn} ${b.gatenummer}` : ''}`
                 : 'Registrer tilstand ved overlevering'}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2.5 flex-wrap">
           <Button variant="secondary" onClick={lagre}>
-            {lagret ? <><Check size={14} className="text-[#15803D]" /> Lagret!</> : 'Lagre utkast'}
+            {lagret ? <><Check size={14} className="text-brand-ink" /> Lagret!</> : 'Lagre utkast'}
           </Button>
           <Button variant="primary" onClick={lastNed} disabled={genererer}>
             <Download size={14} /> {genererer ? 'Genererer...' : 'Last ned PDF'}
@@ -203,26 +208,26 @@ export default function OvertakelsesProtokoll() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_260px] gap-6 items-start">
+      <div className="grid lg:grid-cols-[1fr_270px] gap-6 items-start">
         <div className="space-y-4">
 
           {/* ── Parter ─────────────────────────────────────────────── */}
           <Seksjon tittel="Parter">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <div className="text-xs text-[#7A7D83] mb-1">Utleier</div>
-                <div className="text-[#1A1B1E] font-medium">{utleier?.navn || '—'}</div>
+                <div className="text-[12.5px] font-bold text-muted-2 mb-1">Utleier</div>
+                <div className="text-ink font-extrabold">{utleier?.navn || '—'}</div>
                 {kontrakt?.opprettet && (
-                  <div className="text-xs text-[#7A7D83] mt-0.5">
+                  <div className="text-xs font-medium text-muted-2 mt-0.5">
                     Signert leiekontrakt {new Date(kontrakt.opprettet).toLocaleDateString('nb-NO')}
                   </div>
                 )}
               </div>
               <div>
-                <div className="text-xs text-[#7A7D83] mb-1">Leietaker</div>
-                <div className="text-[#1A1B1E] font-medium">{kontrakt?.leietakerNavn || '—'}</div>
+                <div className="text-[12.5px] font-bold text-muted-2 mb-1">Leietaker</div>
+                <div className="text-ink font-extrabold">{kontrakt?.leietakerNavn || '—'}</div>
                 {kontrakt?.opprettet && (
-                  <div className="text-xs text-[#7A7D83] mt-0.5">
+                  <div className="text-xs font-medium text-muted-2 mt-0.5">
                     Signert leiekontrakt {new Date(kontrakt.opprettet).toLocaleDateString('nb-NO')}
                   </div>
                 )}
@@ -241,8 +246,8 @@ export default function OvertakelsesProtokoll() {
                 ['Bnr.', b?.bruksnummer || '—'],
               ].map(([e, v]) => (
                 <div key={e}>
-                  <span className="text-[#7A7D83]">{e} </span>
-                  <span className="text-[#1A1B1E]">{v}</span>
+                  <span className="text-muted-2 font-semibold">{e} </span>
+                  <span className="text-ink font-bold">{v}</span>
                 </div>
               ))}
             </div>
@@ -254,34 +259,31 @@ export default function OvertakelsesProtokoll() {
               <Input label="Overtakelsesdato" type="date" value={prot.dato} onChange={set('dato')} />
               <div />
             </div>
-            <div>
-              <div className="text-xs text-[#65696F] mb-1.5">Nøkler overlevert</div>
-              <textarea
-                value={prot.noklerOverlevert}
-                onChange={set('noklerOverlevert')}
-                placeholder="Oppgi hvilke og hvor mange nøkler som er overlevert. F.eks: 2 hovednøkler, 1 postkassenøkkel"
-                rows={3}
-                className="w-full bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl px-4 py-3 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] resize-none transition-colors"
-              />
-            </div>
+            <Textarea
+              label="Nøkler overlevert"
+              value={prot.noklerOverlevert}
+              onChange={set('noklerOverlevert')}
+              placeholder="Oppgi hvilke og hvor mange nøkler som er overlevert. F.eks: 2 hovednøkler, 1 postkassenøkkel"
+              rows={3}
+            />
           </Seksjon>
 
           {/* ── Strøm- og vannavlesning ────────────────────────────── */}
           <Seksjon tittel="Strøm- og vannavlesning">
             {kontrakt?.inkludererStrom && (
-              <div className="flex items-center gap-2 text-sm text-[#7A7D83]">
-                <Check size={14} className="text-[#15803D]" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted">
+                <Check size={14} className="text-brand-ink" />
                 Strøm og oppvarming er inkludert i leien
               </div>
             )}
             {kontrakt?.inkludererVann && (
-              <div className="flex items-center gap-2 text-sm text-[#7A7D83]">
-                <Check size={14} className="text-[#15803D]" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted">
+                <Check size={14} className="text-brand-ink" />
                 Vann- og avløpsavgifter er inkludert i leien
               </div>
             )}
             {!kontrakt?.inkludererStrom && !kontrakt?.inkludererVann && (
-              <p className="text-xs text-[#7A7D83]">Strøm og vann faktureres separat. Registrer avlesning ved overtakelse.</p>
+              <p className="text-[12.5px] font-medium text-muted-2">Strøm og vann faktureres separat. Registrer avlesning ved overtakelse.</p>
             )}
             <div className="space-y-3">
               {prot.malere.map((m, i) => (
@@ -292,9 +294,9 @@ export default function OvertakelsesProtokoll() {
                     onChange={(e) => oppdaterMaaler(m.id, 'malerNr', e.target.value)} placeholder="123456" />
                   <Input label={i === 0 ? 'Avlesning' : ''} value={m.avlesning}
                     onChange={(e) => oppdaterMaaler(m.id, 'avlesning', e.target.value)} placeholder="12345 kWh" />
-                  <button type="button"
+                  <button type="button" aria-label="Fjern måler"
                     onClick={() => setProt((p) => ({ ...p, malere: p.malere.filter((x) => x.id !== m.id) }))}
-                    className={`p-1.5 text-[#AEB0B4] hover:text-[#DC2626] cursor-pointer self-end ${i === 0 ? '' : ''}`}>
+                    className="p-1.5 text-faint-2 hover:text-danger cursor-pointer self-end transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -302,7 +304,7 @@ export default function OvertakelsesProtokoll() {
             </div>
             <button type="button"
               onClick={() => setProt((p) => ({ ...p, malere: [...p.malere, { id: genId(), type: 'Fjernvarme', malerNr: '', avlesning: '' }] }))}
-              className="flex items-center gap-2 text-xs text-[#7A7D83] hover:text-[#1A1B1E] transition-colors cursor-pointer">
+              className="flex items-center gap-2 text-[12.5px] font-bold text-muted-2 hover:text-ink transition-colors cursor-pointer">
               <Plus size={13} /> Legg til måler
             </button>
           </Seksjon>
@@ -314,24 +316,24 @@ export default function OvertakelsesProtokoll() {
           >
             {erInn && (
               <>
-                <p className="text-xs text-[#7A7D83] leading-relaxed">
+                <p className="text-[12.5px] font-medium text-muted-2 leading-relaxed">
                   Det foreligger mangel dersom utleieren har gitt uriktige opplysninger, eller dersom boligen er i vesentlig dårligere stand enn leieren hadde grunn til å forvente (husleieloven §§ 2-3, 2-4 og 2-5).
                 </p>
-                <div className="text-xs font-semibold text-[#4B4E54] mt-2 mb-1">Følgende bør sjekkes ved overtakelse:</div>
+                <div className="text-[12.5px] font-bold text-ink-2 mt-2 mb-1">Følgende bør sjekkes ved overtakelse:</div>
               </>
             )}
 
             <div className="space-y-2">
               {prot.sjekkliste.map((s) => (
-                <div key={s.id} className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-3 space-y-2">
+                <div key={s.id} className="bg-surface-2 border border-line rounded-[14px] p-3 space-y-2">
                   <button type="button"
                     onClick={() => toggleSjekk(s.id)}
                     className="flex items-center gap-3 w-full text-left cursor-pointer">
-                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors
-                      ${s.ok ? 'bg-[#15803D]/15 border border-[#15803D]/40' : 'border border-[#DCDAD2]'}`}>
-                      {s.ok && <Check size={12} className="text-[#15803D]" />}
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors
+                      ${s.ok ? 'bg-mint border border-mint-line' : 'border border-line-input'}`}>
+                      {s.ok && <Check size={12} className="text-brand-ink" />}
                     </div>
-                    <span className={`text-sm ${s.ok ? 'text-[#4B4E54]' : 'text-[#1A1B1E]'}`}>{s.tekst}</span>
+                    <span className={`text-sm font-semibold ${s.ok ? 'text-muted' : 'text-ink'}`}>{s.tekst}</span>
                   </button>
                   {s.bemerkning !== undefined && (
                     <input
@@ -339,7 +341,7 @@ export default function OvertakelsesProtokoll() {
                       value={s.bemerkning}
                       onChange={(e) => setSjekkBemerkning(s.id, e.target.value)}
                       placeholder="Legg til merknad (valgfritt)..."
-                      className="w-full bg-transparent border-b border-[#E9E8E2] pb-1 text-xs text-[#65696F] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] transition-colors pl-8"
+                      className="w-full bg-transparent border-b border-line pb-1 text-xs font-medium text-muted placeholder:text-faint outline-none focus:border-brand transition-colors pl-8"
                     />
                   )}
                 </div>
@@ -349,20 +351,20 @@ export default function OvertakelsesProtokoll() {
             {/* Ekstra bemerkninger */}
             {prot.bemerkninger.length > 0 && (
               <div className="space-y-3 pt-2">
-                <div className="text-xs font-semibold text-[#7A7D83] uppercase tracking-wider">Bemerkninger</div>
+                <div className="text-[11px] font-extrabold text-muted-2 uppercase tracking-wider">Bemerkninger</div>
                 {prot.bemerkninger.map((bm) => (
-                  <div key={bm.id} className="bg-[#DC2626]/5 border border-[#DC2626]/20 rounded-xl p-3 space-y-2">
+                  <div key={bm.id} className="bg-danger/[0.05] border border-danger/20 rounded-[14px] p-3 space-y-2">
                     <div className="flex items-start gap-2">
-                      <AlertCircle size={13} className="text-[#DC2626] shrink-0 mt-0.5" />
+                      <AlertCircle size={13} className="text-danger shrink-0 mt-1" />
                       <textarea
                         value={bm.tekst}
                         onChange={(e) => oppdaterBemerkning(bm.id, 'tekst', e.target.value)}
                         placeholder="Beskriv feil eller mangel..."
                         rows={2}
-                        className="flex-1 bg-transparent text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none resize-none"
+                        className="flex-1 bg-transparent text-sm font-semibold text-ink placeholder:font-medium placeholder:text-faint outline-none resize-none"
                       />
-                      <button type="button" onClick={() => fjernBemerkning(bm.id)}
-                        className="text-[#7A7D83] hover:text-[#DC2626] cursor-pointer shrink-0">
+                      <button type="button" onClick={() => fjernBemerkning(bm.id)} aria-label="Fjern bemerkning"
+                        className="text-muted-2 hover:text-danger cursor-pointer shrink-0 transition-colors">
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -378,7 +380,7 @@ export default function OvertakelsesProtokoll() {
             )}
 
             <button type="button" onClick={leggTilBemerkning}
-              className="flex items-center gap-2 text-xs text-[#7A7D83] hover:text-[#1A1B1E] border border-[#E9E8E2] hover:border-[#DCDAD2] rounded-lg px-3 py-2 transition-all cursor-pointer">
+              className="flex items-center gap-2 text-[12.5px] font-bold text-muted-2 hover:text-ink border border-line hover:border-line-input rounded-xl px-3 py-2 transition-all cursor-pointer">
               <Plus size={13} /> Legg til bemerkning
             </button>
           </Seksjon>
@@ -393,17 +395,17 @@ export default function OvertakelsesProtokoll() {
                     <Input label={i === 0 ? 'Gjenstand' : ''} value={inv.navn}
                       onChange={(e) => oppdaterInventar(inv.id, 'navn', e.target.value)}
                       placeholder="f.eks. Kjøleskap, Vaskemaksin" />
-                    <div>
-                      {i === 0 && <div className="text-xs text-[#4B4E54] mb-1.5">Antall</div>}
+                    <div className="flex flex-col gap-1.5">
+                      {i === 0 && <div className="text-[12.5px] font-bold text-muted">Antall</div>}
                       <input type="number" min="1" value={inv.antall}
                         onChange={(e) => oppdaterInventar(inv.id, 'antall', e.target.value)}
-                        className="w-full bg-[#F6F6F4] border border-[#E9E8E2] rounded-lg px-3 py-2.5 text-sm text-[#1A1B1E] outline-none" />
+                        className="w-full bg-surface-2 border-[1.5px] border-line-input rounded-xl px-3 py-[11px] text-sm font-bold text-ink outline-none focus:border-brand focus:bg-surface transition-all num" />
                     </div>
                     <Input label={i === 0 ? 'Merknad / tilstand' : ''} value={inv.merknad}
                       onChange={(e) => oppdaterInventar(inv.id, 'merknad', e.target.value)}
                       placeholder="f.eks. Fungerer, liten bulk" />
-                    <button type="button" onClick={() => fjernInventar(inv.id)}
-                      className="p-1.5 text-[#AEB0B4] hover:text-[#DC2626] cursor-pointer self-end">
+                    <button type="button" onClick={() => fjernInventar(inv.id)} aria-label="Fjern gjenstand"
+                      className="p-1.5 text-faint-2 hover:text-danger cursor-pointer self-end transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -411,7 +413,7 @@ export default function OvertakelsesProtokoll() {
               </div>
             )}
             <button type="button" onClick={leggTilInventar}
-              className="flex items-center gap-2 text-xs text-[#7A7D83] hover:text-[#1A1B1E] border border-[#E9E8E2] hover:border-[#DCDAD2] rounded-lg px-3 py-2 transition-all cursor-pointer">
+              className="flex items-center gap-2 text-[12.5px] font-bold text-muted-2 hover:text-ink border border-line hover:border-line-input rounded-xl px-3 py-2 transition-all cursor-pointer">
               <Plus size={13} /> Legg til gjenstand
             </button>
           </Seksjon>
@@ -432,28 +434,32 @@ export default function OvertakelsesProtokoll() {
                 <KrInput label="Annet tap grunnet leiers mislighold"
                   value={prot.oppgjor?.annetTap || '0'} onChange={setOppgjor('annetTap')} />
                 <div className="flex items-end">
-                  <div className="w-full bg-[#F6F6F4] border border-[#9A7A24]/30 rounded-lg px-3 py-2.5">
-                    <div className="text-xs text-[#9A7A24] mb-1">Totalt</div>
-                    <div className="text-sm font-semibold text-[#1A1B1E] num">
-                      kr {totaltOppgjor.toLocaleString('nb-NO', { minimumFractionDigits: 2 })}
+                  <div className="w-full bg-amber-soft border border-amber-line rounded-xl px-3.5 py-[11px]">
+                    <div className="text-[11px] font-bold text-amber mb-1 uppercase tracking-wide">Totalt</div>
+                    <div className="text-sm font-extrabold text-ink num">
+                      {oppgjorKr(totaltOppgjor)}
                     </div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <div className="text-xs text-[#65696F] mb-2">Er partene enige om oppgjøret?</div>
+                <div className="text-[12.5px] font-bold text-muted mb-2">Er partene enige om oppgjøret?</div>
                 <div className="flex gap-3">
-                  {[['true', 'Ja'], ['false', 'Nei']].map(([val, label]) => (
-                    <button key={val} type="button"
-                      onClick={() => setProt((p) => ({ ...p, oppgjor: { ...p.oppgjor, parteneEnige: val === 'true' } }))}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-all cursor-pointer
-                        ${String(prot.oppgjor?.parteneEnige) === val
-                          ? val === 'true' ? 'border-[#15803D]/30 bg-[#15803D]/10 text-[#15803D]' : 'border-[#DC2626]/30 bg-[#DC2626]/10 text-[#DC2626]'
-                          : 'border-[#E9E8E2] text-[#65696F] hover:border-[#DCDAD2]'}`}>
-                      {label}
-                    </button>
-                  ))}
+                  {[['true', 'Ja'], ['false', 'Nei']].map(([val, label]) => {
+                    const aktiv = String(prot.oppgjor?.parteneEnige) === val;
+                    const aktivKlasse = val === 'true'
+                      ? 'border-mint-line bg-mint text-brand-ink'
+                      : 'border-danger/30 bg-danger/[0.08] text-danger';
+                    return (
+                      <button key={val} type="button"
+                        onClick={() => setProt((p) => ({ ...p, oppgjor: { ...p.oppgjor, parteneEnige: val === 'true' } }))}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold transition-all cursor-pointer
+                          ${aktiv ? aktivKlasse : 'border-line text-muted hover:border-line-input'}`}>
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -475,74 +481,57 @@ export default function OvertakelsesProtokoll() {
           {/* ── Bilder (placeholder) ────────────────────────────────── */}
           <Seksjon tittel="Bilder"
             sub="Dokumenter leieobjektets tilstand med bilder. Kommer i neste versjon med full bilde-opplasting.">
-            <div className="border-2 border-dashed border-[#E9E8E2] rounded-xl p-8 text-center">
-              <Camera size={24} className="text-[#AEB0B4] mx-auto mb-2" />
-              <div className="text-sm text-[#7A7D83]">Bilde-opplasting kommer snart</div>
-              <div className="text-xs text-[#AEB0B4] mt-1">Lagre bilder som vedlegg til PDF inntil videre</div>
-            </div>
+            <Photo className="aspect-[16/7] rounded-[14px] border border-dashed border-line-input" icon={<Camera size={26} strokeWidth={1.6} />}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
+                <span className="text-sm font-bold text-muted">Bilde-opplasting kommer snart</span>
+                <span className="text-xs font-medium text-muted-2">Lagre bilder som vedlegg til PDF inntil videre</span>
+              </div>
+            </Photo>
           </Seksjon>
 
         </div>
 
         {/* ── Høyre sidebar ─────────────────────────────────────────── */}
         <div className="sticky top-6 space-y-4">
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-5 space-y-4">
-            <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-widest">Status</div>
+          <div className="bg-surface border border-line rounded-[20px] p-[22px]">
+            <div className="flex items-center gap-2 mb-4">
+              <IconTile tone="mint" size={28} radius={9}><ClipboardList size={14} /></IconTile>
+              <div className="text-[11px] font-extrabold text-muted-2 uppercase tracking-widest">Status</div>
+            </div>
 
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[#7A7D83]">Type</span>
-                <span className="text-[#1A1B1E]">{erInn ? 'Innflytting' : 'Utflytting'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#7A7D83]">Dato</span>
-                <span className="text-[#1A1B1E]">{prot.dato || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#7A7D83]">Sjekkliste</span>
-                <span className={ukjekket > 0 ? 'text-[#B45309]' : 'text-[#15803D]'}>
-                  {prot.sjekkliste.filter(s => s.ok).length} / {prot.sjekkliste.length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#7A7D83]">Bemerkninger</span>
-                <span className={prot.bemerkninger.length > 0 ? 'text-[#DC2626]' : 'text-[#7A7D83]'}>
-                  {prot.bemerkninger.length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#7A7D83]">Inventar</span>
-                <span className="text-[#1A1B1E]">{prot.inventar.length} gjenstander</span>
-              </div>
+            <div>
+              <DataRow label="Type" value={erInn ? 'Innflytting' : 'Utflytting'} />
+              <DataRow label="Dato" value={prot.dato || '—'} />
+              <DataRow label="Sjekkliste" value={`${sjekketAntall} / ${prot.sjekkliste.length}`}
+                valueClass={ukjekket > 0 ? 'text-amber' : 'text-brand-ink'} />
+              <DataRow label="Bemerkninger" value={prot.bemerkninger.length}
+                valueClass={prot.bemerkninger.length > 0 ? 'text-danger' : 'text-ink'} />
+              <DataRow label="Inventar" value={`${prot.inventar.length} gjenstander`}
+                last={!(!erInn && totaltOppgjor > 0)} />
               {!erInn && totaltOppgjor > 0 && (
-                <div className="flex justify-between border-t border-[#E9E8E2] pt-2">
-                  <span className="text-[#7A7D83]">Totalt krav</span>
-                  <span className="text-[#9A7A24] font-semibold num">
-                    kr {totaltOppgjor.toLocaleString('nb-NO', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
+                <DataRow label="Totalt krav" value={oppgjorKr(totaltOppgjor)} valueClass="text-amber" last />
               )}
             </div>
 
-            <div className="h-px bg-[#E9E8E2]" />
+            <div className="h-px bg-line-soft my-4" />
 
             {/* Sjekkliste-progress */}
             <div>
-              <div className="flex justify-between text-xs text-[#7A7D83] mb-2">
+              <div className="flex justify-between text-[12.5px] font-bold text-muted-2 mb-2">
                 <span>Sjekkliste fullført</span>
-                <span>{Math.round((prot.sjekkliste.filter(s => s.ok).length / prot.sjekkliste.length) * 100)}%</span>
+                <span className="num">{sjekkProsent}%</span>
               </div>
-              <div className="h-1.5 bg-[#E9E8E2] rounded-full overflow-hidden">
-                <div className="h-full bg-[#15803D] rounded-full transition-all duration-300"
-                  style={{ width: `${(prot.sjekkliste.filter(s => s.ok).length / prot.sjekkliste.length) * 100}%` }} />
+              <div className="h-1.5 bg-line-soft rounded-full overflow-hidden">
+                <div className="h-full bg-brand rounded-full transition-all duration-300"
+                  style={{ width: `${sjekkProsent}%` }} />
               </div>
             </div>
 
-            <div className="h-px bg-[#E9E8E2]" />
+            <div className="h-px bg-line-soft my-4" />
 
             <div className="space-y-2">
               <Button variant="secondary" className="w-full justify-center" onClick={lagre}>
-                {lagret ? <><CheckCircle2 size={14} className="text-[#15803D]" /> Lagret!</> : 'Lagre utkast'}
+                {lagret ? <><CheckCircle2 size={14} className="text-brand-ink" /> Lagret!</> : 'Lagre utkast'}
               </Button>
               <Button variant="primary" className="w-full justify-center" onClick={lastNed} disabled={genererer}>
                 <Download size={14} /> {genererer ? 'Genererer...' : 'Last ned PDF'}
@@ -551,11 +540,14 @@ export default function OvertakelsesProtokoll() {
           </div>
 
           {prot.bemerkninger.length > 0 && (
-            <div className="bg-[#DC2626]/5 border border-[#DC2626]/20 rounded-xl p-4">
-              <div className="text-xs font-semibold text-[#DC2626] mb-1">
-                {prot.bemerkninger.length} bemerkning{prot.bemerkninger.length > 1 ? 'er' : ''} registrert
+            <div className="bg-danger/[0.05] border border-danger/20 rounded-[18px] p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle size={14} className="text-danger shrink-0" />
+                <div className="text-[12.5px] font-extrabold text-danger">
+                  {prot.bemerkninger.length} bemerkning{prot.bemerkninger.length > 1 ? 'er' : ''} registrert
+                </div>
               </div>
-              <div className="text-xs text-[#DC2626]/70">
+              <div className="text-xs font-medium text-danger/70 pl-6">
                 Bemerkninger dokumenterer feil og mangler — viktig ved depositumtvister.
               </div>
             </div>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
+import { PageHeader, SectionCard, Pill } from '../../components/ui/kit';
 
 const HANDLING = {
-  endre_niva: 'Endret nivå',
-  endre_status: 'Endret status',
-  gi_gratis_maaned: 'Ga gratis måned',
+  endre_niva: { label: 'Endret nivå', tone: 'neutral' },
+  endre_status: { label: 'Endret status', tone: 'amber' },
+  gi_gratis_maaned: { label: 'Ga gratis måned', tone: 'mint' },
 };
 
 function tid(d) {
@@ -27,43 +29,55 @@ export default function AdminLogg() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-white mb-1">Revisjonslogg</h1>
-      <p className="text-sm text-[#A1A1AA] mb-6">Siste {logg.length} admin-handlinger</p>
+      <PageHeader tittel="Revisjonslogg" undertittel={`Siste ${logg.length} admin-handlinger`} />
 
-      {feil && <div className="text-sm text-[#F87171] mb-4">{feil}</div>}
-      {laster ? (
-        <div className="text-sm text-[#71717A]">Laster…</div>
-      ) : logg.length === 0 ? (
-        <div className="text-sm text-[#71717A]">Ingen handlinger logget ennå.</div>
-      ) : (
-        <div className="rounded-xl border border-[#26262C] overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-[#16161A] text-[#A1A1AA] text-left text-xs">
-                <th className="px-4 py-3 font-medium">Tidspunkt</th>
-                <th className="px-4 py-3 font-medium">Admin</th>
-                <th className="px-4 py-3 font-medium">Handling</th>
-                <th className="px-4 py-3 font-medium">Mål</th>
-                <th className="px-4 py-3 font-medium">Detaljer</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#26262C]">
-              {logg.map((g) => (
-                <tr key={g.id} className="hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 text-[#71717A] whitespace-nowrap">{tid(g.tidspunkt)}</td>
-                  <td className="px-4 py-3 text-[#A1A1AA]">{g.admin_navn || '—'}</td>
-                  <td className="px-4 py-3 text-white">{HANDLING[g.handling] || g.handling}</td>
-                  <td className="px-4 py-3 text-[#A1A1AA]">{g.mal_navn || '—'}</td>
-                  <td className="px-4 py-3 text-[#71717A] num text-xs">
-                    {g.detaljer && Object.keys(g.detaljer).length
-                      ? Object.entries(g.detaljer).map(([k, v]) => `${k}: ${v}`).join(', ')
-                      : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {feil && (
+        <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-danger/25 bg-danger/[0.07] px-4 py-3">
+          <AlertTriangle size={16} className="text-danger shrink-0" />
+          <div className="flex-1 text-sm font-medium text-danger">{feil}</div>
         </div>
+      )}
+
+      {laster ? (
+        <div className="text-sm font-medium text-muted-2">Laster…</div>
+      ) : logg.length === 0 ? (
+        <div className="text-sm font-medium text-muted-2">Ingen handlinger logget ennå.</div>
+      ) : (
+        <SectionCard className="!p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-sand text-muted-2 text-left text-[11.5px] font-extrabold uppercase tracking-[0.06em]">
+                  <th className="px-4 py-3">Tidspunkt</th>
+                  <th className="px-4 py-3">Admin</th>
+                  <th className="px-4 py-3">Handling</th>
+                  <th className="px-4 py-3">Mål</th>
+                  <th className="px-4 py-3">Detaljer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logg.map((g) => {
+                  const h = HANDLING[g.handling];
+                  return (
+                    <tr key={g.id} className="border-t border-line-soft hover:bg-surface-2 transition-colors">
+                      <td className="px-4 py-3 text-muted-2 whitespace-nowrap num">{tid(g.tidspunkt)}</td>
+                      <td className="px-4 py-3 text-muted">{g.admin_navn || '—'}</td>
+                      <td className="px-4 py-3">
+                        {h ? <Pill tone={h.tone}>{h.label}</Pill> : <span className="font-bold text-ink">{g.handling}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-muted">{g.mal_navn || '—'}</td>
+                      <td className="px-4 py-3 text-muted-2 num text-xs">
+                        {g.detaljer && Object.keys(g.detaljer).length
+                          ? Object.entries(g.detaljer).map(([k, v]) => `${k}: ${v}`).join(', ')
+                          : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
       )}
     </div>
   );

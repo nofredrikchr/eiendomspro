@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { BekreftModal } from '../../components/ui/BekreftModal';
+import { Pill, IconTile, Avatar, PageHeader, SectionCard } from '../../components/ui/kit';
 import { profilApi } from '../../services/entitetApi';
 
 // ─── Utleier-skjema ────────────────────────────────────────────
@@ -26,13 +27,13 @@ function UtleierSkjema({ initial, onLagre, onAvbryt }) {
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div className="bg-[#F1F1ED] border border-[#DCDAD2] rounded-xl p-5 space-y-4">
+    <div className="bg-sand border border-line rounded-[18px] p-5 space-y-4">
       <div className="flex gap-2">
         {[['foretak', 'Foretak', Building2], ['privatperson', 'Privatperson', User]].map(([val, label, Icon]) => (
           <button key={val} type="button"
             onClick={() => setForm((f) => ({ ...f, type: val }))}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-pointer
-              ${form.type === val ? 'border-black/[0.10] bg-black/[0.055] text-[#1A1B1E]' : 'border-[#E9E8E2] text-[#65696F] hover:border-[#DCDAD2]'}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold transition-all cursor-pointer
+              ${form.type === val ? 'border-mint-line bg-mint text-brand-ink' : 'border-line text-muted hover:border-line-input'}`}>
             <Icon size={14} />{label}
           </button>
         ))}
@@ -75,18 +76,14 @@ function UtleierSkjema({ initial, onLagre, onAvbryt }) {
 
 function UtleierKort({ utleier, onRediger, onSlett }) {
   return (
-    <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-4 flex items-center gap-4 group hover:border-[#DCDAD2] transition-colors">
-      <div className="w-10 h-10 bg-[#E9E8E2] rounded-lg flex items-center justify-center shrink-0">
-        {utleier.type === 'foretak' ? <Building2 size={16} className="text-[#7A7D83]" /> : <User size={16} className="text-[#7A7D83]" />}
-      </div>
+    <div className="bg-surface border border-line rounded-[18px] p-4 flex items-center gap-4 group hover:border-line-input transition-colors">
+      <Avatar navn={utleier.navn} tone={utleier.type === 'foretak' ? 'mint' : 'sand'} size={40} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-[#1A1B1E] text-sm">{utleier.navn}</span>
-          <span className="text-xs text-[#7A7D83] bg-[#E9E8E2] px-2 py-0.5 rounded-full">
-            {utleier.type === 'foretak' ? 'Foretak' : 'Privatperson'}
-          </span>
+          <span className="font-extrabold text-ink text-sm tracking-[-0.01em]">{utleier.navn}</span>
+          <Pill tone="neutral">{utleier.type === 'foretak' ? 'Foretak' : 'Privatperson'}</Pill>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-[#7A7D83]">
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs font-medium text-muted-2">
           {utleier.orgnummer && <span>Org.nr: <span className="num">{utleier.orgnummer}</span></span>}
           {utleier.fodselsdato && <span>Fødselsdato: {utleier.fodselsdato}</span>}
           {utleier.epost && <span>{utleier.epost}</span>}
@@ -96,11 +93,11 @@ function UtleierKort({ utleier, onRediger, onSlett }) {
       </div>
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
         <button onClick={() => onRediger(utleier)} aria-label="Rediger utleier"
-          className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer">
+          className="p-1.5 text-muted-2 hover:text-ink hover:bg-line-soft rounded-lg transition-all cursor-pointer">
           <Pencil size={13} />
         </button>
         <button onClick={() => onSlett(utleier.id)} aria-label="Slett utleier"
-          className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer">
+          className="p-1.5 text-muted-2 hover:text-danger hover:bg-danger/[0.06] rounded-lg transition-all cursor-pointer">
           <Trash2 size={13} />
         </button>
       </div>
@@ -118,8 +115,8 @@ const TABS = [
 function TabBtn({ active, onClick, icon: Icon, label }) {
   return (
     <button type="button" onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all cursor-pointer
-        ${active ? 'bg-black/[0.055] text-[#1A1B1E]' : 'text-[#65696F] hover:text-[#2A2D33] hover:bg-black/[0.03]'}`}>
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all cursor-pointer
+        ${active ? 'bg-mint text-brand-ink' : 'text-muted hover:text-ink-2 hover:bg-line-soft'}`}>
       <Icon size={15} className="shrink-0" />
       {label}
     </button>
@@ -149,10 +146,9 @@ function InnstillingerTab() {
   }
 
   return (
-    <form onSubmit={lagre} className="max-w-lg space-y-6">
-      <div>
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-1">Kontaktinformasjon</h2>
-        <p className="text-xs text-[#7A7D83] mb-5">Denne informasjonen vises ikke til leietakere.</p>
+    <form onSubmit={lagre} className="max-w-lg space-y-5">
+      <SectionCard tittel="Kontaktinformasjon">
+        <p className="text-[13px] font-medium text-muted-2 -mt-2 mb-4">Denne informasjonen vises ikke til leietakere.</p>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input label="Fornavn" value={form.fornavn || ''} onChange={set('fornavn')} placeholder="Per Tomas" />
@@ -161,12 +157,9 @@ function InnstillingerTab() {
           <Input label="E-post" type="email" value={form.epost || ''} onChange={set('epost')} placeholder="pt@ptfjell.no" />
           <Input label="Mobiltelefon" type="tel" value={form.tlf || ''} onChange={set('tlf')} placeholder="+47 912 22 226" />
         </div>
-      </div>
+      </SectionCard>
 
-      <div className="h-px bg-[#E9E8E2]" />
-
-      <div>
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-5">Preferanser</h2>
+      <SectionCard tittel="Preferanser">
         <div className="space-y-4">
           <Select
             label="Valuta"
@@ -186,7 +179,7 @@ function InnstillingerTab() {
             ]}
           />
         </div>
-      </div>
+      </SectionCard>
 
       <Button type="submit" variant="primary">
         {lagret ? <><Check size={14} /> Lagret!</> : 'Lagre endringer'}
@@ -212,7 +205,7 @@ function UtleiereTab() {
         onBekreft={async () => { await deleteUtleier(slettId); setSlettId(null); }}
         onAvbryt={() => setSlettId(null)}
       />
-      <p className="text-sm text-[#65696F] mb-5">
+      <p className="text-[14.5px] font-medium text-muted mb-5">
         Utleiere brukes på leiekontrakter og i PDF-generering. Du kan ha én eller flere —
         f.eks. deg som privatperson og et AS.
       </p>
@@ -229,10 +222,12 @@ function UtleiereTab() {
           )
         )}
         {utleiere.length === 0 && !visNy && (
-          <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-8 text-center">
-            <Building2 size={24} className="text-[#AEB0B4] mx-auto mb-3" />
-            <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen utleiere registrert</div>
-            <div className="text-xs text-[#7A7D83]">Legg til en utleier for å bruke den på leiekontrakter</div>
+          <div className="bg-surface border border-line rounded-[18px] p-8 text-center">
+            <IconTile tone="sand" size={48} radius={14} className="mx-auto mb-3">
+              <Building2 size={22} />
+            </IconTile>
+            <div className="text-sm font-extrabold text-ink mb-1">Ingen utleiere registrert</div>
+            <div className="text-xs font-medium text-muted-2">Legg til en utleier for å bruke den på leiekontrakter</div>
           </div>
         )}
       </div>
@@ -254,21 +249,21 @@ function UtleiereTab() {
 function TilgangTab() {
   return (
     <div className="max-w-lg">
-      <div className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#E9E8E2] rounded-lg flex items-center justify-center">
-            <Shield size={16} className="text-[#7A7D83]" />
-          </div>
+      <SectionCard>
+        <div className="flex items-center gap-3 mb-4">
+          <IconTile tone="mint" size={40} radius={12}>
+            <Shield size={18} />
+          </IconTile>
           <div>
-            <div className="text-sm font-medium text-[#1A1B1E]">Tilgangsstyring</div>
-            <div className="text-xs text-[#7A7D83] mt-0.5">Administrer hvem som har tilgang til kontoen</div>
+            <div className="text-sm font-extrabold text-ink">Tilgangsstyring</div>
+            <div className="text-xs font-medium text-muted-2 mt-0.5">Administrer hvem som har tilgang til kontoen</div>
           </div>
         </div>
-        <div className="h-px bg-[#E9E8E2]" />
-        <p className="text-sm text-[#7A7D83]">
+        <div className="h-px bg-line-soft mb-4" />
+        <p className="text-[14.5px] font-medium text-muted">
           Tilgangsstyring for flere brukere på samme konto kommer i en fremtidig versjon.
         </p>
-      </div>
+      </SectionCard>
     </div>
   );
 }
@@ -279,29 +274,23 @@ export default function MinKonto() {
   const { bruker, erDemo, loggUt } = useAuth();
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Min konto</h1>
-          <p className="text-sm text-[#65696F] mt-1">Kontoinformasjon og innstillinger</p>
-        </div>
+    <div className="animate-fade-up">
+      <PageHeader tittel="Min konto" undertittel="Kontoinformasjon og innstillinger">
         {!erDemo && bruker && (
           <div className="text-right">
-            <div className="text-xs text-[#7A7D83]">Logget inn som</div>
-            <div className="text-sm text-[#1A1B1E]">{bruker.epost || bruker.telefon || bruker.fulltNavn}</div>
+            <div className="text-[12.5px] font-semibold text-muted-2">Logget inn som</div>
+            <div className="text-sm font-bold text-ink">{bruker.epost || bruker.telefon || bruker.fulltNavn}</div>
             <button onClick={loggUt}
-              className="flex items-center gap-1.5 text-xs text-[#65696F] hover:text-[#DC2626] transition-colors cursor-pointer mt-1.5 ml-auto">
+              className="flex items-center gap-1.5 text-xs font-bold text-muted hover:text-danger transition-colors cursor-pointer mt-1.5 ml-auto">
               <LogOut size={12} /> Logg ut
             </button>
           </div>
         )}
-        {erDemo && (
-          <span className="text-xs text-[#7A7D83] bg-[#E9E8E2] px-2.5 py-1 rounded-full">Demo-modus</span>
-        )}
-      </div>
+        {erDemo && <Pill tone="neutral">Demo-modus</Pill>}
+      </PageHeader>
 
       {/* Tab-linje */}
-      <div className="flex gap-1 mb-8 border-b border-[#E9E8E2] pb-1">
+      <div className="flex gap-1 mb-7 border-b border-line pb-2">
         {TABS.map((t) => (
           <TabBtn key={t.id} active={aktiveTab === t.id} onClick={() => setAktiveTab(t.id)}
             icon={t.icon} label={t.label} />

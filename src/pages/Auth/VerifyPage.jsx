@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { Logo } from '../../components/Logo';
+import { Button } from '../../components/ui/Button';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EiendomsPRO — bekreft e-post (redesign 2026)
+   Sentrert hvitt kort på kremlerret. Kun presentasjon endret.
+   ──────────────────────────────────────────────────────────────────────────── */
 
 export default function VerifyPage() {
   const navigate = useNavigate();
@@ -21,24 +27,38 @@ export default function VerifyPage() {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F6F6F4' }}>
-      <div className="relative w-full max-w-sm text-center">
-        <div className="flex justify-center mb-8"><Logo variant="dark" height={32} /></div>
-        <div className="rounded-2xl p-8 shadow-card-lg" style={{ background: '#FFFFFF', border: '1px solid #E9E8E2' }}>
-          {status === 'jobber' && <p className="text-sm text-[#65696F]">Bekrefter e-posten din…</p>}
+    <div className="min-h-screen bg-canvas text-ink animate-fade-up flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-[400px]">
+        <button onClick={() => navigate('/')} className="flex justify-center w-full mb-7 bg-transparent border-none p-0 cursor-pointer">
+          <Logo variant="dark" height={32} />
+        </button>
+        <div className="bg-surface border border-line rounded-[20px] shadow-card-lg p-[clamp(28px,4vw,38px)] text-center">
+          {status === 'jobber' && (
+            <>
+              <div className="w-12 h-12 rounded-full bg-mint flex items-center justify-center mx-auto mb-3.5">
+                <Loader2 size={22} className="text-brand animate-spin" />
+              </div>
+              <h1 className="m-0 mb-1.5 text-[clamp(20px,3vw,24px)] font-extrabold tracking-[-0.025em] text-ink">Bekrefter e-posten din…</h1>
+              <p className="m-0 text-sm text-muted leading-relaxed">Dette tar bare et øyeblikk.</p>
+            </>
+          )}
           {status === 'ok' && (
             <>
-              <div className="w-12 h-12 rounded-full bg-[#15803D]/15 flex items-center justify-center mx-auto mb-3"><Check size={22} className="text-[#15803D]" /></div>
-              <h1 className="text-base font-semibold text-[#1A1B1E] mb-2">E-posten er bekreftet</h1>
-              <button onClick={() => navigate('/app')} className="text-sm text-[#2563EB] hover:underline cursor-pointer">Gå til appen</button>
+              <div className="w-12 h-12 rounded-full bg-mint flex items-center justify-center mx-auto mb-3.5"><Check size={22} className="text-brand" /></div>
+              <h1 className="m-0 mb-1.5 text-[clamp(20px,3vw,24px)] font-extrabold tracking-[-0.025em] text-ink">E-posten er bekreftet</h1>
+              <p className="m-0 mb-5 text-sm text-muted leading-relaxed">Alt klart — velkommen til EiendomsPRO.</p>
+              <Button onClick={() => navigate('/app')} size="lg" className="w-full">
+                Gå til appen
+                <ArrowRight size={16} strokeWidth={2.2} />
+              </Button>
             </>
           )}
           {status === 'feil' && (
             <>
-              <div className="w-12 h-12 rounded-full bg-[#DC2626]/10 flex items-center justify-center mx-auto mb-3"><AlertCircle size={22} className="text-[#DC2626]" /></div>
-              <h1 className="text-base font-semibold text-[#1A1B1E] mb-2">Lenken er ugyldig eller utløpt</h1>
-              <p className="text-sm text-[#65696F]">Logg inn og be om en ny bekreftelseslenke.</p>
-              <button onClick={() => navigate('/login')} className="text-sm text-[#2563EB] hover:underline cursor-pointer mt-3">Til innlogging</button>
+              <div className="w-12 h-12 rounded-full bg-amber-bg flex items-center justify-center mx-auto mb-3.5"><AlertCircle size={22} className="text-amber" /></div>
+              <h1 className="m-0 mb-1.5 text-[clamp(20px,3vw,24px)] font-extrabold tracking-[-0.025em] text-ink">Lenken er ugyldig eller utløpt</h1>
+              <p className="m-0 mb-5 text-sm text-muted leading-relaxed">Logg inn og be om en ny bekreftelseslenke.</p>
+              <Button onClick={() => navigate('/login')} variant="secondary" size="lg" className="w-full">Til innlogging</Button>
             </>
           )}
         </div>
