@@ -13,8 +13,9 @@ import {
    Plus Jakarta Sans, foto-drevet Airbnb-vibe for langtidsutleie. Ingen emoji.
    ──────────────────────────────────────────────────────────────────────────── */
 
-const HERO_BILDE = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1100&q=70';
-const LEIETAKER_BILDE = 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1000&q=70';
+// Foto-platene fra designet, bundlet lokalt i /public (ingen eksterne kall).
+const HERO_BILDE = '/forside-stue.jpg';
+const LEIETAKER_BILDE = '/forside-soverom.jpg';
 
 export default function LandingPage() {
   const navigate = useNavigate();
