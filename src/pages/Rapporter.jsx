@@ -8,6 +8,9 @@ import { byggOkonomi, byggPrognose, aggreger, DRIFT_LABELS } from '../utils/bygg
 import { beregnSkattSamlet } from '../utils/skatt';
 import { genererRapportPDF } from '../utils/rapportPDF';
 import { formatKr } from '../utils/format';
+import { Button } from '../components/ui/Button';
+import { StatCard } from '../components/ui/Card';
+import { PageHeader, SectionCard } from '../components/ui/kit';
 
 const NÅ = new Date().getFullYear();
 const pct = (v) => (isFinite(v) ? `${v.toFixed(1)} %` : '–');
@@ -35,33 +38,22 @@ function lastNedCsv(navn, rader) {
 }
 
 // ─── Hjelpekomponenter ────────────────────────────────────────────────────────
-function KPI({ label, verdi, farge = '#2A2D33', sub }) {
-  return (
-    <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-4">
-      <div className="text-xs text-[#7A7D83] mb-1">{label}</div>
-      <div className="text-lg font-bold num" style={{ color: farge, fontFamily: 'DM Mono, monospace' }}>{verdi}</div>
-      {sub && <div className="text-xs text-[#7A7D83] mt-0.5">{sub}</div>}
-    </div>
-  );
-}
-
 function Tabell({ kolonner, rader, sumRad }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#E9E8E2]">
+    <div className="overflow-x-auto rounded-[14px] border border-line">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[#F1F1ED] border-b border-[#E9E8E2]">
+          <tr className="bg-sand border-b border-line">
             {kolonner.map((k, i) => (
-              <th key={k} className={`px-4 py-3 text-xs font-medium text-[#7A7D83] ${i === 0 ? 'text-left' : 'text-right'}`}>{k}</th>
+              <th key={k} className={`px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-muted-2 ${i === 0 ? 'text-left' : 'text-right'}`}>{k}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rader.map((r, ri) => (
-            <tr key={ri} className="border-b border-[#E9E8E2]/50 hover:bg-black/[0.02] transition-colors">
+            <tr key={ri} className="border-b border-line-soft last:border-0 hover:bg-surface-2 transition-colors">
               {r.map((celle, ci) => (
-                <td key={ci} className={`px-4 py-3 ${ci === 0 ? 'text-[#1A1B1E]' : 'text-right num text-[#4B4E54]'}`}
-                  style={ci > 0 ? { fontFamily: 'DM Mono, monospace' } : {}}>
+                <td key={ci} className={`px-4 py-3 ${ci === 0 ? 'font-bold text-ink' : 'text-right num font-semibold text-ink-2'}`}>
                   {celle}
                 </td>
               ))}
@@ -70,10 +62,9 @@ function Tabell({ kolonner, rader, sumRad }) {
         </tbody>
         {sumRad && (
           <tfoot>
-            <tr className="border-t border-[#E9E8E2] bg-[#F1F1ED] font-semibold">
+            <tr className="border-t border-line bg-sand font-extrabold">
               {sumRad.map((celle, ci) => (
-                <td key={ci} className={`px-4 py-3 ${ci === 0 ? 'text-[#1A1B1E]' : 'text-right num text-[#1A1B1E]'}`}
-                  style={ci > 0 ? { fontFamily: 'DM Mono, monospace' } : {}}>
+                <td key={ci} className={`px-4 py-3 ${ci === 0 ? 'text-ink' : 'text-right num text-ink'}`}>
                   {celle}
                 </td>
               ))}
@@ -87,15 +78,13 @@ function Tabell({ kolonner, rader, sumRad }) {
 
 function EksportRad({ onCsv, onPdf }) {
   return (
-    <div className="flex items-center gap-1">
-      <button onClick={onPdf}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] transition-all cursor-pointer">
-        <FileDown size={14} /> PDF
-      </button>
-      <button onClick={onCsv}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] transition-all cursor-pointer">
-        <Download size={14} /> CSV
-      </button>
+    <div className="flex items-center gap-2.5">
+      <Button variant="secondary" size="sm" onClick={onCsv}>
+        <Download size={14} /> Eksporter CSV
+      </Button>
+      <Button variant="primary" size="sm" onClick={onPdf}>
+        <FileDown size={14} /> Last ned PDF
+      </Button>
     </div>
   );
 }
@@ -131,20 +120,22 @@ function Portefolje({ okonomi }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Samlet verdi" verdi={formatKr(agg.verdi)} farge="#15803D" sub={`${agg.antall} bygg`} />
-        <KPI label="Samlet gjeld" verdi={formatKr(agg.gjeld)} farge="#DC2626" sub={`LTV ${pct(agg.ltv)}`} />
-        <KPI label="Egenkapital" verdi={formatKr(agg.egenkapital)} farge="#4D7C0F" />
-        <KPI label="Kontantstrøm/år" verdi={formatKr(agg.kontantstromAar)} farge={agg.kontantstromAar >= 0 ? '#15803D' : '#DC2626'} sub={`${formatKr(agg.kontantstromMnd)}/mnd`} />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+        <StatCard label="Samlet verdi" value={formatKr(agg.verdi)} color="green" sub={`${agg.antall} bygg`} />
+        <StatCard label="Samlet gjeld" value={formatKr(agg.gjeld)} color="red" sub={`LTV ${pct(agg.ltv)}`} />
+        <StatCard label="Egenkapital" value={formatKr(agg.egenkapital)} color="green" />
+        <StatCard label="Kontantstrøm/år" value={formatKr(agg.kontantstromAar)} color={agg.kontantstromAar >= 0 ? 'green' : 'red'} sub={`${formatKr(agg.kontantstromMnd)}/mnd`} />
       </div>
-      <Tabell
-        kolonner={['Bygg', 'Verdi', 'Gjeld', 'EK', 'Brutto/år', 'NOI/år', 'Yield', 'LTV']}
-        rader={okonomi.map((b) => [
-          b.navn, formatKr(b.verdi), formatKr(b.gjeld), formatKr(b.egenkapital),
-          formatKr(b.bruttoAar), formatKr(b.noiAar), pct(b.nettoYield), pct(b.ltv),
-        ])}
-        sumRad={['Sum', formatKr(agg.verdi), formatKr(agg.gjeld), formatKr(agg.egenkapital), formatKr(agg.bruttoAar), formatKr(agg.noiAar), pct(agg.nettoYield), pct(agg.ltv)]}
-      />
+      <SectionCard tittel="Per bygg">
+        <Tabell
+          kolonner={['Bygg', 'Verdi', 'Gjeld', 'EK', 'Brutto/år', 'NOI/år', 'Yield', 'LTV']}
+          rader={okonomi.map((b) => [
+            b.navn, formatKr(b.verdi), formatKr(b.gjeld), formatKr(b.egenkapital),
+            formatKr(b.bruttoAar), formatKr(b.noiAar), pct(b.nettoYield), pct(b.ltv),
+          ])}
+          sumRad={['Sum', formatKr(agg.verdi), formatKr(agg.gjeld), formatKr(agg.egenkapital), formatKr(agg.bruttoAar), formatKr(agg.noiAar), pct(agg.nettoYield), pct(agg.ltv)]}
+        />
+      </SectionCard>
     </div>
   );
 }
@@ -179,20 +170,22 @@ function Lonnsomhet({ okonomi }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Brutto leie/år" verdi={formatKr(agg.bruttoAar)} farge="#15803D" />
-        <KPI label="Driftskostnader/år" verdi={formatKr(agg.driftAar)} farge="#DC2626" />
-        <KPI label="NOI/år" verdi={formatKr(agg.noiAar)} farge="#4D7C0F" sub="Netto driftsresultat" />
-        <KPI label="Snitt netto yield" verdi={pct(agg.nettoYield)} farge="#9A7A24" />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+        <StatCard label="Brutto leie/år" value={formatKr(agg.bruttoAar)} color="green" />
+        <StatCard label="Driftskostnader/år" value={formatKr(agg.driftAar)} color="red" />
+        <StatCard label="NOI/år" value={formatKr(agg.noiAar)} color="green" sub="Netto driftsresultat" />
+        <StatCard label="Snitt netto yield" value={pct(agg.nettoYield)} color="amber" />
       </div>
-      <Tabell
-        kolonner={['Bygg', 'Brutto leie/år', 'Driftskostn./år', 'NOI/år', 'Brutto yield', 'Netto yield', 'ROE']}
-        rader={okonomi.map((b) => [
-          b.navn, formatKr(b.bruttoAar), formatKr(b.driftAar), formatKr(b.noiAar),
-          pct(b.bruttoYield), pct(b.nettoYield), pct(b.roe),
-        ])}
-        sumRad={['Sum / snitt', formatKr(agg.bruttoAar), formatKr(agg.driftAar), formatKr(agg.noiAar), pct(agg.bruttoYield), pct(agg.nettoYield), '–']}
-      />
+      <SectionCard tittel="Lønnsomhet per bygg">
+        <Tabell
+          kolonner={['Bygg', 'Brutto leie/år', 'Driftskostn./år', 'NOI/år', 'Brutto yield', 'Netto yield', 'ROE']}
+          rader={okonomi.map((b) => [
+            b.navn, formatKr(b.bruttoAar), formatKr(b.driftAar), formatKr(b.noiAar),
+            pct(b.bruttoYield), pct(b.nettoYield), pct(b.roe),
+          ])}
+          sumRad={['Sum / snitt', formatKr(agg.bruttoAar), formatKr(agg.driftAar), formatKr(agg.noiAar), pct(agg.bruttoYield), pct(agg.nettoYield), '–']}
+        />
+      </SectionCard>
       <InfoBoks>NOI (Net Operating Income) = brutto leie − driftskostnader, før lånekostnader. Yield beregnes mot total investering (kjøpesum + oppussing).</InfoBoks>
     </div>
   );
@@ -227,20 +220,22 @@ function Kontantstrom({ okonomi }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Brutto leie/mnd" verdi={formatKr(agg.bruttoMnd)} farge="#15803D" />
-        <KPI label="Kontantstrøm/mnd" verdi={formatKr(agg.kontantstromMnd)} farge={agg.kontantstromMnd >= 0 ? '#15803D' : '#DC2626'} />
-        <KPI label="Kontantstrøm/år" verdi={formatKr(agg.kontantstromAar)} farge={agg.kontantstromAar >= 0 ? '#15803D' : '#DC2626'} />
-        <KPI label="Avdrag/år (formuesbygging)" verdi={formatKr(okonomi.reduce((s, b) => s + b.avdragMnd * 12, 0))} farge="#2563EB" />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+        <StatCard label="Brutto leie/mnd" value={formatKr(agg.bruttoMnd)} color="green" />
+        <StatCard label="Kontantstrøm/mnd" value={formatKr(agg.kontantstromMnd)} color={agg.kontantstromMnd >= 0 ? 'green' : 'red'} />
+        <StatCard label="Kontantstrøm/år" value={formatKr(agg.kontantstromAar)} color={agg.kontantstromAar >= 0 ? 'green' : 'red'} />
+        <StatCard label="Avdrag/år (formuesbygging)" value={formatKr(okonomi.reduce((s, b) => s + b.avdragMnd * 12, 0))} color="ink" />
       </div>
-      <Tabell
-        kolonner={['Bygg', 'Brutto/mnd', 'Drift/mnd', 'Termin/mnd', 'Renter/mnd', 'Avdrag/mnd', 'Kontantstrøm/mnd']}
-        rader={okonomi.map((b) => [
-          b.navn, formatKr(b.bruttoMnd), formatKr(b.driftMnd), formatKr(b.terminMnd),
-          formatKr(b.renterMnd), formatKr(b.avdragMnd), formatKr(b.kontantstromMnd),
-        ])}
-        sumRad={['Sum', formatKr(agg.bruttoMnd), formatKr(okonomi.reduce((s,b)=>s+b.driftMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.terminMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.renterMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.avdragMnd,0)), formatKr(agg.kontantstromMnd)]}
-      />
+      <SectionCard tittel="Kontantstrøm per bygg">
+        <Tabell
+          kolonner={['Bygg', 'Brutto/mnd', 'Drift/mnd', 'Termin/mnd', 'Renter/mnd', 'Avdrag/mnd', 'Kontantstrøm/mnd']}
+          rader={okonomi.map((b) => [
+            b.navn, formatKr(b.bruttoMnd), formatKr(b.driftMnd), formatKr(b.terminMnd),
+            formatKr(b.renterMnd), formatKr(b.avdragMnd), formatKr(b.kontantstromMnd),
+          ])}
+          sumRad={['Sum', formatKr(agg.bruttoMnd), formatKr(okonomi.reduce((s,b)=>s+b.driftMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.terminMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.renterMnd,0)), formatKr(okonomi.reduce((s,b)=>s+b.avdragMnd,0)), formatKr(agg.kontantstromMnd)]}
+        />
+      </SectionCard>
     </div>
   );
 }
@@ -282,32 +277,31 @@ function Kostnader({ okonomi }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Driftskostnader/år" verdi={formatKr(total)} farge="#DC2626" />
-        <KPI label="Driftskostnader/mnd" verdi={formatKr(total / 12)} farge="#DC2626" />
-        <KPI label="Per bygg/år (snitt)" verdi={formatKr(okonomi.length ? total / okonomi.length : 0)} farge="#4B4E54" />
-        <KPI label="Antall bygg" verdi={String(okonomi.length)} farge="#4B4E54" />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+        <StatCard label="Driftskostnader/år" value={formatKr(total)} color="red" />
+        <StatCard label="Driftskostnader/mnd" value={formatKr(total / 12)} color="red" />
+        <StatCard label="Per bygg/år (snitt)" value={formatKr(okonomi.length ? total / okonomi.length : 0)} color="ink" />
+        <StatCard label="Antall bygg" value={String(okonomi.length)} color="ink" />
       </div>
       {/* Fordeling */}
-      <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-        <h3 className="text-sm font-semibold text-[#1A1B1E] mb-4">Kostnadsfordeling per kategori</h3>
-        <div className="space-y-2.5">
+      <SectionCard tittel="Kostnadsfordeling per kategori">
+        <div className="space-y-3">
           {kategorier.filter((k) => sumPerKat[k] > 0).sort((a, b) => sumPerKat[b] - sumPerKat[a]).map((k) => {
             const andel = total ? (sumPerKat[k] / total) * 100 : 0;
             return (
               <div key={k}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-[#4B4E54]">{DRIFT_LABELS[k]}</span>
-                  <span className="num text-[#1A1B1E]">{formatKr(sumPerKat[k])}/år <span className="text-[#7A7D83]">({andel.toFixed(0)} %)</span></span>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <span className="font-semibold text-muted">{DRIFT_LABELS[k]}</span>
+                  <span className="num font-bold text-ink">{formatKr(sumPerKat[k])}/år <span className="font-semibold text-muted-2">({andel.toFixed(0)} %)</span></span>
                 </div>
-                <div className="h-1.5 bg-[#E9E8E2] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#DC2626]/60 rounded-full" style={{ width: `${andel}%` }} />
+                <div className="h-2.5 bg-line-soft rounded-full overflow-hidden">
+                  <div className="h-full bg-brand rounded-full" style={{ width: `${andel}%` }} />
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }
@@ -319,9 +313,9 @@ function Sammenligning({ okonomi }) {
   if (okonomi.length < 2) {
     return (
       <div className="text-center py-16">
-        <GitCompare size={28} className="text-[#AEB0B4] mx-auto mb-3" />
-        <div className="text-sm font-medium text-[#1A1B1E] mb-1">Trenger minst to bygg</div>
-        <div className="text-xs text-[#7A7D83]">Legg inn flere bygg for å sammenligne lønnsomhet. (Sjekk at filteret ikke begrenser utvalget.)</div>
+        <GitCompare size={28} className="text-faint-2 mx-auto mb-3" />
+        <div className="text-sm font-bold text-ink mb-1">Trenger minst to bygg</div>
+        <div className="text-[13px] font-medium text-muted-2">Legg inn flere bygg for å sammenligne lønnsomhet. (Sjekk at filteret ikke begrenser utvalget.)</div>
       </div>
     );
   }
@@ -375,51 +369,53 @@ function Sammenligning({ okonomi }) {
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
 
       {/* Vinner-kort */}
-      <div className="rounded-xl p-5 border" style={{ borderColor: 'rgba(74,222,128,0.25)', background: 'linear-gradient(135deg, rgba(74,222,128,0.08), rgba(74,222,128,0.02))' }}>
+      <div className="rounded-[20px] p-5 border border-mint-line bg-mint-soft">
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp size={15} className="text-[#15803D]" />
-          <span className="text-xs font-medium text-[#15803D] uppercase tracking-wider">Mest lønnsomme bolig</span>
+          <TrendingUp size={15} className="text-brand" />
+          <span className="text-[11.5px] font-bold text-brand-ink uppercase tracking-wider">Mest lønnsomme bolig</span>
         </div>
-        <div className="text-xl font-bold text-[#1A1B1E]">{vinner.navn}</div>
+        <div className="text-xl font-extrabold tracking-[-0.01em] text-ink">{vinner.navn}</div>
         <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-sm">
-          <span className="text-[#65696F]">Netto yield <span className="text-[#15803D] num font-medium">{pct(vinner.nettoYield)}</span></span>
-          <span className="text-[#65696F]">Kontantstrøm <span className="text-[#15803D] num font-medium">{formatKr(vinner.kontantstromMnd)}/mnd</span></span>
-          <span className="text-[#65696F]">ROE <span className="text-[#15803D] num font-medium">{pct(vinner.roe)}</span></span>
+          <span className="font-medium text-muted">Netto yield <span className="text-brand-ink num font-bold">{pct(vinner.nettoYield)}</span></span>
+          <span className="font-medium text-muted">Kontantstrøm <span className="text-brand-ink num font-bold">{formatKr(vinner.kontantstromMnd)}/mnd</span></span>
+          <span className="font-medium text-muted">ROE <span className="text-brand-ink num font-bold">{pct(vinner.roe)}</span></span>
         </div>
       </div>
 
       {/* Sammenligningstabell med uthevet best/verst */}
-      <div className="overflow-x-auto rounded-xl border border-[#E9E8E2]">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-[#F1F1ED] border-b border-[#E9E8E2]">
-              <th className="px-4 py-3 text-xs font-medium text-[#7A7D83] text-left">Bygg</th>
-              {metrikker.map((m) => (
-                <th key={m.key} className="px-4 py-3 text-xs font-medium text-[#7A7D83] text-right">{m.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {okonomi.map((b) => (
-              <tr key={b.id} className="border-b border-[#E9E8E2]/50 hover:bg-black/[0.02] transition-colors">
-                <td className="px-4 py-3 text-[#1A1B1E]">{b.navn}</td>
-                {metrikker.map((m) => {
-                  const v = b[m.key];
-                  const erBest = Math.abs(v - ekstrem[m.key].best) < 0.001;
-                  const erVerst = Math.abs(v - ekstrem[m.key].verst) < 0.001 && okonomi.length > 1;
-                  const farge = erBest ? '#15803D' : erVerst ? '#DC2626' : '#4B4E54';
-                  return (
-                    <td key={m.key} className="px-4 py-3 text-right num" style={{ fontFamily: 'DM Mono, monospace', color: farge, fontWeight: erBest ? 600 : 400 }}>
-                      {m.format(v)}
-                    </td>
-                  );
-                })}
+      <SectionCard tittel="Sammenligning per nøkkeltall" bodyClassName="-mx-[22px] -mb-[22px]">
+        <div className="overflow-x-auto border-t border-line">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-sand border-b border-line">
+                <th className="px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-muted-2 text-left">Bygg</th>
+                {metrikker.map((m) => (
+                  <th key={m.key} className="px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-muted-2 text-right">{m.label}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <InfoBoks><span className="text-[#15803D]">Grønn</span> = beste verdi, <span className="text-[#DC2626]">rød</span> = svakeste verdi per nøkkeltall. Lav LTV regnes som best (mindre belåning).</InfoBoks>
+            </thead>
+            <tbody>
+              {okonomi.map((b) => (
+                <tr key={b.id} className="border-b border-line-soft last:border-0 hover:bg-surface-2 transition-colors">
+                  <td className="px-4 py-3 font-bold text-ink">{b.navn}</td>
+                  {metrikker.map((m) => {
+                    const v = b[m.key];
+                    const erBest = Math.abs(v - ekstrem[m.key].best) < 0.001;
+                    const erVerst = Math.abs(v - ekstrem[m.key].verst) < 0.001 && okonomi.length > 1;
+                    const cls = erBest ? 'text-brand-ink font-extrabold' : erVerst ? 'text-danger font-semibold' : 'text-ink-2 font-semibold';
+                    return (
+                      <td key={m.key} className={`px-4 py-3 text-right num ${cls}`}>
+                        {m.format(v)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+      <InfoBoks><span className="font-bold text-brand-ink">Teal</span> = beste verdi, <span className="font-bold text-danger">rød</span> = svakeste verdi per nøkkeltall. Lav LTV regnes som best (mindre belåning).</InfoBoks>
     </div>
   );
 }
@@ -467,16 +463,18 @@ function Verdiutvikling({ byggListe, leieobjekter }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end"><EksportRad onCsv={eksport} onPdf={eksportPdf} /></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Egenkapital i dag" verdi={formatKr(forsteEK)} farge="#4D7C0F" />
-        <KPI label="EK om 10 år" verdi={formatKr(sisteEK)} farge="#15803D" />
-        <KPI label="EK-vekst" verdi={formatKr(sisteEK - forsteEK)} farge="#15803D" sub="over 10 år" />
-        <KPI label="Verdi om 10 år" verdi={formatKr(samlet[9]?.verdi || 0)} farge="#4B4E54" />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 215px), 1fr))' }}>
+        <StatCard label="Egenkapital i dag" value={formatKr(forsteEK)} color="green" />
+        <StatCard label="EK om 10 år" value={formatKr(sisteEK)} color="green" />
+        <StatCard label="EK-vekst" value={formatKr(sisteEK - forsteEK)} color="green" sub="over 10 år" />
+        <StatCard label="Verdi om 10 år" value={formatKr(samlet[9]?.verdi || 0)} color="ink" />
       </div>
-      <Tabell
-        kolonner={['År', 'Eiendomsverdi', 'Restgjeld', 'Egenkapital', 'NOI/år']}
-        rader={samlet.map((s) => [String(s.aar), formatKr(s.verdi), formatKr(s.restGjeld), formatKr(s.egenkapital), formatKr(s.noi)])}
-      />
+      <SectionCard tittel="10-års prognose">
+        <Tabell
+          kolonner={['År', 'Eiendomsverdi', 'Restgjeld', 'Egenkapital', 'NOI/år']}
+          rader={samlet.map((s) => [String(s.aar), formatKr(s.verdi), formatKr(s.restGjeld), formatKr(s.egenkapital), formatKr(s.noi)])}
+        />
+      </SectionCard>
       <InfoBoks>Prognose med verdistigning, leievekst og kostnadsvekst fra hvert byggs parametere. Restgjeld beregnes fra annuitetslån.</InfoBoks>
     </div>
   );
@@ -549,13 +547,13 @@ function SkatteRapport({ byggListe, leieobjekter }) {
         <div className="flex items-center gap-3">
           <div className="relative">
             <select value={aar} onChange={(e) => setAar(Number(e.target.value))}
-              className="appearance-none bg-[#FFFFFF] border border-[#E9E8E2] rounded-lg pl-3 pr-9 py-2 text-sm text-[#1A1B1E] outline-none focus:border-[#DCDAD2] cursor-pointer">
+              className="appearance-none bg-surface border border-line-input rounded-xl pl-3.5 pr-9 py-2.5 text-sm font-semibold text-ink outline-none focus:border-brand cursor-pointer">
               {[NÅ - 1, NÅ, NÅ + 1].map((y) => <option key={y} value={y}>{y}{y === NÅ ? ' (i år)' : y > NÅ ? ' (prognose)' : ''}</option>)}
             </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A7D83] pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 pointer-events-none" />
           </div>
-          <label className="flex items-center gap-2 text-xs text-[#65696F] cursor-pointer">
-            <input type="checkbox" checked={visRenter} onChange={(e) => setVisRenter(e.target.checked)} className="accent-[#15803D]" />
+          <label className="flex items-center gap-2 text-[13px] font-semibold text-muted cursor-pointer">
+            <input type="checkbox" checked={visRenter} onChange={(e) => setVisRenter(e.target.checked)} className="accent-brand" />
             Inkluder gjeldsrenter
           </label>
         </div>
@@ -564,36 +562,34 @@ function SkatteRapport({ byggListe, leieobjekter }) {
 
       {/* Privat-seksjon */}
       {privat.length > 0 && (
-        <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#1A1B1E]">Privat utleie <span className="text-xs text-[#7A7D83] font-normal">· 22 % flat skatt</span></h3>
-            <span className="text-sm font-semibold num text-[#9A7A24]">{formatKr(sumPrivat)}</span>
-          </div>
+        <SectionCard
+          tittel={<span>Privat utleie <span className="text-[13px] font-semibold text-muted-2">· 22 % flat skatt</span></span>}
+          action={<span className="text-sm font-extrabold num text-amber">{formatKr(sumPrivat)}</span>}
+        >
           <Tabell
             kolonner={['Bygg', 'Brutto leie', 'Driftskostn.', 'Netto', 'Skatt 22 %']}
             rader={privat.map((b) => [b.navn, formatKr(b.bruttoLeie), formatKr(b.sumDrift), formatKr(b.nettoResultat), formatKr(visRenter ? b.skattEtterRenter : b.skattUtleie)])}
           />
-        </div>
+        </SectionCard>
       )}
 
       {/* AS-seksjon */}
       {asBygg.length > 0 && (
-        <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#1A1B1E]">Aksjeselskap (AS) <span className="text-xs text-[#7A7D83] font-normal">· 22 % selskapsskatt</span></h3>
-            <span className="text-sm font-semibold num text-[#9A7A24]">{formatKr(sumAsSelskap)}</span>
-          </div>
+        <SectionCard
+          tittel={<span>Aksjeselskap (AS) <span className="text-[13px] font-semibold text-muted-2">· 22 % selskapsskatt</span></span>}
+          action={<span className="text-sm font-extrabold num text-amber">{formatKr(sumAsSelskap)}</span>}
+        >
           <Tabell
             kolonner={['Bygg', 'Brutto leie', 'Driftskostn.', 'Netto', 'Selskapsskatt']}
             rader={asBygg.map((b) => [b.navn, formatKr(b.bruttoLeie), formatKr(b.sumDrift), formatKr(b.nettoResultat), formatKr(visRenter ? b.skattEtterRenter : b.skattUtleie)])}
           />
-          <div className="mt-4 bg-[#F6F6F4] border border-[#9A7A24]/20 rounded-xl p-4 space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-[#65696F]">Selskapsskatt (22 %)</span><span className="num text-[#1A1B1E]">{formatKr(sumAsSelskap)}</span></div>
-            <div className="flex justify-between"><span className="text-[#65696F]">+ Utbytteskatt ved uttak (37,84 %)</span><span className="num text-[#1A1B1E]">{formatKr(utbytteskatt)}</span></div>
-            <div className="flex justify-between border-t border-[#E9E8E2] pt-2 font-semibold"><span className="text-[#9A7A24]">= Effektiv skatt hvis du tar ut overskuddet</span><span className="num text-[#9A7A24]">{formatKr(asEffektiv)}</span></div>
-            <p className="text-xs text-[#7A7D83] pt-1">Lar du overskuddet stå i selskapet, betaler du bare selskapsskatten på 22 %.</p>
+          <div className="mt-4 bg-amber-soft border border-amber-line rounded-[14px] p-4 space-y-2 text-sm">
+            <div className="flex justify-between"><span className="font-medium text-muted">Selskapsskatt (22 %)</span><span className="num font-bold text-ink">{formatKr(sumAsSelskap)}</span></div>
+            <div className="flex justify-between"><span className="font-medium text-muted">+ Utbytteskatt ved uttak (37,84 %)</span><span className="num font-bold text-ink">{formatKr(utbytteskatt)}</span></div>
+            <div className="flex justify-between border-t border-amber-line pt-2 font-extrabold"><span className="text-amber">= Effektiv skatt hvis du tar ut overskuddet</span><span className="num text-amber">{formatKr(asEffektiv)}</span></div>
+            <p className="text-xs font-medium text-muted-2 pt-1">Lar du overskuddet stå i selskapet, betaler du bare selskapsskatten på 22 %.</p>
           </div>
-        </div>
+        </SectionCard>
       )}
 
       <InfoBoks>
@@ -605,8 +601,8 @@ function SkatteRapport({ byggListe, leieobjekter }) {
 
 function InfoBoks({ children }) {
   return (
-    <div className="flex gap-2.5 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 text-xs text-blue-300 leading-relaxed">
-      <Info size={14} className="shrink-0 mt-0.5" />
+    <div className="flex gap-2.5 p-4 rounded-[14px] border border-mint-line bg-mint-soft text-[13px] font-medium text-brand-ink leading-relaxed">
+      <Info size={15} className="shrink-0 mt-0.5 text-brand" />
       <span>{children}</span>
     </div>
   );
@@ -635,26 +631,20 @@ export default function Rapporter() {
 
   if (bygg.length === 0) {
     return (
-      <div>
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Rapporter</h1>
-          <p className="text-sm text-[#65696F] mt-1">Analyse og rapportering for porteføljen din</p>
-        </div>
+      <div className="animate-fade-up">
+        <PageHeader tittel="Rapporter" undertittel="Økonomien i porteføljen — klar for regnskapsføreren" />
         <div className="text-center py-20">
-          <PieChart size={28} className="text-[#AEB0B4] mx-auto mb-3" />
-          <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen bygg registrert</div>
-          <div className="text-xs text-[#7A7D83]">Legg inn byggene dine under «Mine Bygg» — så bygger rapportene seg automatisk.</div>
+          <PieChart size={28} className="text-faint-2 mx-auto mb-3" />
+          <div className="text-sm font-bold text-ink mb-1">Ingen bygg registrert</div>
+          <div className="text-[13px] font-medium text-muted-2">Legg inn byggene dine under «Mine Bygg» — så bygger rapportene seg automatisk.</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#1A1B1E]">Rapporter</h1>
-        <p className="text-sm text-[#65696F] mt-1">Hent ut rapporter på hele porteføljen eller per bygg</p>
-      </div>
+    <div className="animate-fade-up">
+      <PageHeader tittel="Rapporter" undertittel="Hent ut rapporter på hele porteføljen eller per bygg" />
 
       {/* Filter-rad */}
       <div className="flex flex-wrap gap-3 mb-6">
@@ -665,18 +655,20 @@ export default function Rapporter() {
       </div>
 
       {/* Rapporttype-velger */}
-      <div className="flex gap-1 mb-8 border-b border-[#E9E8E2] pb-1 overflow-x-auto">
+      <div className="flex gap-2 mb-8 overflow-x-auto pb-1">
         {RAPPORTER.map(({ id, label, ikon: Ikon }) => (
           <button key={id} type="button" onClick={() => setRapport(id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap
-              ${rapport === id ? 'bg-black/[0.055] text-[#1A1B1E]' : 'text-[#65696F] hover:text-[#2A2D33] hover:bg-black/[0.03]'}`}>
-            <Ikon size={15} className="shrink-0" /> {label}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold transition-all cursor-pointer whitespace-nowrap border
+              ${rapport === id
+                ? 'bg-ink-2 text-white border-ink-2'
+                : 'bg-surface text-ink-2 border-line-input hover:border-brand hover:text-brand-ink'}`}>
+            <Ikon size={14} className="shrink-0" /> {label}
           </button>
         ))}
       </div>
 
       {valgteBygg.length === 0 ? (
-        <div className="text-center py-16 text-[#7A7D83] text-sm">Ingen bygg matcher filteret.</div>
+        <div className="text-center py-16 text-muted-2 text-sm font-medium">Ingen bygg matcher filteret.</div>
       ) : (
         <>
           {rapport === 'portefolje' && <Portefolje okonomi={okonomi} />}
@@ -695,12 +687,12 @@ export default function Rapporter() {
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <div className="relative">
-      <span className="absolute -top-2 left-2.5 px-1 bg-[#F6F6F4] text-[10px] text-[#7A7D83] uppercase tracking-wider">{label}</span>
+      <span className="absolute -top-2 left-2.5 px-1 bg-canvas text-[10px] font-bold text-muted-2 uppercase tracking-wider">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="appearance-none bg-[#FFFFFF] border border-[#E9E8E2] rounded-lg pl-3 pr-9 py-2.5 text-sm text-[#1A1B1E] outline-none focus:border-[#DCDAD2] cursor-pointer min-w-44">
+        className="appearance-none bg-surface border border-line-input rounded-xl pl-3.5 pr-9 py-2.5 text-sm font-semibold text-ink outline-none focus:border-brand cursor-pointer min-w-44">
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A7D83] pointer-events-none" />
+      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 pointer-events-none" />
     </div>
   );
 }

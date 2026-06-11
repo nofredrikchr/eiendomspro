@@ -2,9 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Home, TrendingUp, Calculator, FileText, ChevronDown, ChevronUp,
   Copy, Check, BarChart3, AlertTriangle, Info, ArrowRight, Sparkles,
-  Trash2, FolderOpen, Clock
+  Trash2, FolderOpen, Clock,
 } from 'lucide-react';
 import { analyseApi } from '../../services/entitetApi';
+import { Input, Select } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
+import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
 
 // ─── Lagrede rapporter (Neon, eier-scoped via /api) ──────────────────────────
 async function lagreNyRapport(inp, t) {
@@ -100,8 +103,6 @@ function evaluerBoliger(valgte) {
       : null,
   };
 }
-import { Input, Select } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function pct(n, decimals = 1) {
@@ -453,27 +454,27 @@ function SeksjonHeader({ nummer, tittel, icon: Icon, open, onClick, ferdig }) {
       onClick={onClick}
       className="w-full flex items-center gap-3 text-left cursor-pointer"
     >
-      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors
-        ${ferdig ? 'bg-[#15803D]/15 text-[#15803D]' : 'bg-[#E9E8E2] text-[#65696F]'}`}>
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 transition-colors
+        ${ferdig ? 'bg-mint text-brand-ink' : 'bg-line-soft text-muted-2'}`}>
         {ferdig ? <Check size={13} /> : nummer}
       </div>
       <div className="flex items-center gap-2 flex-1">
-        <Icon size={15} className={ferdig ? 'text-[#15803D]' : 'text-[#7A7D83]'} />
-        <span className={`text-sm font-medium ${ferdig ? 'text-[#1A1B1E]' : 'text-[#4B4E54]'}`}>{tittel}</span>
+        <Icon size={15} className={ferdig ? 'text-brand' : 'text-faint-2'} />
+        <span className={`text-sm font-bold ${ferdig ? 'text-ink' : 'text-ink-2'}`}>{tittel}</span>
       </div>
-      {open ? <ChevronUp size={15} className="text-[#7A7D83] shrink-0" /> : <ChevronDown size={15} className="text-[#7A7D83] shrink-0" />}
+      {open ? <ChevronUp size={15} className="text-faint shrink-0" /> : <ChevronDown size={15} className="text-faint shrink-0" />}
     </button>
   );
 }
 
 function Seksjon({ nummer, tittel, icon, open, onToggle, ferdig, children }) {
   return (
-    <div className="rounded-xl border border-[#E9E8E2] overflow-hidden">
-      <div className={`px-5 py-4 ${open ? 'bg-[#FFFFFF]' : 'bg-[#F1F1ED] hover:bg-[#FFFFFF]'} transition-colors`}>
+    <div className="rounded-[18px] border border-line bg-surface overflow-hidden">
+      <div className={`px-5 py-4 ${open ? 'bg-surface' : 'bg-surface-2 hover:bg-surface'} transition-colors`}>
         <SeksjonHeader nummer={nummer} tittel={tittel} icon={icon} open={open} onClick={onToggle} ferdig={ferdig} />
       </div>
       {open && (
-        <div className="px-5 pb-5 pt-4 bg-[#F1F1ED] border-t border-[#E9E8E2] space-y-4">
+        <div className="px-5 pb-5 pt-4 border-t border-line-soft space-y-4">
           {children}
         </div>
       )}
@@ -481,38 +482,50 @@ function Seksjon({ nummer, tittel, icon, open, onToggle, ferdig, children }) {
   );
 }
 
-function KPIKort({ label, value, sub, color = 'white', warn = false }) {
+// Liten nøkkeltall-flis. `dark` = mørk teal-flate med hvit tekst.
+function KPIFlis({ label, value, sub, dark = false, color }) {
+  if (dark) {
+    return (
+      <div className="rounded-[16px] bg-brand-deep px-[18px] py-[17px]">
+        <div className="text-[11.5px] font-bold text-white/75 mb-1.5">{label}</div>
+        <div className="text-2xl font-extrabold tracking-[-0.02em] text-white num">{value}</div>
+        {sub && <div className="text-[10.5px] font-semibold text-white/60 mt-1">{sub}</div>}
+      </div>
+    );
+  }
   return (
-    <div className={`rounded-xl p-4 border ${warn ? 'border-[#DC2626]/20 bg-[#DC2626]/5' : 'border-[#E9E8E2] bg-[#FFFFFF]'}`}>
-      <div className="text-xs text-[#7A7D83] mb-1">{label}</div>
-      <div className={`text-xl font-bold num`} style={{ color, fontFamily: 'DM Mono, monospace' }}>{value}</div>
-      {sub && <div className="text-xs text-[#7A7D83] mt-0.5">{sub}</div>}
+    <div className="rounded-[16px] bg-surface border border-line px-[18px] py-[17px]">
+      <div className="text-[11.5px] font-bold text-muted-2 mb-1.5">{label}</div>
+      <div className={`text-2xl font-extrabold tracking-[-0.02em] num ${color || 'text-ink'}`}>{value}</div>
+      {sub && <div className="text-[10.5px] font-semibold text-faint mt-1">{sub}</div>}
     </div>
   );
 }
 
 function BudsjettRad({ label, verdi, indent = false, bold = false, positive = null, border = false }) {
-  const farge = positive === true ? '#15803D' : positive === false ? '#DC2626' : '#2A2D33';
+  const fargeKlasse = positive === true ? 'text-brand-ink' : positive === false ? 'text-amber' : 'text-ink-2';
   return (
-    <div className={`flex items-center justify-between py-2 ${border ? 'border-t border-[#E9E8E2] mt-1' : ''}`}>
-      <span className={`text-sm ${indent ? 'pl-4 text-[#65696F]' : bold ? 'text-[#1A1B1E] font-medium' : 'text-[#4B4E54]'}`}>{label}</span>
-      <span className={`text-sm num font-${bold ? 'semibold' : 'normal'}`} style={{ color: farge, fontFamily: 'DM Mono, monospace' }}>{verdi}</span>
+    <div className={`flex items-center justify-between py-2 ${border ? 'border-t border-line-soft mt-1' : ''}`}>
+      <span className={`text-[13px] ${indent ? 'pl-3.5 font-semibold text-muted-2' : bold ? 'text-ink font-extrabold' : 'font-semibold text-muted'}`}>{label}</span>
+      <span className={`text-[13px] num ${bold ? 'font-extrabold' : 'font-bold'} ${fargeKlasse}`}>{verdi}</span>
     </div>
   );
 }
 
+// Info/varsel-boks i nytt tokensystem.
 function InfoBoks({ type = 'info', children }) {
   const styles = {
-    info: 'bg-blue-500/5 border-blue-500/20 text-blue-300',
-    warn: 'bg-yellow-500/5 border-yellow-500/20 text-yellow-300',
-    ok: 'bg-[#15803D]/5 border-[#15803D]/20 text-[#15803D]',
-    error: 'bg-[#DC2626]/5 border-[#DC2626]/20 text-[#DC2626]',
+    info: 'bg-mint-soft border-mint-line text-ink-2',
+    warn: 'bg-amber-soft border-amber-line text-ink-2',
+    ok: 'bg-mint-soft border-mint-line text-ink-2',
+    error: 'bg-danger/[0.06] border-danger/25 text-danger',
   };
   const icons = { info: Info, warn: AlertTriangle, ok: Check, error: AlertTriangle };
+  const iconColor = { info: 'text-brand-ink', warn: 'text-amber', ok: 'text-brand-ink', error: 'text-danger' };
   const Icon = icons[type];
   return (
-    <div className={`flex gap-2.5 p-3 rounded-lg border text-xs leading-relaxed ${styles[type]}`}>
-      <Icon size={14} className="shrink-0 mt-0.5" />
+    <div className={`flex gap-2.5 p-3.5 rounded-[12px] border text-[12.5px] font-semibold leading-relaxed ${styles[type]}`}>
+      <Icon size={15} className={`shrink-0 mt-0.5 ${iconColor[type]}`} />
       <span>{children}</span>
     </div>
   );
@@ -534,162 +547,137 @@ function Rapport({ inp, t }) {
   if (!t.kjøpesum) {
     return (
       <div className="text-center py-20">
-        <BarChart3 size={32} className="text-[#AEB0B4] mx-auto mb-3" />
-        <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen data å vise ennå</div>
-        <div className="text-xs text-[#7A7D83]">Fyll inn kjøpesum og leie i kalkulatoren for å generere rapport</div>
+        <IconTile tone="mint" size={56} radius={18} className="mx-auto mb-4"><BarChart3 size={26} /></IconTile>
+        <div className="text-base font-extrabold text-ink mb-1">Ingen data å vise ennå</div>
+        <div className="text-[13px] font-medium text-muted-2">Fyll inn kjøpesum og leie i kalkulatoren for å generere rapport</div>
       </div>
     );
   }
 
+  const stressKontantstrømMnd = t.stressKontantstrøm / 12;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
 
       {/* Nøkkeltall */}
-      <div>
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-4">Nøkkeltall</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KPIKort label="Brutto yield" value={pct(t.bruttoYield)} sub="Leieinntekt / kjøpesum" color={t.bruttoYield >= 5 ? '#15803D' : t.bruttoYield >= 3 ? '#4D7C0F' : '#DC2626'} />
-          <KPIKort label="Netto yield" value={pct(t.nettoYield)} sub="Etter alle kostnader" color={t.nettoYield >= 3.5 ? '#15803D' : t.nettoYield >= 2 ? '#4D7C0F' : '#DC2626'} />
-          <KPIKort label="Kontantstrøm" value={kr(t.kontantstrømMnd) + '/mnd'} sub="Etter lånekostnad" color={t.kontantstrømMnd >= 0 ? '#15803D' : '#DC2626'} warn={t.kontantstrømMnd < 0} />
-          <KPIKort label="ROE" value={pct(t.roe)} sub="Avkastning på EK" color={t.roe >= 5 ? '#15803D' : t.roe >= 0 ? '#4D7C0F' : '#DC2626'} />
-        </div>
+      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))' }}>
+        <KPIFlis dark label="Brutto yield" value={pct(t.bruttoYield)} sub="Leie / total investering" />
+        <KPIFlis label="Netto yield" value={pct(t.nettoYield)} sub="Etter driftskostnader"
+          color={t.nettoYield >= 3.5 ? 'text-brand-ink' : t.nettoYield >= 2 ? 'text-ink' : 'text-danger'} />
+        <KPIFlis label="Kontantstrøm" value={kr(t.kontantstrømMnd)} sub="kr/mnd før skatt"
+          color={t.kontantstrømMnd >= 0 ? 'text-brand-ink' : 'text-danger'} />
+        <KPIFlis label="ROE" value={pct(t.roe)} sub="Kontantstrøm / EK"
+          color={t.roe >= 5 ? 'text-brand-ink' : t.roe >= 0 ? 'text-ink' : 'text-danger'} />
       </div>
 
       {/* Månedlig budsjett */}
-      <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-4">Månedlig budsjett</h2>
-        <div className="divide-y divide-[#E9E8E2]">
-          <div className="pb-2">
-            <BudsjettRad label="Brutto leieinntekt" verdi={`+ ${kr(t.bruttoLeieMnd)}`} positive={true} bold />
-            <BudsjettRad label={`Ledighetsvakanse (${100 - parseNum(inp.utleieandel || 95)} %)`} verdi={`− ${kr(t.ledighetMnd)}`} indent positive={false} />
-          </div>
-          <div className="py-2">
-            <div className="text-xs text-[#7A7D83] mb-1 pt-1">Driftskostnader</div>
-            {t.felleskostnaderÅr > 0 && <BudsjettRad label="Felleskostnader" verdi={`− ${kr(t.felleskostnaderÅr / 12)}`} indent positive={false} />}
-            {t.husforsikringÅr > 0 && <BudsjettRad label="Husforsikring" verdi={`− ${kr(t.husforsikringÅr / 12)}`} indent positive={false} />}
-            {t.kommunaleÅr > 0 && <BudsjettRad label="Kommunale avgifter" verdi={`− ${kr(t.kommunaleÅr / 12)}`} indent positive={false} />}
-            <BudsjettRad label={`Avsatt vedlikehold (${t.vedlikeholdPst} % av leie)`} verdi={`− ${kr(t.vedlikeholdMnd)}`} indent positive={false} />
-            {(inp.tilleggskostnader || []).filter(tk => tk.navn && parseNum(tk.belop) > 0).map((tk) => (
-              <BudsjettRad key={tk.id} label={tk.navn} verdi={`− ${kr(parseNum(tk.belop))}`} indent positive={false} />
-            ))}
-            <BudsjettRad label="Sum driftskostnader" verdi={`− ${kr(t.totaleKostÅr / 12)}`} bold />
-          </div>
-          <div className="py-2">
-            <BudsjettRad label="Netto leieinntekt" verdi={kr(t.nettoLeieMnd)} bold positive={t.nettoLeieMnd >= 0} />
-          </div>
-          <div className="py-2">
-            <div className="text-xs text-[#7A7D83] mb-1 pt-1">Lånekostnader</div>
-            <BudsjettRad label="Renter" verdi={`− ${kr(t.renterMnd)}`} indent positive={false} />
-            <BudsjettRad label="Avdrag" verdi={`− ${kr(t.avdragMnd)}`} indent positive={false} />
-            <BudsjettRad label="Totalt terminbeløp" verdi={`− ${kr(t.termMnd)}`} bold />
-          </div>
-          <div className="pt-3">
-            <BudsjettRad label="Kontantstrøm før skatt" verdi={kr(t.kontantstrømMnd)} bold positive={t.kontantstrømMnd >= 0} border />
-            <BudsjettRad label={`Estimert skatt (22 %)`} verdi={`− ${kr(t.estimertSkattÅr / 12)}`} indent positive={false} />
-            <BudsjettRad label="Kontantstrøm etter skatt" verdi={kr(t.kontantstrømEtterSkattÅr / 12)} bold positive={t.kontantstrømEtterSkattÅr >= 0} />
-          </div>
+      <SectionCard tittel="Månedlig budsjett">
+        <BudsjettRad label="Brutto leieinntekt" verdi={`+ ${kr(t.bruttoLeieMnd)}`} positive={true} bold />
+        <BudsjettRad label={`Ledighetsvakanse (${100 - parseNum(inp.utleieandel || 95)} %)`} verdi={`− ${kr(t.ledighetMnd)}`} indent positive={false} border />
+        <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 pt-3 pb-0.5">Driftskostnader</div>
+        {t.felleskostnaderÅr > 0 && <BudsjettRad label="Felleskostnader" verdi={`− ${kr(t.felleskostnaderÅr / 12)}`} indent positive={false} />}
+        {t.husforsikringÅr > 0 && <BudsjettRad label="Husforsikring" verdi={`− ${kr(t.husforsikringÅr / 12)}`} indent positive={false} />}
+        {t.kommunaleÅr > 0 && <BudsjettRad label="Kommunale avgifter" verdi={`− ${kr(t.kommunaleÅr / 12)}`} indent positive={false} />}
+        <BudsjettRad label={`Avsatt vedlikehold (${t.vedlikeholdPst} % av leie)`} verdi={`− ${kr(t.vedlikeholdMnd)}`} indent positive={false} />
+        {(inp.tilleggskostnader || []).filter(tk => tk.navn && parseNum(tk.belop) > 0).map((tk) => (
+          <BudsjettRad key={tk.id} label={tk.navn} verdi={`− ${kr(parseNum(tk.belop))}`} indent positive={false} />
+        ))}
+        <BudsjettRad label="Netto leieinntekt" verdi={kr(t.nettoLeieMnd)} bold positive={t.nettoLeieMnd >= 0} border />
+        <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 pt-3 pb-0.5">Lånekostnader</div>
+        <BudsjettRad label="Renter" verdi={`− ${kr(t.renterMnd)}`} indent positive={false} />
+        <BudsjettRad label="Avdrag (bygger egenkapital)" verdi={`− ${kr(t.avdragMnd)}`} indent positive={false} />
+        <BudsjettRad label="Kontantstrøm før skatt" verdi={kr(t.kontantstrømMnd)} bold positive={t.kontantstrømMnd >= 0} border />
+        <BudsjettRad label="Estimert skatt (22 % av overskudd)" verdi={`− ${kr(t.estimertSkattÅr / 12)}`} indent positive={false} />
+        <div className="flex items-center justify-between px-3.5 py-3 mt-1.5 rounded-[12px] bg-mint-soft border border-mint-line">
+          <span className="text-[13.5px] font-extrabold text-ink">Kontantstrøm etter skatt</span>
+          <span className="text-sm font-extrabold num text-brand-ink">{kr(t.kontantstrømEtterSkattÅr / 12)}/mnd</span>
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Belåningsanalyse */}
-      <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-4">Belåning og lånekapasitet</h2>
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div className="space-y-2 text-sm">
-            <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider mb-2">Prosjektkalkyle</div>
-            <div className="flex justify-between"><span className="text-[#65696F]">Kjøpesum</span><span className="text-[#1A1B1E] num">{kr(t.kjøpesum)}</span></div>
-            {t.oppussing > 0 && <div className="flex justify-between"><span className="text-[#65696F]">+ Oppussing</span><span className="text-[#1A1B1E] num">{kr(t.oppussing)}</span></div>}
-            <div className="flex justify-between"><span className="text-[#65696F]">+ Omkostninger</span><span className="text-[#1A1B1E] num">{kr(t.totaleOmkostninger)}</span></div>
-            <div className="flex justify-between font-medium border-t border-[#E9E8E2] pt-2 mt-1"><span className="text-[#1A1B1E]">= Total kostnad</span><span className="text-[#1A1B1E] num">{kr(t.totalKostnad)}</span></div>
-            <div className="flex justify-between"><span className="text-[#65696F]">− Sluttlån</span><span className="text-[#DC2626] num">− {kr(t.lånBeløp)}</span></div>
-            <div className="flex justify-between font-medium border-t border-[#E9E8E2] pt-2 mt-1">
-              <span style={{ color: t.cashInvestert >= 0 ? '#2A2D33' : '#15803D' }}>= Cash investert</span>
-              <span className="num" style={{ color: t.cashInvestert >= 0 ? '#2A2D33' : '#15803D' }}>{t.cashInvestert >= 0 ? kr(t.cashInvestert) : `+ ${kr(Math.abs(t.cashInvestert))} ut`}</span>
-            </div>
-            <div className="border-t border-[#E9E8E2] pt-3 mt-2 space-y-2">
-              <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider mb-2">Etter ferdigstillelse</div>
-              <div className="flex justify-between"><span className="text-[#65696F]">Boligverdi ({inp.nyTakst ? 'ny takst' : 'kjøpesum + oppussing'})</span><span className="text-[#1A1B1E] num">{kr(t.boligverdi)}</span></div>
-              <div className="flex justify-between"><span className="text-[#65696F]">− Sluttlån</span><span className="text-[#DC2626] num">− {kr(t.lånBeløp)}</span></div>
-              <div className="flex justify-between font-medium"><span className="text-[#15803D]">= EK i boligen</span><span className="num text-[#15803D]">{kr(t.egenkapital)}</span></div>
-              <div className="flex justify-between"><span className="text-[#65696F]">LTV</span><span className="num" style={{ color: t.ltv <= 90 ? '#15803D' : '#DC2626' }}>{pct(t.ltv)}</span></div>
-              {t.nyTakst > 0 && <div className="flex justify-between font-medium border-t border-[#E9E8E2] pt-2"><span className="text-[#15803D]">Verdi skapt</span><span className="num text-[#15803D]">{kr(t.verdiskapt)}</span></div>}
-              <div className="flex justify-between border-t border-[#E9E8E2] pt-2"><span className="text-[#65696F]">EK-krav ved kjøp ({t.ekKravPst} %)</span><span className="text-[#1A1B1E] num">{kr(t.ekKravMin)}</span></div>
+      {/* Belåning og lånekapasitet */}
+      <SectionCard tittel="Belåning & lånekapasitet">
+        <div className="grid gap-[18px]" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))' }}>
+          <div>
+            <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 mb-2">Prosjektkalkyle</div>
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Kjøpesum</span><span className="num font-bold text-ink-2">{kr(t.kjøpesum)}</span></div>
+            {t.oppussing > 0 && <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">+ Oppussing</span><span className="num font-bold text-ink-2">{kr(t.oppussing)}</span></div>}
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">+ Omkostninger</span><span className="num font-bold text-ink-2">{kr(t.totaleOmkostninger)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px] border-t border-line-soft mt-1"><span className="font-extrabold text-ink">= Total kostnad</span><span className="num font-extrabold text-ink">{kr(t.totalKostnad)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">− Sluttlån</span><span className="num font-bold text-amber">{kr(t.lånBeløp)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px] border-t border-line-soft">
+              <span className={`font-extrabold ${t.cashInvestert >= 0 ? 'text-ink' : 'text-brand-ink'}`}>= Cash investert</span>
+              <span className={`num font-extrabold ${t.cashInvestert >= 0 ? 'text-ink' : 'text-brand-ink'}`}>{t.cashInvestert >= 0 ? kr(t.cashInvestert) : `+ ${kr(Math.abs(t.cashInvestert))} ut`}</span>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider mb-2">5× gjeldsgradsregel</div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#65696F]">Leieinntekt (70 % bankvektet)</span>
-              <span className="text-[#1A1B1E] num">{kr(t.bankAkseptertLeieÅr)}/år</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#65696F]">Ekstra lånekapasitet fra leie</span>
-              <span className="num" style={{ color: '#15803D' }}>{kr(t.ekstraLånekapasitet)}</span>
-            </div>
-            <div className="flex justify-between text-sm border-t border-[#E9E8E2] pt-2">
-              <span className="text-[#65696F]">Nødvendig bruttoinntekt (jobb)</span>
-              <span className="text-[#1A1B1E] num font-semibold">{t.nødvendigBruttoInntekt > 0 ? kr(t.nødvendigBruttoInntekt) : '–'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#65696F]">Stresstest rente</span>
-              <span className="text-[#1A1B1E] num">{pct(t.stressRente, 1)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#65696F]">Terminbeløp ved stressrente</span>
-              <span className="text-[#1A1B1E] num">{kr(t.stressTermMnd)}/mnd</span>
-            </div>
+          <div>
+            <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 mb-2">Etter ferdigstillelse</div>
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Boligverdi ({inp.nyTakst ? 'ny takst' : 'kjøpesum + oppussing'})</span><span className="num font-bold text-ink-2">{kr(t.boligverdi)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">− Sluttlån</span><span className="num font-bold text-amber">{kr(t.lånBeløp)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px] border-t border-line-soft mt-1"><span className="font-extrabold text-brand-ink">= EK i boligen</span><span className="num font-extrabold text-brand-ink">{kr(t.egenkapital)}</span></div>
+            <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Belåningsgrad (LTV)</span><span className="num font-extrabold" style={{ color: t.ltv <= 90 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{pct(t.ltv)}</span></div>
+            {t.nyTakst > 0 && <div className="flex justify-between py-1.5 text-[13px] border-t border-line-soft"><span className="font-bold text-brand-ink">Verdi skapt</span><span className="num font-extrabold text-brand-ink">{kr(t.verdiskapt)}</span></div>}
+            <div className="flex justify-between py-1.5 text-[13px] border-t border-line-soft"><span className="font-semibold text-muted-2">EK-krav ved kjøp ({t.ekKravPst} %)</span><span className="num font-bold text-ink-2">{kr(t.ekKravMin)}</span></div>
           </div>
         </div>
+        <div className="mt-4 border-t border-line-soft pt-3.5">
+          <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 mb-2">5× gjeldsgradsregel</div>
+          <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Leieinntekt (70 % bankvektet)</span><span className="num font-bold text-ink-2">{kr(t.bankAkseptertLeieÅr)}/år</span></div>
+          <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Ekstra lånekapasitet fra leie</span><span className="num font-bold text-brand-ink">{kr(t.ekstraLånekapasitet)}</span></div>
+          <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Nødvendig bruttoinntekt (jobb)</span><span className="num font-extrabold text-ink-2">{t.nødvendigBruttoInntekt > 0 ? kr(t.nødvendigBruttoInntekt) : '–'}</span></div>
+          <div className="flex justify-between py-1.5 text-[13px]"><span className="font-semibold text-muted-2">Terminbeløp ved stressrente</span><span className="num font-bold text-ink-2">{kr(t.stressTermMnd)}/mnd</span></div>
+          {t.harNokLånekapasitet === true && (
+            <div className="mt-2.5"><InfoBoks type="ok">Leieinntekten dekker gjeldsgradskravet med god margin for dette lånet.</InfoBoks></div>
+          )}
+        </div>
+
         {t.lånBeløp > 0 && t.ltv > 90 && (
-          <InfoBoks type="error">
+          <div className="mt-3"><InfoBoks type="error">
             LTV på {pct(t.ltv)} overskrider bankens grense på 90 % av boligverdi ({kr(t.boligverdi)}). Reduser lånet med {kr(t.lånBeløp - t.boligverdi * 0.9)} eller øk boligverdien.
-          </InfoBoks>
+          </InfoBoks></div>
         )}
         {t.lånBeløp > 0 && t.ltv <= 90 && (
-          <InfoBoks type="ok">
+          <div className="mt-3"><InfoBoks type="ok">
             LTV {pct(t.ltv)} — innenfor bankens krav på maks 90 % av boligverdi.
-          </InfoBoks>
+          </InfoBoks></div>
         )}
         {t.lånBeløp > t.kjøpesum && t.ltv <= 90 && (
-          <InfoBoks type="info">
+          <div className="mt-3"><InfoBoks type="info">
             Sluttlånet ({kr(t.lånBeløp)}) er høyere enn kjøpesummen ({kr(t.kjøpesum)}). Dette er normalt ved refinansiering — banken låner mot ny takst ({kr(t.boligverdi)}) og LTV er kun {pct(t.ltv)}.
-          </InfoBoks>
+          </InfoBoks></div>
         )}
         {t.nødvendigBruttoInntekt > 0 && (
-          <div className="mt-3">
-            <InfoBoks type="info">
-              Med en eksisterende gjeld på {kr(t.eksGjeld)} og leieinntektens ekstra kapasitet på {kr(t.ekstraLånekapasitet)}, trenger du minimum {kr(t.nødvendigBruttoInntekt)} i brutto lønnsinntekt per år for å oppfylle 5×-regelen.
-            </InfoBoks>
-          </div>
+          <div className="mt-3"><InfoBoks type="info">
+            Med en eksisterende gjeld på {kr(t.eksGjeld)} og leieinntektens ekstra kapasitet på {kr(t.ekstraLånekapasitet)}, trenger du minimum {kr(t.nødvendigBruttoInntekt)} i brutto lønnsinntekt per år for å oppfylle 5×-regelen.
+          </InfoBoks></div>
         )}
-      </div>
+      </SectionCard>
 
       {/* Prosjektstartanalyse */}
       {t.kjøpesum > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.03)' }}>
-          <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(201,168,76,0.2)' }}>
-            <h2 className="text-sm font-semibold text-[#1A1B1E]">Prosjektstartanalyse</h2>
-            <p className="text-xs text-[#65696F] mt-0.5">Hva du trenger for å gjennomføre dette prosjektet — fra kjøp til refinansiering</p>
+        <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
+          <div className="px-[22px] py-4 border-b border-line-soft">
+            <h2 className="text-base font-extrabold tracking-[-0.01em] text-ink">Prosjektstartanalyse</h2>
+            <p className="text-[12.5px] font-medium text-muted-2 mt-0.5">Hva du trenger for å gjennomføre dette prosjektet — fra kjøp til refinansiering</p>
           </div>
 
-          <div className="p-5 space-y-6">
+          <div className="p-[22px] space-y-6">
 
             {/* Steg 1 — Startkapital */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-full bg-[#9A7A24]/15 text-[#9A7A24] text-xs font-bold flex items-center justify-center">1</div>
-                <span className="text-sm font-medium text-[#1A1B1E]">Hva du må ha for å starte</span>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-6 h-6 rounded-full bg-mint text-brand-ink text-xs font-extrabold flex items-center justify-center">1</div>
+                <span className="text-sm font-extrabold text-ink">Hva du må ha for å starte</span>
               </div>
-              <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-[#65696F]">Kjøpesum</span><span className="num text-[#1A1B1E]">{kr(t.kjøpesum)}</span></div>
-                <div className="flex justify-between"><span className="text-[#65696F]">+ Omkostninger (dok.avg. + tinglysing)</span><span className="num text-[#1A1B1E]">{kr(t.totaleOmkostninger)}</span></div>
-                <div className="flex justify-between border-t border-[#E9E8E2] pt-2"><span className="text-[#65696F]">= Kjøpskostnad</span><span className="num text-[#1A1B1E]">{kr(t.kjøpesum + t.totaleOmkostninger)}</span></div>
-                <div className="flex justify-between"><span className="text-[#65696F]">Maks kjøpslån ({100 - t.ekKravPst} % av kjøpesum)</span><span className="num text-[#DC2626]">− {kr(t.maxKjøpslån)}</span></div>
-                <div className="flex justify-between font-semibold border-t border-[#E9E8E2] pt-2">
-                  <span className="text-[#9A7A24]">= Min. egenkapital du MÅ ha</span>
-                  <span className="num text-[#9A7A24]">{kr(t.minEKvedKjøp)}</span>
+              <div className="bg-surface-2 border border-line rounded-[14px] p-4 space-y-1 text-[13px]">
+                <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Kjøpesum</span><span className="num font-bold text-ink-2">{kr(t.kjøpesum)}</span></div>
+                <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">+ Omkostninger (dok.avg. + tinglysing)</span><span className="num font-bold text-ink-2">{kr(t.totaleOmkostninger)}</span></div>
+                <div className="flex justify-between py-1 border-t border-line-soft"><span className="font-semibold text-muted-2">= Kjøpskostnad</span><span className="num font-bold text-ink-2">{kr(t.kjøpesum + t.totaleOmkostninger)}</span></div>
+                <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Maks kjøpslån ({100 - t.ekKravPst} % av kjøpesum)</span><span className="num font-bold text-amber">− {kr(t.maxKjøpslån)}</span></div>
+                <div className="flex justify-between py-1 border-t border-line-soft">
+                  <span className="font-extrabold text-brand-ink">= Min. egenkapital du MÅ ha</span>
+                  <span className="num font-extrabold text-brand-ink">{kr(t.minEKvedKjøp)}</span>
                 </div>
-                <p className="text-xs text-[#7A7D83] pt-1 leading-relaxed">
+                <p className="text-xs font-medium text-muted-2 pt-1.5 leading-relaxed">
                   Du trenger minimum {kr(t.minEKvedKjøp)} i egenkapital for å kjøpe eiendommen. Oppussingsbudsjettet på {kr(t.oppussing)} finansieres separat via byggelån eller egne midler underveis.
                 </p>
               </div>
@@ -698,55 +686,55 @@ function Rapport({ inp, t }) {
             {/* Steg 2 — Krav til ny takst */}
             {t.lånBeløp > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-[#9A7A24]/15 text-[#9A7A24] text-xs font-bold flex items-center justify-center">2</div>
-                  <span className="text-sm font-medium text-[#1A1B1E]">Krav til ny takst for refinansiering</span>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-mint text-brand-ink text-xs font-extrabold flex items-center justify-center">2</div>
+                  <span className="text-sm font-extrabold text-ink">Krav til ny takst for refinansiering</span>
                 </div>
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-4 space-y-3 text-sm">
+                <div className="bg-surface-2 border border-line rounded-[14px] p-4 space-y-3 text-[13px]">
 
                   {/* For sluttlånet */}
-                  <div className="space-y-2">
-                    <div className="text-xs text-[#7A7D83] uppercase tracking-wider">For å refinansiere til sluttlånet ({kr(t.lånBeløp)})</div>
-                    <div className="flex justify-between">
-                      <span className="text-[#65696F]">Min. ny takst ({100 - t.ekKravPst} % LTV-krav)</span>
-                      <span className="num text-[#1A1B1E]">{kr(t.minNyTakstSluttlån)}</span>
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">For å refinansiere til sluttlånet ({kr(t.lånBeløp)})</div>
+                    <div className="flex justify-between py-1">
+                      <span className="font-semibold text-muted-2">Min. ny takst ({100 - t.ekKravPst} % LTV-krav)</span>
+                      <span className="num font-bold text-ink-2">{kr(t.minNyTakstSluttlån)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#65696F]">Din ny takst</span>
-                      <span className="num" style={{ color: t.harNokTakstSluttlån ? '#15803D' : t.nyTakst > 0 ? '#DC2626' : '#7A7D83' }}>
+                    <div className="flex justify-between py-1">
+                      <span className="font-semibold text-muted-2">Din ny takst</span>
+                      <span className="num font-bold" style={{ color: t.harNokTakstSluttlån ? 'var(--color-brand-ink)' : t.nyTakst > 0 ? 'var(--color-danger)' : 'var(--color-faint)' }}>
                         {t.nyTakst > 0 ? kr(t.boligverdi) : '– (ikke fylt inn)'}
                       </span>
                     </div>
                     {t.nyTakst > 0 && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-[#7A7D83]">Buffer over minstekrav</span>
-                        <span className="num" style={{ color: t.takstBufferSluttlån >= 0 ? '#15803D' : '#DC2626' }}>{kr(t.takstBufferSluttlån)}</span>
+                      <div className="flex justify-between py-1 text-xs">
+                        <span className="font-semibold text-faint">Buffer over minstekrav</span>
+                        <span className="num font-bold" style={{ color: t.takstBufferSluttlån >= 0 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{kr(t.takstBufferSluttlån)}</span>
                       </div>
                     )}
                     {t.nyTakst > 0 && !t.harNokTakstSluttlån && (
-                      <p className="text-xs text-[#DC2626] leading-relaxed">Ny takst er for lav. Du mangler {kr(t.minNyTakstSluttlån - t.boligverdi)} i verdi for å refinansiere til sluttlånet innenfor {t.ekKravPst} % EK-krav.</p>
+                      <p className="text-xs font-semibold text-danger leading-relaxed">Ny takst er for lav. Du mangler {kr(t.minNyTakstSluttlån - t.boligverdi)} i verdi for å refinansiere til sluttlånet innenfor {t.ekKravPst} % EK-krav.</p>
                     )}
                     {t.nyTakst > 0 && t.harNokTakstSluttlån && (
-                      <p className="text-xs text-[#15803D] leading-relaxed">✓ Ny takst er høy nok. Banken vil refinansiere til sluttlånet innenfor {t.ekKravPst} % EK-krav.</p>
+                      <p className="text-xs font-semibold text-brand-ink leading-relaxed">Ny takst er høy nok. Banken vil refinansiere til sluttlånet innenfor {t.ekKravPst} % EK-krav.</p>
                     )}
                   </div>
 
                   {/* For full refinansiering */}
-                  <div className="border-t border-[#E9E8E2] pt-3 space-y-2">
-                    <div className="text-xs text-[#7A7D83] uppercase tracking-wider">For å hente tilbake ALL investert cash</div>
-                    <div className="flex justify-between">
-                      <span className="text-[#65696F]">Total kostnad ÷ {100 - t.ekKravPst} %</span>
-                      <span className="num text-[#1A1B1E]">{kr(t.minNyTakstFullRefin)}</span>
+                  <div className="border-t border-line-soft pt-3 space-y-1">
+                    <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">For å hente tilbake ALL investert cash</div>
+                    <div className="flex justify-between py-1">
+                      <span className="font-semibold text-muted-2">Total kostnad ÷ {100 - t.ekKravPst} %</span>
+                      <span className="num font-bold text-ink-2">{kr(t.minNyTakstFullRefin)}</span>
                     </div>
                     {t.nyTakst > 0 && (
                       <>
-                        <div className="flex justify-between">
-                          <span className="text-[#65696F]">Din ny takst</span>
-                          <span className="num" style={{ color: t.harNokTakstFullRefin ? '#15803D' : '#DC2626' }}>{kr(t.boligverdi)}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="font-semibold text-muted-2">Din ny takst</span>
+                          <span className="num font-bold" style={{ color: t.harNokTakstFullRefin ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{kr(t.boligverdi)}</span>
                         </div>
                         {t.harNokTakstFullRefin
-                          ? <p className="text-xs text-[#15803D] leading-relaxed">✓ Du henter ut {kr(Math.abs(t.cashInvestert))} mer enn du la inn — full refinansiering er mulig.</p>
-                          : <p className="text-xs text-[#65696F] leading-relaxed">Ny takst er ikke høy nok til full refinansiering. Du sitter igjen med {kr(t.cashInvestert)} investert.</p>
+                          ? <p className="text-xs font-semibold text-brand-ink leading-relaxed">Du henter ut {kr(Math.abs(t.cashInvestert))} mer enn du la inn — full refinansiering er mulig.</p>
+                          : <p className="text-xs font-medium text-muted-2 leading-relaxed">Ny takst er ikke høy nok til full refinansiering. Du sitter igjen med {kr(t.cashInvestert)} investert.</p>
                         }
                       </>
                     )}
@@ -758,87 +746,88 @@ function Rapport({ inp, t }) {
             {/* Steg 3 — Pengestrøm og uttak */}
             {t.nyTakst > 0 && t.lånBeløp > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-[#9A7A24]/15 text-[#9A7A24] text-xs font-bold flex items-center justify-center">3</div>
-                  <span className="text-sm font-medium text-[#1A1B1E]">Pengestrøm — hva går inn og hva kan du hente ut</span>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-mint text-brand-ink text-xs font-extrabold flex items-center justify-center">3</div>
+                  <span className="text-sm font-extrabold text-ink">Pengestrøm — hva går inn og hva kan du hente ut</span>
                 </div>
 
                 {/* Cash inn */}
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl overflow-hidden mb-3">
-                  <div className="px-4 py-2.5 border-b border-[#E9E8E2]">
-                    <span className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider">Cash inn — hva du legger inn</span>
+                <div className="bg-surface-2 border border-line rounded-[14px] overflow-hidden mb-3">
+                  <div className="px-4 py-2.5 border-b border-line-soft">
+                    <span className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">Cash inn — hva du legger inn</span>
                   </div>
-                  <div className="px-4 py-3 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-[#65696F]">Egenkapital ved kjøp (min. {t.ekKravPst} %)</span><span className="num text-[#1A1B1E]">{kr(t.minEKvedKjøp)}</span></div>
-                    {t.oppussing > 0 && <div className="flex justify-between"><span className="text-[#65696F]">Oppussing (eget eller byggelån)</span><span className="num text-[#1A1B1E]">{kr(t.oppussing)}</span></div>}
-                    <div className="flex justify-between text-xs text-[#7A7D83]"><span>Omkostninger (dok.avg. + tinglysing)</span><span className="num">{kr(t.totaleOmkostninger)}</span></div>
-                    <div className="flex justify-between font-semibold border-t border-[#E9E8E2] pt-2 text-[#1A1B1E]">
-                      <span>Total cash lagt inn</span>
-                      <span className="num">{kr(t.totalCashInn)}</span>
+                  <div className="px-4 py-3 space-y-1 text-[13px]">
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Egenkapital ved kjøp (min. {t.ekKravPst} %)</span><span className="num font-bold text-ink-2">{kr(t.minEKvedKjøp)}</span></div>
+                    {t.oppussing > 0 && <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Oppussing (eget eller byggelån)</span><span className="num font-bold text-ink-2">{kr(t.oppussing)}</span></div>}
+                    <div className="flex justify-between py-1 text-xs"><span className="font-semibold text-faint">Omkostninger (dok.avg. + tinglysing)</span><span className="num font-bold text-faint">{kr(t.totaleOmkostninger)}</span></div>
+                    <div className="flex justify-between py-1 border-t border-line-soft">
+                      <span className="font-extrabold text-ink">Total cash lagt inn</span>
+                      <span className="num font-extrabold text-ink">{kr(t.totalCashInn)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Ditt sluttlån */}
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl overflow-hidden mb-3">
-                  <div className="px-4 py-2.5 border-b border-[#E9E8E2]">
-                    <span className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider">Ditt sluttlån ({pct(t.ltv)} LTV)</span>
+                <div className="bg-surface-2 border border-line rounded-[14px] overflow-hidden mb-3">
+                  <div className="px-4 py-2.5 border-b border-line-soft">
+                    <span className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">Ditt sluttlån ({pct(t.ltv)} LTV)</span>
                   </div>
-                  <div className="px-4 py-3 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-[#65696F]">Total cash lagt inn</span><span className="num text-[#1A1B1E]">{kr(t.totalCashInn)}</span></div>
-                    <div className="flex justify-between"><span className="text-[#65696F]">− Sluttlån dekker</span><span className="num text-[#15803D]">− {kr(t.sluttlånDekkerKostnad)}</span></div>
-                    <div className="flex justify-between font-semibold border-t border-[#E9E8E2] pt-2" style={{ color: t.cashInvestert <= 0 ? '#15803D' : '#2A2D33' }}>
-                      <span>{t.cashInvestert <= 0 ? '= Cash ut (over investert beløp)' : '= Cash fortsatt investert'}</span>
-                      <span className="num">{t.cashInvestert <= 0 ? `+ ${kr(Math.abs(t.cashInvestert))}` : kr(t.cashInvestert)}</span>
+                  <div className="px-4 py-3 space-y-1 text-[13px]">
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Total cash lagt inn</span><span className="num font-bold text-ink-2">{kr(t.totalCashInn)}</span></div>
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">− Sluttlån dekker</span><span className="num font-bold text-brand-ink">− {kr(t.sluttlånDekkerKostnad)}</span></div>
+                    <div className="flex justify-between py-1 border-t border-line-soft">
+                      <span className={`font-extrabold ${t.cashInvestert <= 0 ? 'text-brand-ink' : 'text-ink'}`}>{t.cashInvestert <= 0 ? '= Cash ut (over investert beløp)' : '= Cash fortsatt investert'}</span>
+                      <span className={`num font-extrabold ${t.cashInvestert <= 0 ? 'text-brand-ink' : 'text-ink'}`}>{t.cashInvestert <= 0 ? `+ ${kr(Math.abs(t.cashInvestert))}` : kr(t.cashInvestert)}</span>
                     </div>
                     {t.cashInvestert > 0 && (
-                      <p className="text-xs text-[#65696F] leading-relaxed">Sluttlånet dekker ikke hele investeringen. Du har fortsatt {kr(t.cashInvestert)} stående i prosjektet.</p>
+                      <p className="text-xs font-medium text-muted-2 leading-relaxed">Sluttlånet dekker ikke hele investeringen. Du har fortsatt {kr(t.cashInvestert)} stående i prosjektet.</p>
                     )}
                     {t.cashInvestert <= 0 && (
-                      <p className="text-xs text-[#15803D] leading-relaxed">✓ Sluttlånet dekker hele investeringen. Du henter ut {kr(Math.abs(t.cashInvestert))} mer enn du la inn.</p>
+                      <p className="text-xs font-semibold text-brand-ink leading-relaxed">Sluttlånet dekker hele investeringen. Du henter ut {kr(Math.abs(t.cashInvestert))} mer enn du la inn.</p>
                     )}
                   </div>
                 </div>
 
                 {/* Maks mulig uttak */}
-                <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)' }}>
-                  <div className="px-4 py-2.5 border-b" style={{ borderColor: 'rgba(74,222,128,0.15)' }}>
-                    <span className="text-xs font-medium text-[#15803D] uppercase tracking-wider">Maks mulig uttak ({pct(t.ekKravPst * 10 / 10, 0)} % EK-krav)</span>
+                <div className="rounded-[14px] overflow-hidden bg-mint-soft border border-mint-line">
+                  <div className="px-4 py-2.5 border-b border-mint-line">
+                    <span className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-brand-ink">Maks mulig uttak ({pct(t.ekKravPst, 0)} EK-krav)</span>
                   </div>
-                  <div className="px-4 py-3 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-[#65696F]">Ny takst</span><span className="num text-[#1A1B1E]">{kr(t.boligverdi)}</span></div>
-                    <div className="flex justify-between"><span className="text-[#65696F]">× Maks LTV ({100 - t.ekKravPst} %)</span><span className="num text-[#1A1B1E]">{kr(t.maxMuligSluttlån)}</span></div>
-                    <div className="flex justify-between"><span className="text-[#65696F]">− Total cash lagt inn</span><span className="num text-[#1A1B1E]">− {kr(t.totalCashInn)}</span></div>
-                    <div className="flex justify-between font-semibold border-t pt-2" style={{ borderColor: 'rgba(74,222,128,0.2)', color: t.maxCashUt >= 0 ? '#15803D' : '#DC2626' }}>
-                      <span>{t.maxCashUt >= 0 ? '= Maks cash du kan hente ut' : '= Du mangler i takst for full refin.'}</span>
-                      <span className="num">{t.maxCashUt >= 0 ? `+ ${kr(t.maxCashUt)}` : `− ${kr(Math.abs(t.maxCashUt))}`}</span>
+                  <div className="px-4 py-3 space-y-1 text-[13px]">
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">Ny takst</span><span className="num font-bold text-ink-2">{kr(t.boligverdi)}</span></div>
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">× Maks LTV ({100 - t.ekKravPst} %)</span><span className="num font-bold text-ink-2">{kr(t.maxMuligSluttlån)}</span></div>
+                    <div className="flex justify-between py-1"><span className="font-semibold text-muted-2">− Total cash lagt inn</span><span className="num font-bold text-ink-2">− {kr(t.totalCashInn)}</span></div>
+                    <div className="flex justify-between py-1 border-t border-mint-line">
+                      <span className="font-extrabold" style={{ color: t.maxCashUt >= 0 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{t.maxCashUt >= 0 ? '= Maks cash du kan hente ut' : '= Du mangler i takst for full refin.'}</span>
+                      <span className="num font-extrabold" style={{ color: t.maxCashUt >= 0 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{t.maxCashUt >= 0 ? `+ ${kr(t.maxCashUt)}` : `− ${kr(Math.abs(t.maxCashUt))}`}</span>
                     </div>
                     {t.ekstraMedMaksLån > 0 && (
-                      <div className="flex justify-between text-xs text-[#7A7D83] pt-1">
-                        <span>Ekstra du KAN låne utover ditt sluttlån</span>
-                        <span className="num text-[#15803D]">+ {kr(t.ekstraMedMaksLån)}</span>
+                      <div className="flex justify-between py-1 text-xs">
+                        <span className="font-semibold text-faint">Ekstra du KAN låne utover ditt sluttlån</span>
+                        <span className="num font-bold text-brand-ink">+ {kr(t.ekstraMedMaksLån)}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Konklusjonstall */}
-                <div className="mt-3 bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-4">
-                  <div className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider mb-3">Fasit</div>
+                <div className="mt-3 bg-surface-2 border border-line rounded-[14px] p-4">
+                  <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 mb-3">Fasit</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Du la inn totalt', val: kr(t.totalCashInn), color: '#2A2D33' },
-                      { label: 'Cash ut ved ditt sluttlån', val: t.cashInvestert <= 0 ? `+ ${kr(Math.abs(t.cashInvestert))}` : `− ${kr(t.cashInvestert)}`, color: t.cashInvestert <= 0 ? '#15803D' : '#DC2626' },
-                      { label: 'Maks cash ut (ved maks lån)', val: t.maxCashUt >= 0 ? `+ ${kr(t.maxCashUt)}` : `− ${kr(Math.abs(t.maxCashUt))}`, color: t.maxCashUt >= 0 ? '#15803D' : '#DC2626' },
-                      { label: 'EK i boligen', val: kr(t.egenkapital), color: '#15803D' },
-                    ].map(({ label, val, color }) => (
-                      <div key={label} className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-lg p-3">
-                        <div className="text-xs text-[#7A7D83] mb-1">{label}</div>
-                        <div className="text-sm font-semibold num" style={{ color, fontFamily: 'DM Mono, monospace' }}>{val}</div>
+                      { label: 'Du la inn totalt', val: kr(t.totalCashInn), cls: 'text-ink' },
+                      { label: 'Cash ut ved ditt sluttlån', val: t.cashInvestert <= 0 ? `+ ${kr(Math.abs(t.cashInvestert))}` : `− ${kr(t.cashInvestert)}`, cls: t.cashInvestert <= 0 ? 'text-brand-ink' : 'text-danger' },
+                      { label: 'Maks cash ut (ved maks lån)', val: t.maxCashUt >= 0 ? `+ ${kr(t.maxCashUt)}` : `− ${kr(Math.abs(t.maxCashUt))}`, cls: t.maxCashUt >= 0 ? 'text-brand-ink' : 'text-danger' },
+                      { label: 'EK i boligen', val: kr(t.egenkapital), cls: 'text-brand-ink' },
+                    ].map(({ label, val, cls }) => (
+                      <div key={label} className="bg-surface border border-line rounded-[12px] p-3">
+                        <div className="text-[11px] font-bold text-faint mb-1">{label}</div>
+                        <div className={`text-sm font-extrabold num ${cls}`}>{val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
+
               </div>
             )}
 
@@ -846,73 +835,100 @@ function Rapport({ inp, t }) {
         </div>
       )}
 
+      {/* Stresstest */}
+      <div className="rounded-[20px] border border-amber-line bg-amber-soft p-[22px]">
+        <div className="flex items-center gap-2.5 mb-3">
+          <AlertTriangle size={16} className="text-amber" />
+          <h2 className="text-[15px] font-extrabold tracking-[-0.01em] text-ink">Stresstest — rente {pct(t.stressRente, 1)}</h2>
+        </div>
+        <div className="flex gap-[18px] flex-wrap">
+          <div>
+            <div className="text-[11.5px] font-bold text-faint mb-1">Terminbeløp ved stressrente</div>
+            <div className="text-[17px] font-extrabold num text-ink">{kr(t.stressTermMnd)}/mnd</div>
+          </div>
+          <div>
+            <div className="text-[11.5px] font-bold text-faint mb-1">Kontantstrøm ved stressrente</div>
+            <div className={`text-[17px] font-extrabold num ${stressKontantstrømMnd >= 0 ? 'text-brand-ink' : 'text-amber'}`}>{kr(stressKontantstrømMnd)}/mnd</div>
+          </div>
+        </div>
+        <p className="mt-3 text-[12.5px] font-medium text-muted leading-relaxed">
+          {stressKontantstrømMnd >= 0
+            ? `Boligen tåler en renteoppgang til ${pct(t.stressRente, 1)} med fortsatt positiv kontantstrøm. Sørg likevel for en likviditetsbuffer på 3–4 måneders terminbeløp.`
+            : `Ved en renteoppgang til ${pct(t.stressRente, 1)} blir kontantstrømmen negativ. Boligen tåler dagens nivå, men sørg for en likviditetsbuffer på 3–4 måneders terminbeløp.`}
+        </p>
+      </div>
+
       {/* 10-år prognose */}
-      <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5">
-        <h2 className="text-sm font-semibold text-[#1A1B1E] mb-1">10-år prognose</h2>
-        <p className="text-xs text-[#7A7D83] mb-4">Eiendomsprisvekst 3 %/år · KPI-regulering av leie 2,5 %/år</p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+      <SectionCard tittel="10-års prognose" action={<span className="text-[11.5px] font-semibold text-muted-2">3 % verdivekst · 2,5 % leievekst</span>}>
+        <div className="border border-line rounded-[13px] overflow-hidden overflow-x-auto">
+          <table className="w-full text-[12.5px]">
             <thead>
-              <tr className="text-[#7A7D83] border-b border-[#E9E8E2]">
-                {['År', 'Eiendomsverdi', 'Leieinntekt', 'Gjeld', 'Egenkapital', 'Yield'].map(h => (
-                  <th key={h} className="text-left py-2 pr-4 font-medium">{h}</th>
+              <tr className="bg-sand text-faint">
+                {['År', 'Boligverdi', 'Leieinntekt', 'Restgjeld', 'EK-verdi', 'Yield'].map((h, i) => (
+                  <th key={h} className={`py-2.5 px-3.5 text-[11px] font-extrabold uppercase tracking-[0.03em] ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {t.prognose.map((r) => (
-                <tr key={r.år} className="border-b border-[#E9E8E2]/50 hover:bg-black/[0.02] transition-colors">
-                  <td className="py-2 pr-4 text-[#65696F]">{r.år}</td>
-                  <td className="py-2 pr-4 text-[#1A1B1E] num">{kr(r.eiendomsverdi)}</td>
-                  <td className="py-2 pr-4 num" style={{ color: '#15803D' }}>{kr(r.leieinntektÅr)}</td>
-                  <td className="py-2 pr-4 text-[#DC2626] num">{kr(r.gjeldRest)}</td>
-                  <td className="py-2 pr-4 text-[#1A1B1E] num font-medium">{kr(r.ekVerdi)}</td>
-                  <td className="py-2 pr-4 text-[#4B4E54] num">{pct(r.nYield)}</td>
+                <tr key={r.år} className="border-t border-line-soft">
+                  <td className="py-2.5 px-3.5 font-bold text-muted-2">{r.år}</td>
+                  <td className="py-2.5 px-3.5 text-right num font-bold text-ink-2">{kr(r.eiendomsverdi)}</td>
+                  <td className="py-2.5 px-3.5 text-right num font-bold text-brand-ink">{kr(r.leieinntektÅr)}</td>
+                  <td className="py-2.5 px-3.5 text-right num font-bold text-muted">{kr(r.gjeldRest)}</td>
+                  <td className="py-2.5 px-3.5 text-right num font-extrabold text-brand-ink">{kr(r.ekVerdi)}</td>
+                  <td className="py-2.5 px-3.5 text-right num font-bold text-muted-2">{pct(r.nYield)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+        <div className="flex items-center gap-3 mt-3.5 rounded-[14px] bg-brand-deep px-[18px] py-[15px] flex-wrap">
+          <div className="flex-1 min-w-[180px]">
+            <div className="text-[11.5px] font-bold text-white/75 mb-0.5">Egenkapitalverdi etter 10 år</div>
+            <div className="text-xs font-medium text-white/80">Boligverdi {kr(t.prognose[9]?.eiendomsverdi)} − restgjeld {kr(t.prognose[9]?.gjeldRest)}</div>
+          </div>
+          <div className="text-[26px] font-extrabold tracking-[-0.02em] text-white num">{kr(t.prognose[9]?.ekVerdi)}</div>
+        </div>
+      </SectionCard>
 
       {/* AI Analyse */}
-      <div className="rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9E8E2]">
+      <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
+        <div className="flex items-center justify-between px-[22px] py-4 border-b border-line-soft">
           <div className="flex items-center gap-2">
-            <Sparkles size={15} className="text-[#9A7A24]" />
-            <h2 className="text-sm font-semibold text-[#1A1B1E]">AI-analyse</h2>
+            <Sparkles size={15} className="text-brand" />
+            <h2 className="text-base font-extrabold tracking-[-0.01em] text-ink">AI-analyse</h2>
           </div>
-          <button
-            onClick={() => kopier(analysetekst, 'analyse')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#65696F] hover:text-[#1A1B1E] hover:bg-black/[0.045] transition-all cursor-pointer"
-          >
-            {kopiert === 'analyse' ? <><Check size={12} className="text-[#15803D]" /> Kopiert</> : <><Copy size={12} /> Kopier</>}
-          </button>
+          <Button variant="ghost" size="sm" onClick={() => kopier(analysetekst, 'analyse')}>
+            {kopiert === 'analyse' ? <><Check size={13} className="text-brand-ink" /> Kopiert</> : <><Copy size={13} /> Kopier</>}
+          </Button>
         </div>
-        <pre className="px-5 py-4 text-xs text-[#4B4E54] leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
+        <pre className="px-[22px] py-4 text-xs text-muted leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
           {analysetekst}
         </pre>
       </div>
 
       {/* Bankmelding */}
-      <div className="rounded-xl border border-[#9A7A24]/20 bg-[#FFFFFF] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#9A7A24]/20" style={{ background: 'rgba(201,168,76,0.05)' }}>
+      <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
+        <div className="flex items-center justify-between px-[22px] py-4 border-b border-line-soft bg-mint-soft">
           <div className="flex items-center gap-2">
-            <FileText size={15} className="text-[#9A7A24]" />
-            <h2 className="text-sm font-semibold text-[#1A1B1E]">Bankmelding</h2>
-            <span className="text-xs text-[#65696F]">— klar til å sende til din bank</span>
+            <FileText size={15} className="text-brand" />
+            <h2 className="text-base font-extrabold tracking-[-0.01em] text-ink">Bankmelding</h2>
+            <span className="text-[12.5px] font-medium text-muted-2">— klar til å sende til din bank</span>
           </div>
-          <button
-            onClick={() => kopier(bankmelding, 'bank')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs hover:bg-black/[0.045] transition-all cursor-pointer"
-            style={{ color: kopiert === 'bank' ? '#15803D' : '#9A7A24' }}
-          >
-            {kopiert === 'bank' ? <><Check size={12} /> Kopiert!</> : <><Copy size={12} /> Kopier melding</>}
-          </button>
+          <Button variant="ghost" size="sm" onClick={() => kopier(bankmelding, 'bank')}>
+            {kopiert === 'bank' ? <><Check size={13} className="text-brand-ink" /> Kopiert!</> : <><Copy size={13} /> Kopier melding</>}
+          </Button>
         </div>
-        <pre className="px-5 py-4 text-xs text-[#4B4E54] leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
+        <pre className="px-[22px] py-4 text-xs text-muted leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
           {bankmelding}
         </pre>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="flex items-start gap-2.5 bg-sand border border-line rounded-[14px] px-4 py-3.5">
+        <Info size={15} className="text-faint shrink-0 mt-0.5" />
+        <span className="text-[12.5px] font-medium text-muted-2 leading-relaxed">Beregningen er veiledende. Skatt er forenklet (22 % på leieoverskudd etter rentefradrag) og tar ikke høyde for formuesskatt, individuelle fradrag eller fremtidige renteendringer ut over stresstesten.</span>
       </div>
 
     </div>
@@ -947,53 +963,50 @@ function Sammenligning({ valgte, onLukk }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 size={16} className="text-[#9A7A24]" />
-          <h2 className="text-sm font-semibold text-[#1A1B1E]">Sammenligning av {valgte.length} boliger</h2>
+          <BarChart3 size={16} className="text-brand" />
+          <h2 className="text-base font-extrabold tracking-[-0.01em] text-ink">Sammenligning av {valgte.length} boliger</h2>
         </div>
-        <button onClick={onLukk} className="text-xs text-[#65696F] hover:text-[#1A1B1E] transition-colors cursor-pointer">← Tilbake til lagrede</button>
+        <Button variant="ghost" size="sm" onClick={onLukk}>← Tilbake til lagrede</Button>
       </div>
 
       {/* AI-evaluering */}
       {evaluering && (
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.03)' }}>
-          <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: 'rgba(201,168,76,0.2)' }}>
-            <Sparkles size={15} className="text-[#9A7A24]" />
-            <span className="text-sm font-semibold text-[#1A1B1E]">AI-evaluering</span>
+        <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
+          <div className="flex items-center gap-2 px-[22px] py-3.5 border-b border-line-soft">
+            <Sparkles size={15} className="text-brand" />
+            <span className="text-base font-extrabold tracking-[-0.01em] text-ink">AI-evaluering</span>
           </div>
-          <div className="p-5 space-y-4">
-            <div className="rounded-lg bg-[#15803D]/8 border border-[#15803D]/25 p-4">
-              <div className="text-xs font-medium text-[#15803D] uppercase tracking-wider mb-1">Anbefaling</div>
-              <p className="text-sm text-[#1A1B1E] leading-relaxed">{evaluering.anbefaling}</p>
+          <div className="p-[22px] space-y-4">
+            <div className="rounded-[14px] bg-mint-soft border border-mint-line p-4">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.05em] text-brand-ink mb-1.5">Anbefaling</div>
+              <p className="text-sm font-semibold text-ink-2 leading-relaxed">{evaluering.anbefaling}</p>
             </div>
             <div className="space-y-2">
               {evaluering.punkter.map((p, i) => (
-                <div key={i} className="flex gap-2 text-sm text-[#4B4E54] leading-relaxed">
-                  <span className="text-[#9A7A24] shrink-0 mt-0.5">•</span>
+                <div key={i} className="flex gap-2.5 text-[13.5px] font-medium text-muted leading-relaxed">
+                  <Check size={15} className="text-brand shrink-0 mt-0.5" />
                   <span>{p}</span>
                 </div>
               ))}
             </div>
             {evaluering.advarsel && (
-              <div className="flex gap-2 p-3 rounded-lg border border-[#B45309]/25 bg-[#B45309]/5 text-xs text-[#B45309] leading-relaxed">
-                <AlertTriangle size={13} className="shrink-0 mt-0.5" />
-                <span>{evaluering.advarsel}</span>
-              </div>
+              <InfoBoks type="warn">{evaluering.advarsel}</InfoBoks>
             )}
           </div>
         </div>
       )}
 
       {/* Sammenligningstabell */}
-      <div className="overflow-x-auto rounded-xl border border-[#E9E8E2]">
+      <div className="overflow-x-auto rounded-[20px] border border-line">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#F1F1ED] border-b border-[#E9E8E2]">
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#7A7D83] sticky left-0 bg-[#F1F1ED]">Nøkkeltall</th>
+            <tr className="bg-sand border-b border-line">
+              <th className="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.03em] text-faint sticky left-0 bg-sand">Nøkkeltall</th>
               {valgte.map((r) => (
-                <th key={r.id} className="px-4 py-3 text-right text-xs font-medium text-[#1A1B1E] min-w-32">{navn(r)}</th>
+                <th key={r.id} className="px-4 py-3 text-right text-[12.5px] font-extrabold text-ink min-w-32">{navn(r)}</th>
               ))}
             </tr>
           </thead>
@@ -1001,14 +1014,13 @@ function Sammenligning({ valgte, onLukk }) {
             {SAMMENLIGN_RADER.map((rad) => {
               const best = besteId(rad.felt, rad.hoyBest);
               return (
-                <tr key={rad.felt} className="border-b border-[#E9E8E2]/50">
-                  <td className="px-4 py-2.5 text-[#65696F] sticky left-0 bg-[#F6F6F4]">{rad.label}</td>
+                <tr key={rad.felt} className="border-t border-line-soft">
+                  <td className="px-4 py-2.5 font-semibold text-muted-2 sticky left-0 bg-surface-2">{rad.label}</td>
                   {valgte.map((r) => {
                     const v = r.snapshot[rad.felt];
                     const erBest = best === r.id && rad.hoyBest !== undefined && valgte.length > 1;
                     return (
-                      <td key={r.id} className="px-4 py-2.5 text-right num"
-                        style={{ fontFamily: 'DM Mono, monospace', color: erBest ? '#15803D' : '#2A2D33', fontWeight: erBest ? 600 : 400 }}>
+                      <td key={r.id} className={`px-4 py-2.5 text-right num ${erBest ? 'font-extrabold text-brand-ink' : 'font-bold text-ink-2'}`}>
                         {rad.fmt(v ?? 0)}
                       </td>
                     );
@@ -1019,10 +1031,9 @@ function Sammenligning({ valgte, onLukk }) {
           </tbody>
         </table>
       </div>
-      <div className="flex gap-2.5 p-3 rounded-lg border border-blue-500/20 bg-blue-500/5 text-xs text-blue-300 leading-relaxed">
-        <Info size={13} className="shrink-0 mt-0.5" />
-        <span><span className="text-[#15803D]">Grønn</span> = beste verdi per nøkkeltall. AI-evalueringen vekter yield, kontantstrøm, avkastning på egenkapital, verdiskaping og robusthet mot renteoppgang.</span>
-      </div>
+      <InfoBoks type="info">
+        <span className="text-brand-ink font-bold">Grønn</span> = beste verdi per nøkkeltall. AI-evalueringen vekter yield, kontantstrøm, avkastning på egenkapital, verdiskaping og robusthet mot renteoppgang.
+      </InfoBoks>
     </div>
   );
 }
@@ -1051,9 +1062,9 @@ function LagredeRapporter({ onLastInn }) {
   if (rapporter.length === 0) {
     return (
       <div className="text-center py-20">
-        <FolderOpen size={32} className="text-[#AEB0B4] mx-auto mb-3" />
-        <div className="text-sm font-medium text-[#1A1B1E] mb-1">Ingen lagrede analyser</div>
-        <div className="text-xs text-[#7A7D83]">Klikk «Generer full rapport» i kalkulatoren for å lagre en analyse</div>
+        <IconTile tone="mint" size={56} radius={18} className="mx-auto mb-4"><FolderOpen size={26} /></IconTile>
+        <div className="text-base font-extrabold text-ink mb-1">Ingen lagrede analyser</div>
+        <div className="text-[13px] font-medium text-muted-2">Klikk «Generer full rapport» i kalkulatoren for å lagre en analyse</div>
       </div>
     );
   }
@@ -1066,8 +1077,8 @@ function LagredeRapporter({ onLastInn }) {
   return (
     <div className="space-y-3">
       {/* Sammenlign-verktøylinje */}
-      <div className="flex items-center justify-between bg-[#F1F1ED] border border-[#E9E8E2] rounded-xl px-4 py-3">
-        <span className="text-xs text-[#65696F]">
+      <div className="flex items-center justify-between bg-surface-2 border border-line rounded-[14px] px-4 py-3">
+        <span className="text-[13px] font-semibold text-muted-2">
           {valgt.length === 0 ? 'Velg 2 eller flere analyser for å sammenligne' : `${valgt.length} valgt`}
         </span>
         <Button variant="primary" size="sm" disabled={valgt.length < 2} onClick={() => setVisSammenligning(true)}>
@@ -1086,54 +1097,45 @@ function LagredeRapporter({ onLastInn }) {
         return (
           <div
             key={r.id}
-            className="bg-[#FFFFFF] border rounded-xl p-5 transition-colors group"
-            style={{ borderColor: erValgt ? 'rgba(201,168,76,0.4)' : '#E9E8E2' }}
+            className={`bg-surface border rounded-[18px] p-5 transition-colors ${erValgt ? 'border-brand' : 'border-line'}`}
           >
             <div className="flex items-start gap-4">
               {/* Avkrysning for sammenligning */}
               <button type="button" onClick={() => toggleValg(r.id)}
-                className={`w-5 h-5 rounded mt-0.5 shrink-0 flex items-center justify-center border transition-all cursor-pointer
-                  ${erValgt ? 'bg-[#9A7A24] border-[#9A7A24]' : 'border-[#AEB0B4] hover:border-[#7A7D83]'}`}>
-                {erValgt && <Check size={13} className="text-[#F6F6F4]" />}
+                className={`w-5 h-5 rounded-[6px] mt-0.5 shrink-0 flex items-center justify-center border transition-all cursor-pointer
+                  ${erValgt ? 'bg-brand border-brand' : 'border-line-input hover:border-faint'}`}>
+                {erValgt && <Check size={13} className="text-white" />}
               </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-[#1A1B1E] text-sm truncate">{adresse}</span>
-                  <span className="text-xs text-[#7A7D83] bg-[#E9E8E2] px-2 py-0.5 rounded-full shrink-0">
-                    {r.inp.boligtype === 'borettslag' ? 'Borettslag' : 'Selveier'}
-                  </span>
+                  <span className="font-extrabold text-ink text-sm truncate">{adresse}</span>
+                  <Pill tone="neutral">{r.inp.boligtype === 'borettslag' ? 'Borettslag' : 'Selveier'}</Pill>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-[#7A7D83] mb-3">
-                  <Clock size={11} />
+                <div className="flex items-center gap-1.5 text-[12.5px] font-medium text-muted-2 mb-3">
+                  <Clock size={12} />
                   <span>{datoStr} kl. {tidStr}</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: 'Kjøpesum', val: kr(parseNum(r.inp.kjøpesum)) },
-                    { label: 'Netto yield', val: pct(s.nettoYield), color: s.nettoYield >= 3 ? '#15803D' : s.nettoYield >= 1.5 ? '#4D7C0F' : '#DC2626' },
-                    { label: 'Kontantstrøm', val: `${kr(s.kontantstrømMnd)}/mnd`, color: s.kontantstrømMnd >= 0 ? '#15803D' : '#DC2626' },
-                    { label: 'ROE', val: pct(s.roe), color: s.roe >= 5 ? '#15803D' : s.roe >= 0 ? '#4D7C0F' : '#DC2626' },
-                  ].map(({ label, val, color }) => (
+                    { label: 'Kjøpesum', val: kr(parseNum(r.inp.kjøpesum)), cls: 'text-ink-2' },
+                    { label: 'Netto yield', val: pct(s.nettoYield), cls: s.nettoYield >= 3 ? 'text-brand-ink' : s.nettoYield >= 1.5 ? 'text-ink' : 'text-danger' },
+                    { label: 'Kontantstrøm', val: `${kr(s.kontantstrømMnd)}/mnd`, cls: s.kontantstrømMnd >= 0 ? 'text-brand-ink' : 'text-danger' },
+                    { label: 'ROE', val: pct(s.roe), cls: s.roe >= 5 ? 'text-brand-ink' : s.roe >= 0 ? 'text-ink' : 'text-danger' },
+                  ].map(({ label, val, cls }) => (
                     <div key={label}>
-                      <div className="text-xs text-[#7A7D83]">{label}</div>
-                      <div className="text-sm font-semibold num mt-0.5" style={{ color: color || '#2A2D33', fontFamily: 'DM Mono, monospace' }}>{val}</div>
+                      <div className="text-[11px] font-bold text-faint">{label}</div>
+                      <div className={`text-sm font-extrabold num mt-0.5 ${cls}`}>{val}</div>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 shrink-0">
-                <button
-                  onClick={() => onLastInn(r.inp)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#1A1B1E] bg-black/[0.055] hover:bg-black/[0.07] transition-all cursor-pointer"
-                >
+                <Button variant="secondary" size="sm" onClick={() => onLastInn(r.inp)}>
                   <FolderOpen size={12} /> Last inn
-                </button>
-                <button
-                  onClick={() => slett(r.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 transition-all cursor-pointer"
-                >
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => slett(r.id)}>
                   <Trash2 size={12} /> Slett
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1216,35 +1218,35 @@ export default function BoliganalyseKalkulator() {
     5: true,
   };
 
+  const rentePst = t.termMnd > 0 ? Math.round((t.renterMnd / t.termMnd) * 100) : 0;
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Boliganalyse</h1>
-          <p className="text-sm text-[#65696F] mt-1">Beregn lønnsomhet, belåning og få AI-rapport klar for bankmøtet</p>
-        </div>
+    <div className="animate-fade-up">
+      <PageHeader
+        tittel="Boliganalyse"
+        undertittel="Full lønnsomhetsanalyse — yield, kontantstrøm, belåning, refinansiering og 10-års prognose"
+      >
         {aktivTab === 'kalkulator' && t.kjøpesum > 0 && (
-          <div className="flex gap-2">
+          <>
             <Button variant="secondary" onClick={håndterLagreKun}>
-              {visBekreftet ? <><Check size={14} className="text-[#15803D]" /> Lagret!</> : <><FolderOpen size={14} /> Lagre</>}
+              {visBekreftet ? <><Check size={14} className="text-brand-ink" /> Lagret!</> : <><FolderOpen size={14} /> Lagre</>}
             </Button>
             <Button variant="primary" onClick={håndterGenererRapport}>
               <ArrowRight size={14} /> Generer rapport
             </Button>
-          </div>
+          </>
         )}
-      </div>
+      </PageHeader>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-8 border-b border-[#E9E8E2] pb-1">
+      <div className="flex gap-1.5 mb-7">
         {[['kalkulator', 'Kalkulator', Calculator], ['rapport', 'Rapport', BarChart3], ['lagrede', 'Lagrede', FolderOpen]].map(([id, label, Icon]) => (
           <button
             key={id}
             type="button"
             onClick={() => setAktivTab(id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all cursor-pointer
-              ${aktivTab === id ? 'bg-black/[0.055] text-[#1A1B1E]' : 'text-[#65696F] hover:text-[#2A2D33] hover:bg-black/[0.03]'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all cursor-pointer
+              ${aktivTab === id ? 'bg-brand text-white shadow-brand' : 'text-muted hover:text-ink-2 hover:bg-line-soft'}`}
           >
             <Icon size={15} className="shrink-0" />
             {label}
@@ -1254,13 +1256,13 @@ export default function BoliganalyseKalkulator() {
 
       {/* Kalkulator */}
       {aktivTab === 'kalkulator' && (
-        <div className="grid lg:grid-cols-5 gap-6">
+        <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))' }}>
           {/* Skjema */}
-          <div className="lg:col-span-3 space-y-3">
+          <div className="space-y-3">
 
             <Seksjon nummer="1" tittel="Boligen" icon={Home} open={åpneSeksjoner[1]} onToggle={() => toggle(1)} ferdig={ferdig[1]}>
               <Input label="Adresse" value={inp.adresse} onChange={set('adresse')} placeholder="Bjørneveien 8, Oslo" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Select
                   label="Type"
                   value={inp.boligtype}
@@ -1275,28 +1277,28 @@ export default function BoliganalyseKalkulator() {
 
               {/* Oppussing */}
               <div className="pt-1">
-                <div className="text-xs text-[#7A7D83] uppercase tracking-wider mb-3">Oppussing / rehabilitering</div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-faint mb-2.5">Oppussing / rehabilitering</div>
+                <div className="grid grid-cols-2 gap-3">
                   <Input label="Total oppussingskostnad" value={inp.oppussing} onChange={set('oppussing')} placeholder="0" type="number" />
                   <Input label="Herav vedlikehold (fradragsberettiget)" value={inp.oppussingVedlikehold} onChange={set('oppussingVedlikehold')} placeholder="0" type="number" />
                 </div>
-                <Input label="Ny takst etter oppussing (valgfritt)" value={inp.nyTakst} onChange={set('nyTakst')} placeholder="Estimert verdi etter oppussing" type="number" className="mt-4" />
+                <Input label="Ny takst etter oppussing (valgfritt)" value={inp.nyTakst} onChange={set('nyTakst')} placeholder="Estimert verdi etter oppussing" type="number" className="mt-3" />
                 {inp.nyTakst && parseNum(inp.nyTakst) > 0 && (
-                  <p className="text-xs text-[#7A7D83] mt-1">
-                    Ny takst brukes som startverdi i 10-år prognose. Verdiøkning ved oppussing: <span className="num" style={{ color: t.verdiøkningOppussing >= 0 ? '#15803D' : '#DC2626' }}>{kr(t.verdiøkningOppussing)}</span>
+                  <p className="text-xs font-medium text-muted-2 mt-1.5">
+                    Ny takst brukes som startverdi i 10-år prognose. Verdiøkning ved oppussing: <span className={`num font-bold ${t.verdiøkningOppussing >= 0 ? 'text-brand-ink' : 'text-danger'}`}>{kr(t.verdiøkningOppussing)}</span>
                   </p>
                 )}
               </div>
 
               {inp.kjøpesum && (
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-4 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-[#7A7D83]"><span>Kjøpesum</span><span className="num">{kr(parseNum(inp.kjøpesum))}</span></div>
-                  {t.oppussing > 0 && <div className="flex justify-between text-[#7A7D83]"><span>Oppussing</span><span className="num">{kr(t.oppussing)}</span></div>}
-                  <div className="flex justify-between text-[#7A7D83]"><span>Dokumentavgift {inp.boligtype !== 'borettslag' ? '(2,5 %)' : '(0 %)'}</span><span className="num">{kr(t.dokAvgift)}</span></div>
-                  <div className="flex justify-between text-[#7A7D83]"><span>Tinglysing m.m.</span><span className="num">{kr(t.tinglysing)}</span></div>
-                  <div className="flex justify-between font-medium text-[#1A1B1E] border-t border-[#E9E8E2] pt-1.5 mt-1"><span>Total investering</span><span className="num">{kr(t.totalInvestering)}</span></div>
+                <div className="bg-surface-2 border border-line rounded-[14px] p-4 space-y-1.5 text-xs">
+                  <div className="flex justify-between font-medium text-muted-2"><span>Kjøpesum</span><span className="num font-bold">{kr(parseNum(inp.kjøpesum))}</span></div>
+                  {t.oppussing > 0 && <div className="flex justify-between font-medium text-muted-2"><span>Oppussing</span><span className="num font-bold">{kr(t.oppussing)}</span></div>}
+                  <div className="flex justify-between font-medium text-muted-2"><span>Dokumentavgift {inp.boligtype !== 'borettslag' ? '(2,5 %)' : '(0 %)'}</span><span className="num font-bold">{kr(t.dokAvgift)}</span></div>
+                  <div className="flex justify-between font-medium text-muted-2"><span>Tinglysing m.m.</span><span className="num font-bold">{kr(t.tinglysing)}</span></div>
+                  <div className="flex justify-between font-extrabold text-ink border-t border-line-soft pt-1.5 mt-1"><span>Total investering</span><span className="num">{kr(t.totalInvestering)}</span></div>
                   {t.startBoligverdi !== t.totalInvestering && (
-                    <div className="flex justify-between text-[#15803D]"><span>Startverdi bolig (etter ombygging)</span><span className="num">{kr(t.startBoligverdi)}</span></div>
+                    <div className="flex justify-between font-semibold text-brand-ink"><span>Startverdi bolig (etter ombygging)</span><span className="num">{kr(t.startBoligverdi)}</span></div>
                   )}
                 </div>
               )}
@@ -1308,8 +1310,8 @@ export default function BoliganalyseKalkulator() {
                 {[['kalkulert', 'Kalkulert'], ['manuell', 'Manuell']].map(([m, label]) => (
                   <button key={m} type="button"
                     onClick={() => setInp((f) => ({ ...f, laanModus: m }))}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-all cursor-pointer
-                      ${inp.laanModus === m ? 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/30' : 'text-[#65696F] border-[#E9E8E2] hover:border-[#DCDAD2]'}`}>
+                    className={`px-4 py-2 text-sm font-bold rounded-xl border-[1.5px] transition-all cursor-pointer
+                      ${inp.laanModus === m ? 'bg-mint text-brand-ink border-mint-line' : 'text-muted border-line-input hover:border-faint'}`}>
                     {label}
                   </button>
                 ))}
@@ -1318,44 +1320,41 @@ export default function BoliganalyseKalkulator() {
               {inp.laanModus === 'manuell' ? (
                 <Input label="Terminbeløp per mnd" value={inp.terminbelop} onChange={set('terminbelop')} placeholder="12 500" type="number" />
               ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    <Input label="Lånebeløp" value={inp.laanebelop} onChange={set('laanebelop')} placeholder="2 800 000" type="number" />
-                    <Input label="Rentesats (%)" value={inp.rentesats} onChange={set('rentesats')} placeholder="5.5" type="number" step="0.1" />
-                    <Input label="Løpetid (år)" value={inp.nedbetalingstid} onChange={set('nedbetalingstid')} placeholder="25" type="number" />
-                  </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <Input label="Lånebeløp" value={inp.laanebelop} onChange={set('laanebelop')} placeholder="2 800 000" type="number" />
+                  <Input label="Rentesats (%)" value={inp.rentesats} onChange={set('rentesats')} placeholder="5.5" type="number" step="0.1" />
+                  <Input label="Løpetid (år)" value={inp.nedbetalingstid} onChange={set('nedbetalingstid')} placeholder="25" type="number" />
                 </div>
               )}
 
               {t.termMnd > 0 && (
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl overflow-hidden mt-1">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#E9E8E2]">
-                    <span className="text-sm text-[#4B4E54]">Terminbeløp</span>
-                    <span className="text-[#15803D] font-semibold num">{kr(t.termMnd)}/mnd</span>
+                <div className="bg-surface-2 border border-line rounded-[14px] overflow-hidden mt-1">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-line-soft">
+                    <span className="text-sm font-semibold text-muted">Terminbeløp</span>
+                    <span className="text-brand-ink font-extrabold num">{kr(t.termMnd)}/mnd</span>
                   </div>
                   <div className="px-4 py-3 space-y-2">
-                    <div className="text-xs text-[#7A7D83] mb-2 uppercase tracking-wider">Fordeling første måned</div>
+                    <div className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2 mb-2">Fordeling første måned</div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                        <span className="text-xs text-[#4B4E54]">Renter</span>
+                        <div className="w-2 h-2 rounded-full bg-brand" />
+                        <span className="text-xs font-semibold text-muted">Renter</span>
                       </div>
-                      <span className="text-sm text-[#2563EB] num">{kr(t.renterMnd)}</span>
+                      <span className="text-[13px] font-bold text-brand-ink num">{kr(t.renterMnd)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#15803D]" />
-                        <span className="text-xs text-[#4B4E54]">Avdrag</span>
+                        <div className="w-2 h-2 rounded-full bg-mint-line" />
+                        <span className="text-xs font-semibold text-muted">Avdrag</span>
                       </div>
-                      <span className="text-sm text-[#15803D] num">{kr(t.avdragMnd)}</span>
+                      <span className="text-[13px] font-bold text-ink-2 num">{kr(t.avdragMnd)}</span>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-[#E9E8E2] overflow-hidden flex">
-                      <div className="h-full bg-[#2563EB] transition-all duration-300"
-                        style={{ width: `${t.termMnd > 0 ? Math.round((t.renterMnd / t.termMnd) * 100) : 0}%` }} />
-                      <div className="h-full bg-[#15803D] flex-1" />
+                    <div className="mt-2 h-2 rounded-full bg-line-soft overflow-hidden flex">
+                      <div className="h-full bg-brand transition-all duration-300" style={{ width: `${rentePst}%` }} />
+                      <div className="h-full bg-mint-line flex-1" />
                     </div>
-                    <div className="flex justify-between text-xs text-[#7A7D83]">
-                      <span>Renter {t.termMnd > 0 ? Math.round((t.renterMnd / t.termMnd) * 100) : 0}%</span>
+                    <div className="flex justify-between text-xs font-semibold text-faint">
+                      <span>Renter {rentePst}%</span>
                       <span>Avdrag {t.termMnd > 0 ? Math.round((t.avdragMnd / t.termMnd) * 100) : 0}%</span>
                     </div>
                   </div>
@@ -1364,36 +1363,35 @@ export default function BoliganalyseKalkulator() {
 
               {/* EK-krav ved kjøp */}
               <div className="pt-1">
-                <div className="text-xs text-[#4B4E54] mb-1.5">EK-krav ved kjøp</div>
-                <div className="flex items-center gap-2 bg-[#F6F6F4] border border-[#E9E8E2] rounded-lg px-3 py-2.5">
+                <div className="text-[12.5px] font-bold text-muted mb-1.5">EK-krav ved kjøp</div>
+                <div className="flex items-center gap-2 bg-surface-2 border border-line-input rounded-xl px-3.5 py-2.5">
                   <input
                     type="number"
                     value={inp.ekKravProsent}
                     onChange={set('ekKravProsent')}
                     step="1"
-                    className="w-10 bg-transparent text-[#1A1B1E] text-sm outline-none num"
-                    style={{ fontFamily: 'DM Mono, monospace' }}
+                    className="w-10 bg-transparent text-ink text-sm font-bold outline-none num"
                   />
-                  <span className="text-[#7A7D83] text-sm">% av kjøpesum + omkostninger</span>
-                  <span className="ml-auto text-xs text-[#1A1B1E] num">{kr(t.ekKravMin)}</span>
+                  <span className="text-muted-2 text-sm font-semibold">% av kjøpesum + omkostninger</span>
+                  <span className="ml-auto text-xs font-bold text-ink num">{kr(t.ekKravMin)}</span>
                 </div>
-                <p className="text-xs text-[#7A7D83] mt-1">Dette er bankens krav til egenkapital ved kjøpstidspunktet — ikke din EK etter ferdigstillelse.</p>
+                <p className="text-xs font-medium text-muted-2 mt-1.5">Dette er bankens krav til egenkapital ved kjøpstidspunktet — ikke din EK etter ferdigstillelse.</p>
               </div>
 
               {t.lånBeløp > 0 && t.boligverdi > 0 && (
                 <div className="space-y-2 mt-1">
                   {/* Prosjektkalkyle */}
-                  <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl overflow-hidden">
-                    <div className="px-4 py-2.5 border-b border-[#E9E8E2]">
-                      <span className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider">Prosjektkalkyle</span>
+                  <div className="bg-surface-2 border border-line rounded-[14px] overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-line-soft">
+                      <span className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">Prosjektkalkyle</span>
                     </div>
                     <div className="px-4 py-3 space-y-1.5 text-xs">
-                      <div className="flex justify-between text-[#7A7D83]"><span>Kjøpesum</span><span className="num">{kr(t.kjøpesum)}</span></div>
-                      {t.oppussing > 0 && <div className="flex justify-between text-[#7A7D83]"><span>+ Oppussing</span><span className="num">{kr(t.oppussing)}</span></div>}
-                      <div className="flex justify-between text-[#7A7D83]"><span>+ Omkostninger</span><span className="num">{kr(t.totaleOmkostninger)}</span></div>
-                      <div className="flex justify-between font-medium text-[#1A1B1E] border-t border-[#E9E8E2] pt-1.5"><span>= Total kostnad</span><span className="num">{kr(t.totalKostnad)}</span></div>
-                      <div className="flex justify-between text-[#7A7D83] pt-0.5"><span>− Sluttlån</span><span className="num text-[#DC2626]">− {kr(t.lånBeløp)}</span></div>
-                      <div className="flex justify-between font-medium border-t border-[#E9E8E2] pt-1.5" style={{ color: t.cashInvestert >= 0 ? '#2A2D33' : '#15803D' }}>
+                      <div className="flex justify-between font-medium text-muted-2"><span>Kjøpesum</span><span className="num font-bold">{kr(t.kjøpesum)}</span></div>
+                      {t.oppussing > 0 && <div className="flex justify-between font-medium text-muted-2"><span>+ Oppussing</span><span className="num font-bold">{kr(t.oppussing)}</span></div>}
+                      <div className="flex justify-between font-medium text-muted-2"><span>+ Omkostninger</span><span className="num font-bold">{kr(t.totaleOmkostninger)}</span></div>
+                      <div className="flex justify-between font-extrabold text-ink border-t border-line-soft pt-1.5"><span>= Total kostnad</span><span className="num">{kr(t.totalKostnad)}</span></div>
+                      <div className="flex justify-between font-medium text-muted-2 pt-0.5"><span>− Sluttlån</span><span className="num font-bold text-amber">− {kr(t.lånBeløp)}</span></div>
+                      <div className={`flex justify-between font-extrabold border-t border-line-soft pt-1.5 ${t.cashInvestert >= 0 ? 'text-ink' : 'text-brand-ink'}`}>
                         <span>= Cash investert av deg</span>
                         <span className="num">{t.cashInvestert >= 0 ? kr(t.cashInvestert) : `+ ${kr(Math.abs(t.cashInvestert))} ut`}</span>
                       </div>
@@ -1401,17 +1399,17 @@ export default function BoliganalyseKalkulator() {
                   </div>
 
                   {/* EK etter ferdigstillelse */}
-                  <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl overflow-hidden">
-                    <div className="px-4 py-2.5 border-b border-[#E9E8E2]">
-                      <span className="text-xs font-medium text-[#7A7D83] uppercase tracking-wider">Etter ferdigstillelse</span>
+                  <div className="bg-surface-2 border border-line rounded-[14px] overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-line-soft">
+                      <span className="text-[11px] font-extrabold tracking-[0.05em] uppercase text-faint-2">Etter ferdigstillelse</span>
                     </div>
                     <div className="px-4 py-3 space-y-1.5 text-xs">
-                      <div className="flex justify-between text-[#7A7D83]"><span>Boligverdi ({inp.nyTakst ? 'ny takst' : 'kjøpesum + oppussing'})</span><span className="num">{kr(t.boligverdi)}</span></div>
-                      <div className="flex justify-between text-[#7A7D83]"><span>− Sluttlån</span><span className="num text-[#DC2626]">− {kr(t.lånBeløp)}</span></div>
-                      <div className="flex justify-between font-medium text-[#15803D] border-t border-[#E9E8E2] pt-1.5"><span>= EK i boligen</span><span className="num">{kr(t.egenkapital)}</span></div>
-                      <div className="flex justify-between text-[#7A7D83]"><span>LTV (lån / boligverdi)</span><span className="num" style={{ color: t.ltv <= 90 ? '#15803D' : '#DC2626' }}>{pct(t.ltv)}</span></div>
+                      <div className="flex justify-between font-medium text-muted-2"><span>Boligverdi ({inp.nyTakst ? 'ny takst' : 'kjøpesum + oppussing'})</span><span className="num font-bold">{kr(t.boligverdi)}</span></div>
+                      <div className="flex justify-between font-medium text-muted-2"><span>− Sluttlån</span><span className="num font-bold text-amber">− {kr(t.lånBeløp)}</span></div>
+                      <div className="flex justify-between font-extrabold text-brand-ink border-t border-line-soft pt-1.5"><span>= EK i boligen</span><span className="num">{kr(t.egenkapital)}</span></div>
+                      <div className="flex justify-between font-medium text-muted-2"><span>LTV (lån / boligverdi)</span><span className="num font-bold" style={{ color: t.ltv <= 90 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>{pct(t.ltv)}</span></div>
                       {t.nyTakst > 0 && (
-                        <div className="flex justify-between border-t border-[#E9E8E2] pt-1.5" style={{ color: t.verdiskapt >= 0 ? '#15803D' : '#DC2626' }}>
+                        <div className="flex justify-between font-semibold border-t border-line-soft pt-1.5" style={{ color: t.verdiskapt >= 0 ? 'var(--color-brand-ink)' : 'var(--color-danger)' }}>
                           <span>Verdi skapt (ny takst − total kostnad)</span>
                           <span className="num">{kr(t.verdiskapt)}</span>
                         </div>
@@ -1460,7 +1458,7 @@ export default function BoliganalyseKalkulator() {
                     {(inp.leieinntekter || []).length > 1 && (
                       <button type="button"
                         onClick={() => setInp((f) => ({ ...f, leieinntekter: f.leieinntekter.filter((_, j) => j !== i) }))}
-                        className="pb-0.5 text-[#7A7D83] hover:text-[#DC2626] transition-colors cursor-pointer shrink-0">
+                        className="pb-2.5 text-faint hover:text-danger transition-colors cursor-pointer shrink-0">
                         <Trash2 size={15} />
                       </button>
                     )}
@@ -1469,8 +1467,8 @@ export default function BoliganalyseKalkulator() {
               </div>
               <button type="button"
                 onClick={() => setInp((f) => ({ ...f, leieinntekter: [...(f.leieinntekter || []), { id: Date.now(), navn: '', belop: '' }] }))}
-                className="flex items-center gap-1.5 text-xs text-[#7A7D83] hover:text-[#1A1B1E] transition-colors cursor-pointer mt-1">
-                <span className="w-5 h-5 rounded border border-[#E9E8E2] flex items-center justify-center text-lg leading-none">+</span>
+                className="flex items-center gap-1.5 text-[13px] font-bold text-muted hover:text-brand-ink transition-colors cursor-pointer mt-1">
+                <span className="w-5 h-5 rounded-[7px] border border-line-input flex items-center justify-center text-lg leading-none">+</span>
                 Legg til leieobjekt
               </button>
 
@@ -1487,22 +1485,22 @@ export default function BoliganalyseKalkulator() {
                     { value: '90', label: '90 % — høy ledighet (10 % vakanse)' },
                   ]}
                 />
-                <p className="text-xs text-[#7A7D83] mt-1">
-                  Ledighetsvakanse: <span className="num text-[#1A1B1E]">{kr(t.ledighetMnd)}/mnd</span> ({100 - parseNum(inp.utleieandel || 95)} % av brutto leie)
+                <p className="text-xs font-medium text-muted-2 mt-1.5">
+                  Ledighetsvakanse: <span className="num font-bold text-ink">{kr(t.ledighetMnd)}/mnd</span> ({100 - parseNum(inp.utleieandel || 95)} % av brutto leie)
                 </p>
               </div>
 
               {t.bruttoLeieMnd > 0 && (
-                <div className="bg-[#F6F6F4] border border-[#E9E8E2] rounded-xl p-3 text-xs space-y-1">
-                  <div className="flex justify-between text-[#7A7D83]"><span>Brutto leieinntekt</span><span className="num">{kr(t.bruttoLeieMnd)}/mnd · {kr(t.bruttoLeieÅr)}/år</span></div>
-                  <div className="flex justify-between text-[#7A7D83]"><span>− Ledighetsvakanse</span><span className="num text-[#DC2626]">− {kr(t.ledighetMnd)}/mnd</span></div>
-                  <div className="flex justify-between font-medium text-[#1A1B1E] border-t border-[#E9E8E2] pt-1"><span>Effektiv leieinntekt</span><span className="num">{kr((t.bruttoLeieMnd - t.ledighetMnd))}/mnd · {kr(t.effektivLeieÅr)}/år</span></div>
+                <div className="bg-surface-2 border border-line rounded-[14px] p-3.5 text-xs space-y-1.5">
+                  <div className="flex justify-between font-medium text-muted-2"><span>Brutto leieinntekt</span><span className="num font-bold">{kr(t.bruttoLeieMnd)}/mnd · {kr(t.bruttoLeieÅr)}/år</span></div>
+                  <div className="flex justify-between font-medium text-muted-2"><span>− Ledighetsvakanse</span><span className="num font-bold text-amber">− {kr(t.ledighetMnd)}/mnd</span></div>
+                  <div className="flex justify-between font-extrabold text-ink border-t border-line-soft pt-1.5"><span>Effektiv leieinntekt</span><span className="num">{kr((t.bruttoLeieMnd - t.ledighetMnd))}/mnd · {kr(t.effektivLeieÅr)}/år</span></div>
                 </div>
               )}
             </Seksjon>
 
             <Seksjon nummer="4" tittel="Driftskostnader" icon={FileText} open={åpneSeksjoner[4]} onToggle={() => toggle(4)} ferdig={ferdig[4]}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Input label="Felleskostnader (kr/mnd)" value={inp.felleskostnader} onChange={set('felleskostnader')} placeholder="2 500" type="number" />
                 <Input label="Husforsikring (kr/mnd)" value={inp.husforsikring} onChange={set('husforsikring')} placeholder="500" type="number" />
                 <Input label="Kommunale avgifter (kr/år)" value={inp.kommunaleAvgifter} onChange={set('kommunaleAvgifter')} placeholder="8 000" type="number" />
@@ -1511,18 +1509,17 @@ export default function BoliganalyseKalkulator() {
               {/* Avsatt vedlikehold — prosent av leie */}
               <div className="flex gap-3 items-end pt-1">
                 <div className="flex-1">
-                  <div className="text-xs text-[#4B4E54] mb-1.5">Avsatt vedlikehold</div>
-                  <div className="flex items-center gap-2 bg-[#F6F6F4] border border-[#E9E8E2] rounded-lg px-3 py-2.5">
+                  <div className="text-[12.5px] font-bold text-muted mb-1.5">Avsatt vedlikehold</div>
+                  <div className="flex items-center gap-2 bg-surface-2 border border-line-input rounded-xl px-3.5 py-2.5">
                     <input
                       type="number"
                       value={inp.vedlikeholdProsent}
                       onChange={set('vedlikeholdProsent')}
                       step="0.5"
-                      className="w-12 bg-transparent text-[#1A1B1E] text-sm outline-none num"
-                      style={{ fontFamily: 'DM Mono, monospace' }}
+                      className="w-12 bg-transparent text-ink text-sm font-bold outline-none num"
                     />
-                    <span className="text-[#7A7D83] text-sm">% av brutto leie</span>
-                    <span className="ml-auto text-xs text-[#15803D] num">{kr(t.vedlikeholdMnd)}/mnd</span>
+                    <span className="text-muted-2 text-sm font-semibold">% av brutto leie</span>
+                    <span className="ml-auto text-xs font-bold text-brand-ink num">{kr(t.vedlikeholdMnd)}/mnd</span>
                   </div>
                 </div>
               </div>
@@ -1530,7 +1527,7 @@ export default function BoliganalyseKalkulator() {
               {/* Tilleggskostnader — dynamiske rader */}
               {(inp.tilleggskostnader || []).length > 0 && (
                 <div className="space-y-2 pt-1">
-                  <div className="text-xs text-[#7A7D83] uppercase tracking-wider">Tilleggskostnader</div>
+                  <div className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-faint">Tilleggskostnader</div>
                   {(inp.tilleggskostnader || []).map((tk, i) => (
                     <div key={tk.id} className="flex gap-2 items-end">
                       <Input
@@ -1558,7 +1555,7 @@ export default function BoliganalyseKalkulator() {
                       />
                       <button type="button"
                         onClick={() => setInp((f) => ({ ...f, tilleggskostnader: f.tilleggskostnader.filter((_, j) => j !== i) }))}
-                        className="pb-0.5 text-[#7A7D83] hover:text-[#DC2626] transition-colors cursor-pointer shrink-0">
+                        className="pb-2.5 text-faint hover:text-danger transition-colors cursor-pointer shrink-0">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -1567,32 +1564,32 @@ export default function BoliganalyseKalkulator() {
               )}
               <button type="button"
                 onClick={() => setInp((f) => ({ ...f, tilleggskostnader: [...(f.tilleggskostnader || []), { id: Date.now(), navn: '', belop: '' }] }))}
-                className="flex items-center gap-1.5 text-xs text-[#7A7D83] hover:text-[#1A1B1E] transition-colors cursor-pointer mt-1">
-                <span className="w-5 h-5 rounded border border-[#E9E8E2] flex items-center justify-center text-lg leading-none">+</span>
+                className="flex items-center gap-1.5 text-[13px] font-bold text-muted hover:text-brand-ink transition-colors cursor-pointer mt-1">
+                <span className="w-5 h-5 rounded-[7px] border border-line-input flex items-center justify-center text-lg leading-none">+</span>
                 Legg til kostnad (alarm, internett m.m.)
               </button>
 
-              <div className="flex justify-between text-xs text-[#7A7D83] pt-2 border-t border-[#E9E8E2]">
+              <div className="flex justify-between text-xs font-semibold text-muted-2 pt-2 border-t border-line-soft">
                 <span>Sum driftskostnader/år</span>
-                <span className="num text-[#1A1B1E]">{kr(t.totaleKostÅr)}</span>
+                <span className="num font-bold text-ink">{kr(t.totaleKostÅr)}</span>
               </div>
             </Seksjon>
 
             <Seksjon nummer="5" tittel="Din økonomi" icon={BarChart3} open={åpneSeksjoner[5]} onToggle={() => toggle(5)} ferdig={ferdig[5]}>
-              <p className="text-xs text-[#7A7D83]">Brukes til å beregne om du tilfredsstiller 5×-gjeldsgradsregelen.</p>
-              <div className="grid grid-cols-2 gap-4">
+              <p className="text-xs font-medium text-muted-2">Brukes til å beregne om du tilfredsstiller 5×-gjeldsgradsregelen.</p>
+              <div className="grid grid-cols-2 gap-3">
                 <Input label="Brutto årsinntekt (jobb)" value={inp.bruttoArsinntekt} onChange={set('bruttoArsinntekt')} placeholder="700 000" type="number" />
                 <Input label="Eksisterende gjeld" value={inp.eksisterendeGjeld} onChange={set('eksisterendeGjeld')} placeholder="0" type="number" />
               </div>
               {inp.bruttoArsinntekt && inp.kjøpesum && (
-                <div className="text-xs space-y-1">
-                  <div className="flex justify-between text-[#7A7D83]">
+                <div className="text-xs space-y-1.5">
+                  <div className="flex justify-between font-medium text-muted-2">
                     <span>Maks total gjeld (5× inntekt inkl. leie)</span>
-                    <span className="num">{kr(t.maxGjeldMedLeie)}</span>
+                    <span className="num font-bold">{kr(t.maxGjeldMedLeie)}</span>
                   </div>
-                  <div className="flex justify-between text-[#7A7D83]">
+                  <div className="flex justify-between font-medium text-muted-2">
                     <span>Din totale gjeld (eks. + ny)</span>
-                    <span className={`num ${(t.lånBeløp + t.eksGjeld) <= t.maxGjeldMedLeie ? 'text-[#15803D]' : 'text-[#DC2626]'}`}>
+                    <span className={`num font-bold ${(t.lånBeløp + t.eksGjeld) <= t.maxGjeldMedLeie ? 'text-brand-ink' : 'text-danger'}`}>
                       {kr(t.lånBeløp + t.eksGjeld)}
                     </span>
                   </div>
@@ -1601,37 +1598,36 @@ export default function BoliganalyseKalkulator() {
             </Seksjon>
 
             <Button variant="primary" className="w-full justify-center" onClick={håndterGenererRapport}>
-              {visBekreftet ? <><Check size={14} /> Lagret og åpnet!</> : <><BarChart3 size={14} /> Generer full rapport</>}
+              {visBekreftet ? <><Check size={14} /> Lagret og åpnet!</> : <><BarChart3 size={14} /> Oppdater analyse</>}
             </Button>
+            <div className="flex items-center gap-2 mt-1 text-[11.5px] font-semibold text-faint">
+              <FileText size={13} />
+              Lagre som rapport · sammenlign flere boliger
+            </div>
           </div>
 
           {/* Sticky live-preview */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-6 rounded-xl border border-[#E9E8E2] bg-[#FFFFFF] p-5 space-y-4">
-              <div className="text-xs font-semibold text-[#7A7D83] uppercase tracking-wider">Live-oversikt</div>
+          <div>
+            <div className="sticky top-6 rounded-[20px] border border-line bg-surface p-[22px] space-y-4">
+              <div className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-faint">Live-oversikt</div>
 
               {t.kjøpesum ? (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-[#7A7D83]">Brutto yield</div>
-                      <div className="text-lg font-bold num" style={{ color: t.bruttoYield >= 5 ? '#15803D' : t.bruttoYield >= 3 ? '#4D7C0F' : '#DC2626', fontFamily: 'DM Mono, monospace' }}>{pct(t.bruttoYield)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-[#7A7D83]">Netto yield</div>
-                      <div className="text-lg font-bold num" style={{ color: t.nettoYield >= 3 ? '#15803D' : t.nettoYield >= 1.5 ? '#4D7C0F' : '#DC2626', fontFamily: 'DM Mono, monospace' }}>{pct(t.nettoYield)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-[#7A7D83]">Kontantstrøm/mnd</div>
-                      <div className="text-lg font-bold num" style={{ color: t.kontantstrømMnd >= 0 ? '#15803D' : '#DC2626', fontFamily: 'DM Mono, monospace' }}>{kr(t.kontantstrømMnd)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-[#7A7D83]">ROE</div>
-                      <div className="text-lg font-bold num" style={{ color: t.roe >= 5 ? '#15803D' : t.roe >= 0 ? '#4D7C0F' : '#DC2626', fontFamily: 'DM Mono, monospace' }}>{pct(t.roe)}</div>
-                    </div>
+                    {[
+                      { label: 'Brutto yield', val: pct(t.bruttoYield), cls: t.bruttoYield >= 5 ? 'text-brand-ink' : t.bruttoYield >= 3 ? 'text-ink' : 'text-danger' },
+                      { label: 'Netto yield', val: pct(t.nettoYield), cls: t.nettoYield >= 3 ? 'text-brand-ink' : t.nettoYield >= 1.5 ? 'text-ink' : 'text-danger' },
+                      { label: 'Kontantstrøm/mnd', val: kr(t.kontantstrømMnd), cls: t.kontantstrømMnd >= 0 ? 'text-brand-ink' : 'text-danger' },
+                      { label: 'ROE', val: pct(t.roe), cls: t.roe >= 5 ? 'text-brand-ink' : t.roe >= 0 ? 'text-ink' : 'text-danger' },
+                    ].map(({ label, val, cls }) => (
+                      <div key={label}>
+                        <div className="text-[11px] font-bold text-faint">{label}</div>
+                        <div className={`text-lg font-extrabold num ${cls}`}>{val}</div>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="h-px bg-[#E9E8E2]" />
+                  <div className="h-px bg-line-soft" />
 
                   <div className="space-y-2">
                     {[
@@ -1642,8 +1638,8 @@ export default function BoliganalyseKalkulator() {
                       ['Ekstra lånekapasitet', kr(t.ekstraLånekapasitet)],
                     ].map(([label, val]) => (
                       <div key={label} className="flex justify-between text-xs">
-                        <span className="text-[#7A7D83]">{label}</span>
-                        <span className="num text-[#1A1B1E]">{val}</span>
+                        <span className="font-semibold text-muted-2">{label}</span>
+                        <span className="num font-bold text-ink">{val}</span>
                       </div>
                     ))}
                   </div>
@@ -1666,8 +1662,8 @@ export default function BoliganalyseKalkulator() {
                 </>
               ) : (
                 <div className="text-center py-8">
-                  <Calculator size={24} className="text-[#AEB0B4] mx-auto mb-2" />
-                  <p className="text-xs text-[#7A7D83]">Fyll inn kjøpesum for å se beregninger</p>
+                  <Calculator size={24} className="text-faint-2 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-muted-2">Fyll inn kjøpesum for å se beregninger</p>
                 </div>
               )}
             </div>

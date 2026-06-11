@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Home, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Home, Search, Square, BedDouble, Megaphone } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../../components/ui/Button';
-import { EmptyState, Badge } from '../../components/ui/Card';
+import { EmptyState } from '../../components/ui/Card';
 import { Select } from '../../components/ui/Input';
+import { Photo, Pill, Avatar, PageHeader } from '../../components/ui/kit';
 import { BekreftModal } from '../../components/ui/BekreftModal';
 import { formatKr } from '../../utils/format';
 
-const STATUS_FARGER = { utleid: 'green', ledig: 'red', delvis: 'yellow' };
 const STATUS_LABEL = { utleid: 'Utleid', ledig: 'Ledig', delvis: 'Delvis utleid' };
+const STATUS_TONE = { utleid: 'mint', ledig: 'amber', delvis: 'amber' };
 const TYPE_LABEL = {
   hybel: 'Hybel', leilighet: 'Leilighet', sokkelleilighet: 'Sokkelleilighet',
   enebolig: 'Enebolig', naering: 'Næringslokale',
@@ -17,7 +18,7 @@ const TYPE_LABEL = {
 
 export default function LeieobjektListe() {
   const navigate = useNavigate();
-  const { leieobjekter, bygg, lasterEiendom, deleteLeieobjekt } = useApp();
+  const { leieobjekter, bygg, kontrakter = [], lasterEiendom, deleteLeieobjekt } = useApp();
   const [filterBygg, setFilterBygg] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [søk, setSøk] = useState('');
@@ -26,6 +27,16 @@ export default function LeieobjektListe() {
   const byggOptions = bygg.map((b) => ({ value: b.id, label: `${b.gatenavn} ${b.gatenummer}` }));
 
   const getBygg = (byggId) => bygg.find((b) => b.id === byggId);
+
+  // Aktiv leietaker fra koblet, aktiv kontrakt (samme logikk som Dashboard).
+  const getLeietaker = (objektId) => {
+    const k = kontrakter.find((kk) => {
+      if (kk.leieobjektId !== objektId) return false;
+      if (kk.kontraktstype === 'tidsubestemt' || !kk.sluttdato) return true;
+      return new Date(kk.sluttdato) >= new Date();
+    });
+    return k?.leietakerNavn || null;
+  };
 
   const filtered = leieobjekter.filter((l) => {
     if (filterBygg && l.byggId !== filterBygg) return false;
@@ -38,10 +49,20 @@ export default function LeieobjektListe() {
     return true;
   });
 
+  const antallUtleid = leieobjekter.filter((l) => l.status === 'utleid').length;
+  const antallLedig = leieobjekter.filter((l) => l.status === 'ledig').length;
+  const antallBygg = new Set(leieobjekter.map((l) => l.byggId).filter(Boolean)).size;
+
   const slettObjekt = leieobjekter.find((l) => l.id === slettId);
 
+  const statusPiller = [
+    { verdi: '', label: 'Alle', antall: leieobjekter.length },
+    { verdi: 'utleid', label: 'Utleid', antall: antallUtleid },
+    { verdi: 'ledig', label: 'Ledig', antall: antallLedig },
+  ];
+
   return (
-    <div>
+    <div className="animate-fade-up">
       <BekreftModal
         åpen={!!slettId}
         tittel="Slette leieobjektet?"
@@ -50,123 +71,144 @@ export default function LeieobjektListe() {
         onBekreft={async () => { await deleteLeieobjekt(slettId); setSlettId(null); }}
         onAvbryt={() => setSlettId(null)}
       />
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-xl font-semibold text-[#1A1B1E]">Leieobjekter</h1>
-          <p className="text-sm text-[#65696F] mt-1">{leieobjekter.length} leieobjekter totalt</p>
-        </div>
+
+      <PageHeader
+        tittel="Leieobjekter"
+        undertittel={`${leieobjekter.length} ${leieobjekter.length === 1 ? 'enhet' : 'enheter'} fordelt på ${antallBygg} ${antallBygg === 1 ? 'bygg' : 'bygg'}`}
+      >
         <Button onClick={() => navigate('/leieobjekter/ny')} variant="primary">
-          <Plus size={14} /> Nytt leieobjekt
+          <Plus size={15} strokeWidth={2.4} /> Nytt leieobjekt
         </Button>
-      </div>
+      </PageHeader>
 
       {leieobjekter.length > 0 && (
-        <div className="flex gap-3 mb-6 flex-wrap">
-          <div className="relative flex-1 min-w-48 max-w-sm">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7D83]" />
-            <input value={søk} onChange={(e) => setSøk(e.target.value)} placeholder="Søk leieobjekt, adresse..."
-              className="w-full bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl pl-9 pr-4 py-2 text-sm text-[#1A1B1E] placeholder-[#AEB0B4] outline-none focus:border-[#DCDAD2] transition-colors" />
+        <>
+          {/* Status-piller */}
+          <div className="flex gap-2 flex-wrap mb-5">
+            {statusPiller.map((p) => {
+              const aktiv = filterStatus === p.verdi;
+              return (
+                <button
+                  key={p.verdi || 'alle'}
+                  type="button"
+                  onClick={() => setFilterStatus(p.verdi)}
+                  className={`px-4 py-2 rounded-full text-[13px] font-bold transition-colors cursor-pointer border
+                    ${aktiv
+                      ? 'bg-ink-2 text-white border-ink-2'
+                      : 'bg-surface text-ink-2 border-line-input hover:border-brand hover:text-brand-ink'}`}
+                >
+                  {p.label} · {p.antall}
+                </button>
+              );
+            })}
           </div>
-          <Select value={filterBygg} onChange={(e) => setFilterBygg(e.target.value)}
-            options={byggOptions} placeholder="Alle bygg" className="w-52" />
-          <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-            options={[
-              { value: 'utleid', label: 'Utleid' },
-              { value: 'ledig', label: 'Ledig' },
-              { value: 'delvis', label: 'Delvis utleid' },
-            ]}
-            placeholder="Alle statuser" className="w-48" />
-        </div>
+
+          {/* Søk + bygg-filter */}
+          <div className="flex gap-3 mb-6 flex-wrap">
+            <div className="relative flex-1 min-w-48 max-w-sm">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" />
+              <input
+                value={søk}
+                onChange={(e) => setSøk(e.target.value)}
+                placeholder="Søk leieobjekt, adresse…"
+                className="w-full bg-surface border border-line-input rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium text-ink placeholder-faint outline-none focus:border-brand transition-colors"
+              />
+            </div>
+            <Select
+              value={filterBygg}
+              onChange={(e) => setFilterBygg(e.target.value)}
+              options={byggOptions}
+              placeholder="Alle bygg"
+              className="w-52"
+            />
+          </div>
+        </>
       )}
 
       {lasterEiendom ? (
-        <div className="text-center py-16 text-[#7A7D83] text-sm">Laster leieobjekter…</div>
+        <div className="text-center py-16 text-muted text-sm font-medium">Laster leieobjekter…</div>
       ) : leieobjekter.length === 0 ? (
         <EmptyState
-          icon="🏠"
+          icon={<Home size={24} />}
           title="Ingen leieobjekter registrert"
           description="Legg til ditt første leieobjekt. Du må ha minst ett bygg registrert først."
           action={
             <Button onClick={() => navigate('/leieobjekter/ny')} variant="primary">
-              <Plus size={14} /> Legg til leieobjekt
+              <Plus size={15} strokeWidth={2.4} /> Legg til leieobjekt
             </Button>
           }
         />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-[#7A7D83] text-sm">
+        <div className="text-center py-16 text-muted text-sm font-medium">
           Ingen leieobjekter matcher filteret.
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-[18px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 252px), 1fr))' }}>
           {filtered.map((l) => {
             const byggInfo = getBygg(l.byggId);
+            const tittel = `${TYPE_LABEL[l.type] || 'Leieobjekt'}${l.betegnelse ? ` · ${l.betegnelse}` : ''}`;
+            const adresse = byggInfo
+              ? [`${byggInfo.gatenavn} ${byggInfo.gatenummer}`, byggInfo.poststed].filter(Boolean).join(', ')
+              : null;
+            const leietaker = l.status === 'utleid' ? getLeietaker(l.id) : null;
+
             return (
               <div
                 key={l.id}
                 onClick={() => navigate(`/leieobjekter/${l.id}`)}
-                className="bg-[#FFFFFF] border border-[#E9E8E2] rounded-xl overflow-hidden hover:border-[#DCDAD2] hover:bg-[#FAF9F6] transition-all duration-150 cursor-pointer group flex flex-col"
+                className="bg-surface border border-line rounded-[20px] overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-card-lg flex flex-col"
               >
-                {/* Bilde / placeholder */}
-                {l.bilde ? (
-                  <img src={l.bilde} alt={l.betegnelse} className="w-full h-40 object-cover" />
-                ) : (
-                  <div className="w-full h-40 bg-[#F1F1ED] flex items-center justify-center">
-                    <Home size={28} className="text-[#DCDAD2]" />
-                  </div>
-                )}
-
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  {/* Status + type */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge color={STATUS_FARGER[l.status] || 'default'}>
+                <Photo src={l.bilde} alt={tittel} className="aspect-[4/3]">
+                  <span className="absolute top-3 left-3">
+                    <Pill tone={STATUS_TONE[l.status] || 'neutral'}>
                       {STATUS_LABEL[l.status] || l.status}
-                    </Badge>
-                    {l.type && (
-                      <span className="text-xs text-[#7A7D83]">{TYPE_LABEL[l.type] || l.type}</span>
+                    </Pill>
+                  </span>
+                </Photo>
+
+                <div className="px-4 pt-[15px] pb-4 flex flex-col flex-1">
+                  <div className="text-[15px] font-extrabold tracking-[-0.01em] text-ink mb-0.5">{tittel}</div>
+                  {adresse && (
+                    <div className="text-[12.5px] font-semibold text-muted-2 mb-3">{adresse}</div>
+                  )}
+
+                  {/* Nøkkeltall */}
+                  <div className="flex gap-3.5 flex-wrap mb-3">
+                    {l.areal && (
+                      <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
+                        <Square size={13} /> <span className="num">{l.areal}</span> m²
+                      </span>
+                    )}
+                    {(l.antallSoverom || l.antallRom) && (
+                      <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
+                        <BedDouble size={13} />
+                        {l.antallSoverom
+                          ? <><span className="num">{l.antallSoverom}</span> soverom</>
+                          : <><span className="num">{l.antallRom}</span> rom</>}
+                      </span>
                     )}
                   </div>
 
-                  {/* Navn og adresse */}
-                  <div>
-                    <div className="font-medium text-[#1A1B1E] text-sm">
-                      {l.betegnelse || TYPE_LABEL[l.type] || 'Leieobjekt'}
-                    </div>
-                    {byggInfo && (
-                      <div className="text-xs text-[#7A7D83] mt-0.5">
-                        {byggInfo.gatenavn} {byggInfo.gatenummer}, {byggInfo.poststed}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Egenskaper */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#65696F] border-t border-[#E9E8E2] pt-3">
-                    {l.areal && <span><span className="text-[#7A7D83]">Areal</span> <span className="text-[#1A1B1E] num">{l.areal} m²</span></span>}
-                    {l.antallRom && <span><span className="text-[#7A7D83]">Rom</span> <span className="text-[#1A1B1E] num">{l.antallRom}</span></span>}
-                    {l.antallSoverom && <span><span className="text-[#7A7D83]">Soverom</span> <span className="text-[#1A1B1E] num">{l.antallSoverom}</span></span>}
-                  </div>
-
-                  {/* Leie + actions */}
-                  <div className="flex items-center justify-between mt-auto">
-                    <div>
-                      <div className="text-xs text-[#7A7D83]">Forventet leie/mnd</div>
-                      <div className="text-sm font-medium text-[#15803D] num mt-0.5">{formatKr(l.forventetLeie || 0)}</div>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                      <button
+                  {/* Leie + leietaker / annonse */}
+                  <div className="flex items-center justify-between gap-2.5 border-t border-line-soft pt-3 mt-auto">
+                    <span className="text-[15px] font-extrabold text-ink num">
+                      {formatKr(l.forventetLeie || 0)}
+                      <span className="text-xs font-semibold text-faint num"> /mnd</span>
+                    </span>
+                    {l.status === 'ledig' ? (
+                      <Button
+                        variant="amber"
+                        size="sm"
                         onClick={(e) => { e.stopPropagation(); navigate(`/leieobjekter/${l.id}`); }}
-                        aria-label="Rediger leieobjekt"
-                        className="p-1.5 text-[#7A7D83] hover:text-[#1A1B1E] hover:bg-black/[0.045] rounded-md transition-all cursor-pointer"
                       >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSlettId(l.id); }}
-                        aria-label="Slett leieobjekt"
-                        className="p-1.5 text-[#7A7D83] hover:text-[#DC2626] hover:bg-[#DC2626]/8 rounded-md transition-all cursor-pointer"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+                        <Megaphone size={13} /> Lag annonse
+                      </Button>
+                    ) : leietaker ? (
+                      <span className="inline-flex items-center gap-2 text-xs font-bold text-muted min-w-0">
+                        <Avatar navn={leietaker} size={22} />
+                        <span className="truncate">{leietaker}</span>
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
