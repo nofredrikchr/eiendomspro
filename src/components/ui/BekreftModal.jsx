@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
+import { IconTile } from './kit';
 
 /**
  * Gjenbrukbar bekreftelsesdialog — erstatter window.confirm()
@@ -33,25 +34,25 @@ export function BekreftModal({
       onClick={onAvbryt}
     >
       {/* Bakgrunn */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[#141A17]/45 backdrop-blur-sm" />
 
-      {/* Modal */}
+      {/* Modal — matcher restylet Modal: hvitt kort, mykt skille, varm radius */}
       <div
-        className="relative bg-[#FFFFFF] border border-[#DCDAD2] rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+        className="relative w-full max-w-sm bg-surface border border-line rounded-3xl shadow-soft p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Ikon */}
         {fare && (
-          <div className="w-10 h-10 bg-[#DC2626]/10 rounded-full flex items-center justify-center mb-4">
-            <AlertTriangle size={18} className="text-[#DC2626]" />
-          </div>
+          <IconTile tone="amber" size={44} radius={14} className="mb-4 bg-danger/10 text-danger">
+            <AlertTriangle size={20} />
+          </IconTile>
         )}
 
-        <h3 className="text-base font-semibold text-[#1A1B1E] mb-2">{tittel}</h3>
-        {tekst && <p className="text-sm text-[#65696F] leading-relaxed mb-6">{tekst}</p>}
+        <h2 className="text-base font-extrabold tracking-[-0.01em] text-ink mb-2">{tittel}</h2>
+        {tekst && <p className="text-sm font-medium text-muted leading-relaxed mb-6">{tekst}</p>}
         {!tekst && <div className="mb-6" />}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <Button variant="secondary" className="flex-1 justify-center" onClick={onAvbryt}>
             {avbrytLabel}
           </Button>
