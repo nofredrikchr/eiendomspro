@@ -274,8 +274,15 @@ export default function LandingPage() {
     <div ref={omfang} className="min-h-screen bg-canvas text-ink overflow-x-clip">
 
       {/* ── Toppmeny ─────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-canvas/85 backdrop-blur-[14px] border-b border-transparent transition-all duration-300 [&.topp-skrollet]:border-line [&.topp-skrollet]:bg-canvas/95 [&.topp-skrollet]:shadow-card">
-        <div className="max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] h-[70px] flex items-center gap-5">
+      <header className="sticky top-0 z-40">
+        {/* Frostet sone som strekker seg under selve menylinjen: innholdet
+            «smelter» gradvis inn i blur når man skroller (tones inn via
+            .topp-skrollet). Skjules når mobilmenyen er åpen. */}
+        <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-[170px] transition-opacity duration-500 ${menyApen ? 'opacity-0' : ''}`}>
+          <div className="blur-topp absolute inset-x-0 top-0 h-[170px] opacity-0 transition-opacity duration-500 [.topp-skrollet_&]:opacity-100" />
+          <div className="blur-topp-sterk absolute inset-x-0 top-0 h-[120px] opacity-0 transition-opacity duration-500 [.topp-skrollet_&]:opacity-100" />
+        </div>
+        <div className="relative max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] h-[70px] flex items-center gap-5">
           <button onClick={() => { setMenyApen(false); navigate('/'); }} className="cursor-pointer bg-transparent border-none p-0">
             <Logo variant="dark" height={34} />
           </button>
@@ -839,6 +846,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── Subtil frostet kant nederst i viewporten ─────────────────────────── */}
+      <div aria-hidden="true" className="blur-bunn fixed inset-x-0 bottom-0 h-[110px] z-[25]" />
     </div>
   );
 }

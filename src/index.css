@@ -134,6 +134,34 @@ input[type="number"]::-webkit-outer-spin-button {
 
 /* ── Bevegelse på forsiden («rolig, men levende» — se DESIGNSYSTEM.md) ─────── */
 
+/* Progressive kant-blur: innhold «smelter» mykt inn i en frostet sone øverst
+   (under toppmenyen) og nederst i viewporten. To lag med ulik styrke og maske
+   gir en gradvis overgang i stedet for en hard blur-kant. Selve fargetonen
+   ligger i samme element, så tint og blur toner ut sammen. */
+.blur-topp, .blur-topp-sterk, .blur-bunn {
+  pointer-events: none;
+}
+.blur-topp-sterk {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(to bottom, rgba(246, 244, 239, 0.9) 0%, rgba(246, 244, 239, 0.55) 60%, rgba(246, 244, 239, 0) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 100%);
+}
+.blur-topp {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+}
+.blur-bunn {
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  background: linear-gradient(to top, rgba(246, 244, 239, 0.55) 0%, rgba(246, 244, 239, 0) 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 18%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 18%, transparent 100%);
+}
+
 /* Uendelig båndtekst: innholdet dupliseres én gang i markup, og hele raden
    flyttes -50% i loop. Maskene toner kantene mykt ut. */
 @keyframes marquee {

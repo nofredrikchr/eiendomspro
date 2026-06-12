@@ -110,6 +110,11 @@ Bevegelsesspråket skal kjennes varmt og omsorgsfullt — aldri hektisk. Innhold
 - `data-parallakse` — foto litt høyere enn rammen (112–116 %) som driver
   oppover; bruk kun negative `yPercent`-spenn så kantene aldri blottlegges.
 - `data-steg` + `.steg-aktiv` — scrolldrevet aktiv-tilstand med fyllende linje.
+- **Progressiv kant-blur** (`.blur-topp`, `.blur-topp-sterk`, `.blur-bunn` i
+  `index.css`): innholdet smelter inn i en frostet sone under toppmenyen ved
+  scroll (tones inn via `.topp-skrollet`) og i en subtil fast sone nederst i
+  viewporten. Gradient-maskede `backdrop-filter`-lag — tint og blur toner ut
+  sammen. Bruk samme klasser på nye markedssider; ikke i appen.
 
 **Ufravikelig:** all animasjon settes opp i JS (`gsap.from`) slik at innholdet
 er synlig uten JS, og ALT pakkes i
