@@ -83,6 +83,41 @@ Opacity-modifier funker: `bg-surface/95`, `border-danger/25`, `bg-white/[0.07]`.
 - **Aktiv/positiv** = mint; **oppfølging/utløp** = amber; **mørk teal-flate** = `brand-deep`
   (hvit tekst) for hero/utvalgte nøkkeltall.
 
+## Bevegelse («rolig, men levende»)
+
+Bevegelsesspråket skal kjennes varmt og omsorgsfullt — aldri hektisk. Innhold
+*glir på plass*, det spretter ikke.
+
+**To nivåer:**
+
+1. **App-sidene (innlogget):** kun CSS. `animate-fade-up` på sidecontainer,
+   `transition-all` + `hover:-translate-y-0.5 hover:shadow-card-lg` på klikkbare
+   kort. Ikke dra GSAP inn i appen — den skal føles umiddelbar.
+2. **Markedssidene (forside m.fl.):** GSAP + ScrollTrigger (`useGSAP` med
+   `scope`). Mønstrene under er etablert i `src/pages/LandingPage.jsx` — kopier
+   derfra ved nye markedssider.
+
+**Grunnverdier:** ease `power3.out`, varighet 0.7–0.9 s, innglidning fra
+`y: 24–28`, stagger 0.07–0.09 s. Scrub-effekter (parallakse, linjer) bruker
+`ease: 'none'`.
+
+**Etablerte mønstre (data-attributter på landingssiden):**
+- `data-reveal` / `data-reveal-gruppe` — generisk innglidning ved scroll
+  (gruppe staggerer barna). `data-reveal-delay="0.08"` for forskyvning.
+- `.hero-ord` — overskriftsord som glir opp fra klippede spans.
+- `data-teller="5,8"` — tall som teller seg opp (norsk komma).
+- `data-soyler` / `data-tegn` — søyler som vokser / SVG-stier som tegner seg.
+- `data-parallakse` — foto litt høyere enn rammen (112–116 %) som driver
+  oppover; bruk kun negative `yPercent`-spenn så kantene aldri blottlegges.
+- `data-steg` + `.steg-aktiv` — scrolldrevet aktiv-tilstand med fyllende linje.
+
+**Ufravikelig:** all animasjon settes opp i JS (`gsap.from`) slik at innholdet
+er synlig uten JS, og ALT pakkes i
+`gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', …)` —
+med redusert bevegelse står siden stille og fullt synlig (CSS-fallbacks i
+`index.css` håndterer dim-/opacity-tilstander). Marquee og svev er rene
+CSS-animasjoner som skrus av i samme media query.
+
 ## Regler ved ombygging
 1. Behold ALL dataflyt: API-kall, hooks (`useApp`, `useAuth`), props, ruter, eksport-navn
    og funksjonalitet. Kun presentasjon endres.
