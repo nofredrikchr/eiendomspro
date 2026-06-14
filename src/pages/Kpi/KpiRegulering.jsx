@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Loader2, AlertTriangle, ArrowRight, ExternalLink, Info, CalendarClock } from 'lucide-react';
+import { TrendingUp, Loader2, AlertTriangle, ArrowRight, ExternalLink, Info, CalendarClock, FileDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -8,6 +8,7 @@ import { Avatar, Pill, IconTile, PageHeader, SectionCard } from '../../component
 import { formatKr } from '../../utils/format';
 import { hentKpiSerie, indeksFor, tilSsbMaaned, ssbMaanedTilTekst } from '../../services/ssbKpi';
 import { kanReguleresNaa, nesteReguleringTekst, nesteReguleringsdato, beregnNyLeie } from '../../utils/kpi';
+import { genererKpiVarselPDF } from '../../utils/kpiVarselPDF';
 
 function ssbMinus(maaned, n) {
   const m = String(maaned).match(/(\d{4})M(\d{2})/);
@@ -36,6 +37,7 @@ export default function KpiRegulering() {
   const [status, setStatus] = useState('laster');
   const [leie, setLeie] = useState('15000');
   const [sistReg, setSistReg] = useState('');
+  const [valgtKontraktId, setValgtKontraktId] = useState('');
 
   useEffect(() => {
     let aktiv = true;
@@ -77,11 +79,28 @@ export default function KpiRegulering() {
 
   const kpiKontrakter = kontrakter.filter((k) => k.indeksregulering);
   function hentFraKontrakt(id) {
+    setValgtKontraktId(id);
     const k = kontrakter.find((x) => x.id === id);
     if (!k) return;
     if (k.maanedligLeie) setLeie(String(k.maanedligLeie));
     const basis = (k.sisteRegulering || k.startdato || '').slice(0, 7);
     if (basis) setSistReg(basis);
+  }
+
+  // Last ned ferdig varselbrev (PDF) basert på kalkulatorens tall. Hvis en kontrakt
+  // er valgt, adresseres brevet til den leietakeren; ellers blir det en mal.
+  function lastNedVarsel() {
+    const k = kontrakter.find((x) => x.id === valgtKontraktId);
+    genererKpiVarselPDF({
+      utleier: {},
+      leietaker: k ? { navn: k.leietakerNavn, epost: k.leietakerEpost, tlf: k.leietakerTlf } : {},
+      adresse: '',
+      gjeldendeLeie: gLeie,
+      nyLeie,
+      kpiProsent: annual || 0,
+      kpiKilde: `KPI-endring siste 12 mnd, fra ${ssbMaanedTilTekst(fraRef)} til ${ssbMaanedTilTekst(data.sisteMaaned)} (SSB)`,
+      gjelderFra,
+    });
   }
 
   // Del kontraktene i «klare nå» og «ikke klare ennå»
@@ -133,7 +152,7 @@ export default function KpiRegulering() {
               {kpiKontrakter.length > 0 && (
                 <div className="mb-4">
                   <Select
-                    label="Hent fra leiekontrakt (valgfritt)" value="" onChange={(e) => hentFraKontrakt(e.target.value)}
+                    label="Hent fra leiekontrakt (valgfritt)" value={valgtKontraktId} onChange={(e) => hentFraKontrakt(e.target.value)}
                     options={kpiKontrakter.map((k) => ({ value: k.id, label: `${k.leietakerNavn || 'Uten navn'} — ${formatKr(Number(k.maanedligLeie) || 0)}` }))}
                     placeholder="Velg kontrakt …"
                   />
@@ -194,6 +213,11 @@ export default function KpiRegulering() {
                   </p>
                 )}
               </div>
+
+              {/* Ferdig varselbrev til leietaker */}
+              <Button variant="secondary" className="w-full justify-center mt-3" onClick={lastNedVarsel}>
+                <FileDown size={15} /> Last ned varselbrev (PDF)
+              </Button>
             </SectionCard>
 
             {/* Siste 12 måneder */}
