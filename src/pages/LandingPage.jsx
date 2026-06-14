@@ -10,8 +10,9 @@ import {
   ShieldCheck, TrendingUp, Building2, Heart, ArrowRight, Check,
   CreditCard, Wrench, FileText, MessageSquare, CheckCircle2,
   Menu, X, ChevronDown, FileSignature, ChartLine, Bell,
-  Banknote, CalendarClock, KeyRound, Receipt,
+  Banknote, KeyRound,
 } from 'lucide-react';
+import { HeroAtmosfere } from '../components/HeroAtmosfere';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -236,17 +237,6 @@ export default function LandingPage() {
     { tekst: 'Guider', klikk: () => navigate('/guider') },
   ];
 
-  const marqueePunkter = [
-    { icon: CheckCircle2, t: 'Husleie betalt' },
-    { icon: FileSignature, t: 'Kontrakt signert' },
-    { icon: ChartLine, t: 'KPI-regulering klar' },
-    { icon: Wrench, t: 'Sak løst på 2 timer' },
-    { icon: ShieldCheck, t: 'Depositum sikret' },
-    { icon: Receipt, t: 'Rapport sendt banken' },
-    { icon: Heart, t: 'Fornøyd leietaker' },
-    { icon: CalendarClock, t: 'Purring sendt automatisk' },
-  ];
-
   const stats = [
     { tall: '5', suffix: ' min', tekst: 'fra registrering til full oversikt' },
     { tall: '10', suffix: ' år', tekst: 'prognose for hver eneste bolig' },
@@ -274,15 +264,11 @@ export default function LandingPage() {
     <div ref={omfang} className="min-h-screen bg-canvas text-ink overflow-x-clip">
 
       {/* ── Toppmeny ─────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40">
-        {/* Frostet sone som strekker seg under selve menylinjen: innholdet
-            «smelter» gradvis inn i blur når man skroller (tones inn via
-            .topp-skrollet). Skjules når mobilmenyen er åpen. */}
-        <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-[170px] transition-opacity duration-500 ${menyApen ? 'opacity-0' : ''}`}>
-          <div className="blur-topp absolute inset-x-0 top-0 h-[170px] opacity-0 transition-opacity duration-500 [.topp-skrollet_&]:opacity-100" />
-          <div className="blur-topp-sterk absolute inset-x-0 top-0 h-[120px] opacity-0 transition-opacity duration-500 [.topp-skrollet_&]:opacity-100" />
-        </div>
-        <div className="relative max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] h-[70px] flex items-center gap-5">
+      {/* Ren, frostet glasslinje med et tydelig skille mot innholdet. Skillet og
+          en mild skygge forsterkes når man har skrollet (.topp-skrollet, satt
+          av ScrollTrigger). */}
+      <header className="sticky top-0 z-40 bg-canvas/80 backdrop-blur-[16px] border-b border-line transition-[box-shadow,background-color,border-color] duration-300 [&.topp-skrollet]:bg-canvas/92 [&.topp-skrollet]:border-line-input [&.topp-skrollet]:shadow-card">
+        <div className="max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] h-[70px] flex items-center gap-5">
           <button onClick={() => { setMenyApen(false); navigate('/'); }} className="cursor-pointer bg-transparent border-none p-0">
             <Logo variant="dark" height={34} />
           </button>
@@ -326,8 +312,11 @@ export default function LandingPage() {
       )}
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <section data-hero className="max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] pt-[clamp(40px,6vw,84px)] pb-[clamp(48px,6vw,76px)] grid gap-[clamp(36px,5vw,64px)] items-center lg:grid-cols-[1.04fr_0.96fr]">
-        <div>
+      <section data-hero className="relative max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] pt-[clamp(40px,6vw,84px)] pb-[clamp(48px,6vw,76px)] grid gap-[clamp(36px,5vw,64px)] items-center lg:grid-cols-[1.04fr_0.96fr]">
+        {/* Three.js bokeh-atmosfære, full bredde bak innholdet (root har
+            overflow-x-clip, så w-screen gir ingen vannrett scroll). */}
+        <HeroAtmosfere className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen z-0" />
+        <div className="relative z-10">
           <div data-hero-bit className="inline-flex items-center gap-2 bg-mint text-brand-ink text-[13px] font-bold px-3.5 py-[7px] rounded-full mb-[22px]">
             <ShieldCheck size={14} />
             Laget for langtidsutleie i Norge
@@ -364,7 +353,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="relative min-h-[380px]">
+        <div className="relative z-10 min-h-[380px]">
           <div data-hero-plate className="absolute w-[70%] h-[70%] bg-mint rounded-[28px] rotate-3" style={{ inset: '24px -10px auto auto' }} />
           <div data-hero-foto className="relative rounded-[26px] overflow-hidden bg-[#E8E4DB] shadow-card-lg" style={{ aspectRatio: '4 / 3.4' }}>
             <img src={HERO_BILDE} alt="Lys og varm stue i utleiebolig" fetchPriority="high" className="w-full h-[112%] object-cover block will-change-transform" />
@@ -392,23 +381,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ── Marquee: små øyeblikk fra en rolig utleiehverdag ─────────────────── */}
-      <div className="border-y border-line bg-surface py-[18px] overflow-hidden marquee-maske" aria-hidden="true">
-        <div className="flex w-max gap-0 animate-marquee">
-          {[0, 1].map((kopi) => (
-            <div key={kopi} className="flex shrink-0 items-center">
-              {marqueePunkter.map(({ icon: Icon, t }) => (
-                <span key={`${kopi}-${t}`} className="inline-flex items-center gap-2.5 px-7 text-[14px] font-bold text-muted whitespace-nowrap">
-                  <Icon size={16} className="text-brand shrink-0" />
-                  {t}
-                  <span className="w-1 h-1 rounded-full bg-line-input ml-7" />
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ── Nøkkeltall ───────────────────────────────────────────────────────── */}
       <section className="max-w-[1180px] mx-auto px-[clamp(20px,4vw,40px)] py-[clamp(44px,6vw,72px)]">
