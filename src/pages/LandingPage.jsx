@@ -240,7 +240,7 @@ export default function LandingPage() {
   const stats = [
     { tall: '5', suffix: ' min', tekst: 'fra registrering til full oversikt' },
     { tall: '10', suffix: ' år', tekst: 'prognose for hver eneste bolig' },
-    { tall: '149', suffix: ' kr', tekst: 'fast pris — uansett antall boliger' },
+    { tall: '99', suffix: ' kr', tekst: 'fast pris — uansett antall boliger' },
     { tall: '0', suffix: ' kr', tekst: 'å komme i gang. Ingen kort, ingen binding' },
   ];
 
@@ -251,7 +251,7 @@ export default function LandingPage() {
   ];
 
   const faq = [
-    { sporsmal: 'Passer EiendomsPRO for meg med bare én bolig?', svar: 'Ja. Gratis-planen gir full lønnsomhetsanalyse og oversikt over én bolig, helt gratis. Vil du ha flere boliger, alle rapporter og ubegrensede leiekontrakter, oppgraderer du til Utleier for 149 kr/mnd — fast pris uansett antall boliger.' },
+    { sporsmal: 'Passer EiendomsPRO for meg med bare én bolig?', svar: 'Ja. Gratis-planen gir full lønnsomhetsanalyse og oversikt over én bolig, helt gratis. Vil du ha flere boliger, alle rapporter og ubegrensede leiekontrakter, oppgraderer du til Utleier for 99 kr/mnd — fast pris uansett antall boliger.' },
     { sporsmal: 'Er leiekontraktene juridisk gyldige?', svar: 'Ja. Kontraktene er utformet etter husleieloven og norsk lovgivning. Du laster dem ned som PDF, og BankID-signering kommer for Pro-brukere.' },
     { sporsmal: 'Hva koster det å begynne?', svar: 'Ingenting. Du kommer i gang gratis uten kredittkort og velger selv om og når du vil oppgradere. Det trekkes ingenting automatisk.' },
     { sporsmal: 'Kan jeg bruke det for et AS?', svar: 'Ja. EiendomsPRO regner skatt for både privatperson (22 %) og selskap, og du kan knytte et selskap som utleier på kontraktene.' },
@@ -678,7 +678,7 @@ export default function LandingPage() {
               </div>
               <div className="text-[15px] font-extrabold mb-1 relative">Utleier</div>
               <div className="flex items-baseline gap-1 mb-1 relative">
-                <span className="font-extrabold tracking-[-0.03em] num" style={{ fontSize: '38px' }}>149 kr</span>
+                <span className="font-extrabold tracking-[-0.03em] num" style={{ fontSize: '38px' }}>99 kr</span>
                 <span className="text-[13px] font-bold text-white/60">/ mnd</span>
               </div>
               <p className="m-0 text-[13.5px] font-semibold text-white/75 mb-5 relative">Fast pris — uansett antall boliger.</p>
@@ -698,7 +698,7 @@ export default function LandingPage() {
             <div className="bg-sand border border-line-soft rounded-[22px] p-7 flex flex-col transition-all hover:-translate-y-[3px] hover:shadow-card-lg">
               <div className="text-[15px] font-extrabold mb-1">Pro</div>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="font-extrabold tracking-[-0.03em] num" style={{ fontSize: '38px' }}>299 kr</span>
+                <span className="font-extrabold tracking-[-0.03em] num" style={{ fontSize: '38px' }}>199 kr</span>
                 <span className="text-[13px] font-bold text-faint">/ mnd</span>
               </div>
               <p className="m-0 text-[13.5px] font-semibold text-muted mb-5">For deg som driver utleie som selskap.</p>
