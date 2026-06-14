@@ -15,7 +15,7 @@ import { verifiserWebhook } from '../_betaling/index.js';
 import {
   handterBetaltFaktura, handterMislyktBetaling, handterKansellering, handterRefusjon,
 } from '../_plan/livssyklus.js';
-import { finnBrukerViaStripeCustomer, oppdaterAbonnement } from '../_plan/db.js';
+import { finnBrukerViaStripeCustomer, oppdaterAbonnement, startTrial } from '../_plan/db.js';
 
 // Vi trenger rå body for å verifisere Stripe-signaturen.
 export const config = { api: { bodyParser: false } };
@@ -60,9 +60,15 @@ export default async function handler(req, res) {
           stripe_customer_id: obj.customer || null,
           stripe_subscription_id: obj.subscription || null,
         });
-        // setup-modus (kortregistrering for BankID) skal ikke aktivere abonnement
         if (obj.mode === 'setup') {
+          // Kortregistrering (for BankID) — ikke abonnement.
           await oppdaterAbonnement(brukerId, { har_kort: true });
+        } else if (meta.trial) {
+          // Prøveperiode startet med kort — trekkes først ved trial-slutt.
+          await startTrial(brukerId, {
+            planId, intervall, trialDager: Number(meta.trial) || 14,
+            stripeCustomerId: obj.customer || null, stripeSubscriptionId: obj.subscription || null,
+          });
         } else {
           await handterBetaltFaktura(brukerId, { planId, intervall, bruttoOre: obj.amount_total ?? null });
         }

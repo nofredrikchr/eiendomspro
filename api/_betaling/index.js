@@ -26,10 +26,19 @@ async function stripe() {
  * Start abonnementskjøp. Stub: signaliserer at kallstedet skal fullføre direkte
  * (simulert betaling). Ekte: oppretter en Stripe Checkout-sesjon og gir redirect-URL.
  */
-export async function opprettCheckout({ brukerId, planId, intervall, suksessUrl, avbrytUrl, kundeEpost }) {
+export async function opprettCheckout({
+  brukerId, planId, intervall, suksessUrl, avbrytUrl, kundeEpost, trialDager = 0,
+}) {
   if (erStub()) return { stub: true, url: suksessUrl };
   const s = await stripe();
   const prisId = prisIdFor(planId, intervall);
+  // Med prøveperiode: Stripe samler inn kort nå, men trekker først når prøven
+  // utløper. Brukeren må selv si opp (Customer Portal / Min konto) for å unngå trekk.
+  const subData = { metadata: { brukerId, planId, intervall, trial: trialDager ? String(trialDager) : '' } };
+  if (trialDager > 0) {
+    subData.trial_period_days = trialDager;
+    subData.trial_settings = { end_behavior: { missing_payment_method: 'cancel' } };
+  }
   const sesjon = await s.checkout.sessions.create({
     mode: 'subscription',
     // Betalingsmetoder (kort, Vipps) styres fra Stripe Dashboard → vises automatisk.
@@ -38,11 +47,20 @@ export async function opprettCheckout({ brukerId, planId, intervall, suksessUrl,
     cancel_url: avbrytUrl,
     customer_email: kundeEpost || undefined,
     client_reference_id: brukerId,
-    metadata: { brukerId, planId, intervall },
-    // Metadata på abonnementet → følger med på fremtidige fakturaer (renewals).
-    subscription_data: { metadata: { brukerId, planId, intervall } },
+    // Krev kort selv om det er prøveperiode (hindrer gratis-uttak).
+    payment_method_collection: 'always',
+    metadata: { brukerId, planId, intervall, trial: trialDager ? String(trialDager) : '' },
+    subscription_data: subData,
   });
   return { stub: false, url: sesjon.url, sesjonId: sesjon.id };
+}
+
+/** Si opp et Stripe-abonnement ved periodeslutt (prøve/betalt) — ingen nytt trekk. */
+export async function kansellerAbonnement(stripeSubscriptionId) {
+  if (erStub() || !stripeSubscriptionId) return { stub: true };
+  const s = await stripe();
+  await s.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+  return { stub: false };
 }
 
 /** Registrer/oppdater kort (kreves for BankID-signering). Stub: fullføres direkte. */

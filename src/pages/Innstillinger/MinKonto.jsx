@@ -118,7 +118,7 @@ const TABS = [
 ];
 
 const STATUS_TEKST = {
-  prøve: 'Pro-prøveperiode',
+  prøve: 'Prøveperiode',
   aktiv: 'Aktivt',
   betalingsproblem: 'Betalingsproblem',
   forfalt: 'Avsluttet (betaling feilet)',
@@ -157,9 +157,11 @@ function AbonnementTab() {
     <div className="max-w-lg space-y-5">
       <BekreftModal
         åpen={visKanseller}
-        tittel="Si opp abonnementet?"
-        tekst="Du beholder full tilgang ut den betalte perioden, og ingen data slettes. Etterpå går kontoen tilbake til Gratis."
-        bekreftLabel="Si opp"
+        tittel={abonnement?.status === 'prøve' ? 'Avbryt prøveperioden?' : 'Si opp abonnementet?'}
+        tekst={abonnement?.status === 'prøve'
+          ? 'Du beholder tilgangen ut prøveperioden, og det trekkes ingenting. Ingen data slettes.'
+          : 'Du beholder full tilgang ut den betalte perioden, og ingen data slettes. Etterpå går kontoen tilbake til Gratis.'}
+        bekreftLabel={abonnement?.status === 'prøve' ? 'Avbryt prøve' : 'Si opp'}
         onBekreft={async () => { setVisKanseller(false); await kjor('kanseller', () => abonnementApi.kanseller()); }}
         onAvbryt={() => setVisKanseller(false)}
       />
@@ -172,7 +174,7 @@ function AbonnementTab() {
               <Pill tone={erBetalende ? 'mint' : 'neutral'}>{statusTekst}</Pill>
             </div>
             {abonnement?.status === 'prøve' && trialDagerIgjen > 0 && (
-              <div className="text-[13px] font-semibold text-brand-ink mt-1">{trialDagerIgjen} dager igjen av Pro-prøven</div>
+              <div className="text-[13px] font-semibold text-brand-ink mt-1">{trialDagerIgjen} dager igjen av prøveperioden — si opp før den utløper for å unngå trekk</div>
             )}
           </div>
           <Button variant="primary" onClick={() => navigate('/priser')}>
@@ -196,7 +198,7 @@ function AbonnementTab() {
             </Button>
             {erBetalende && abonnement?.status !== 'kansellert' && (
               <Button variant="danger" onClick={() => setVisKanseller(true)} disabled={jobber === 'kanseller'}>
-                Si opp abonnement
+                {abonnement?.status === 'prøve' ? 'Avbryt prøveperioden' : 'Si opp abonnement'}
               </Button>
             )}
           </div>

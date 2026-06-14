@@ -23,23 +23,45 @@ export async function finnBrukerViaStripeCustomer(stripeCustomerId) {
 }
 
 /**
- * Reverse trial ved registrering: permanent Gratis-konto (plan_id='gratis') men
- * 14 dager full Pro-tilgang via status='prøve' + trial_ends_at. Kortløst.
- * Idempotent — oppretter også kontokreditt-rad og personlig vervekode.
+ * Oppretter konto ved registrering på GRATIS-plan (ingen automatisk prøveperiode).
+ * Brukeren velger selv plan i onboarding; prøveperiode på Privat/Pro krever kort
+ * (Stripe). Idempotent — oppretter også kontokreditt-rad og personlig vervekode.
  */
-export async function opprettTrialOgKonto(brukerId, fulltNavn) {
-  const utloper = new Date(Date.now() + TRIAL_DAGER * 86_400_000).toISOString();
+export async function opprettKonto(brukerId, fulltNavn) {
   const rader = await sql`
-    insert into abonnement (bruker_id, plan_id, status, trial_ends_at)
-    values (${brukerId}, 'gratis', 'prøve', ${utloper})
+    insert into abonnement (bruker_id, plan_id, status)
+    values (${brukerId}, 'gratis', 'aktiv')
     on conflict (bruker_id) do nothing
     returning *`;
   if (rader[0]) {
-    await loggAbonnementHendelse(brukerId, 'trial_start', { trial_ends_at: utloper });
+    await loggAbonnementHendelse(brukerId, 'opprettet', { plan: 'gratis' });
   }
   await sql`insert into konto_kreditt (bruker_id) values (${brukerId}) on conflict do nothing`;
   await hentEllerLagVervekode(brukerId, fulltNavn);
   return rader[0] || (await hentAbonnement(brukerId));
+}
+
+/**
+ * Start en (kort-sikret) prøveperiode på en betalt plan. Settes når Stripe-checkout
+ * med prøveperiode er fullført (webhook) eller i stub-modus. betalt_forste_gang
+ * forblir false til første ordinære faktura faktisk betales.
+ */
+export async function startTrial(brukerId, {
+  planId, intervall = 'mnd', trialDager = TRIAL_DAGER,
+  stripeCustomerId = null, stripeSubscriptionId = null,
+}) {
+  const utloper = new Date(Date.now() + trialDager * 86_400_000).toISOString();
+  const r = await sql`
+    update abonnement set
+      plan_id = ${planId}, status = 'prøve', faktureringsintervall = ${intervall},
+      trial_ends_at = ${utloper}, har_kort = true, betalt_forste_gang = false,
+      stripe_customer_id = coalesce(${stripeCustomerId}, stripe_customer_id),
+      stripe_subscription_id = coalesce(${stripeSubscriptionId}, stripe_subscription_id),
+      oppdatert = now()
+    where bruker_id = ${brukerId}
+    returning *`;
+  await loggAbonnementHendelse(brukerId, 'trial_start', { planId, intervall, trial_ends_at: utloper });
+  return r[0] || null;
 }
 
 /** Har det allerede blitt logget en hendelse av denne typen for brukeren? */
