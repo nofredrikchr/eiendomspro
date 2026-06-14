@@ -6,6 +6,8 @@ import { byggSesjonsCookie } from '../_auth/cookie.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 import { lagEngangsToken } from '../_auth/tokens.js';
 import { sendEpost, malVerifisering } from '../_auth/epost.js';
+import { opprettTrialOgKonto, hentAbonnement } from '../_plan/db.js';
+import { registrerVerving } from '../_verving/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -35,6 +37,23 @@ export default async function handler(req, res) {
     });
     res.setHeader('Set-Cookie', byggSesjonsCookie(token));
 
+    // Reverse trial: permanent Gratis-konto + 14 dager full Pro (kortløst).
+    // Oppretter også kontokreditt-rad og personlig vervekode.
+    await opprettTrialOgKonto(bruker.id, bruker.fullt_navn);
+
+    // Verve-/partnerkode (best-effort — registrering skal aldri feile på ugyldig kode).
+    const vervekode = typeof req.body?.vervekode === 'string' ? req.body.vervekode.trim() : null;
+    const partnerkode = typeof req.body?.partnerkode === 'string' ? req.body.partnerkode.trim() : null;
+    if (vervekode) {
+      try { await registrerVerving(vervekode, bruker.id); } catch { /* ugyldig vervekode ignoreres */ }
+    }
+    if (partnerkode) {
+      try {
+        const { registrerPartnerVerving } = await import('../_partner/db.js');
+        await registrerPartnerVerving(partnerkode, bruker.id);
+      } catch { /* ugyldig partnerkode ignoreres */ }
+    }
+
     // Send verifiserings-e-post (best-effort; dormant uten RESEND_API_KEY).
     if (bruker.epost) {
       try {
@@ -44,7 +63,8 @@ export default async function handler(req, res) {
       } catch { /* registrering skal ikke feile pga. e-post */ }
     }
 
-    return res.status(201).json({ bruker: offentligBruker(bruker, [v.verdier.primaryRolle]) });
+    const abonnement = await hentAbonnement(bruker.id);
+    return res.status(201).json({ bruker: offentligBruker(bruker, [v.verdier.primaryRolle], { abonnement, kredittOre: 0 }) });
   } catch (e) {
     return res.status(500).json({ feil: { generelt: e.message } });
   }

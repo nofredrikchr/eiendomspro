@@ -4,6 +4,7 @@ import { validerInnlogging } from '../_auth/validering.js';
 import { finnBruker, hentRoller, opprettSesjon, offentligBruker, verifyPassord } from '../_auth/index.js';
 import { byggSesjonsCookie } from '../_auth/cookie.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
+import { hentAbonnement, hentKredittOre } from '../_plan/db.js';
 
 // Gyldig argon2id-hash av en tilfeldig, forkastet streng (samme parametre som
 // hashPassord). Brukes til dummy-verifisering når brukeren ikke finnes, slik at
@@ -38,7 +39,10 @@ export default async function handler(req, res) {
     });
     res.setHeader('Set-Cookie', byggSesjonsCookie(token));
     const roller = await hentRoller(bruker.id);
-    return res.status(200).json({ bruker: offentligBruker(bruker, roller) });
+    const ekstra = bruker.niva === 3
+      ? {}
+      : { abonnement: await hentAbonnement(bruker.id), kredittOre: await hentKredittOre(bruker.id) };
+    return res.status(200).json({ bruker: offentligBruker(bruker, roller, ekstra) });
   } catch (e) {
     return res.status(500).json({ feil: { generelt: e.message } });
   }
