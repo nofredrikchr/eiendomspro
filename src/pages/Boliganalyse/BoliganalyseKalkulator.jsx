@@ -11,6 +11,9 @@ import { analyseApi } from '../../services/entitetApi';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
+import { LaastFunksjon } from '../../components/plan/LaastFunksjon';
+import { OppgraderingsModal } from '../../components/plan/OppgraderingsModal';
+import { usePlan } from '../../hooks/usePlan';
 import { lesPref, settPref } from '../../utils/uiPref';
 
 // Alle seksjoner åpne ved første besøk — brukeren skal se hva verktøyet inneholder
@@ -1043,7 +1046,9 @@ function Rapport({ inp, t }) {
         </p>
       </div>
 
-      {/* 10-år prognose */}
+      {/* 10-år prognose (låst for gratisbrukere) */}
+      <LaastFunksjon feature="prognose" tittel="Lås opp 10-års prognose"
+        beskrivelse="Se hvordan formuen din bygges over 10 år med verdivekst, nedbetaling og yield.">
       <SectionCard tittel="10-års prognose" action={<span className="text-[11.5px] font-semibold text-muted-2">3 % verdivekst · 2,5 % leievekst</span>}>
         <div className="border border-line rounded-[13px] overflow-hidden overflow-x-auto">
           <table className="w-full text-[12.5px]">
@@ -1076,6 +1081,7 @@ function Rapport({ inp, t }) {
           <div className="text-[26px] font-extrabold tracking-[-0.02em] text-white num">{kr(t.prognose[9]?.ekVerdi)}</div>
         </div>
       </SectionCard>
+      </LaastFunksjon>
 
       {/* AI Analyse */}
       <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
@@ -1093,7 +1099,9 @@ function Rapport({ inp, t }) {
         </pre>
       </div>
 
-      {/* Bankmelding */}
+      {/* Bankmelding / bankrapport (låst for gratisbrukere) */}
+      <LaastFunksjon feature="bankrapport" tittel="Lås opp bankrapport"
+        beskrivelse="Få en ferdig formulert bankmelding du kan sende rett til banken din.">
       <div className="rounded-[20px] border border-line bg-surface overflow-hidden">
         <div className="flex items-center justify-between px-[22px] py-4 border-b border-line-soft bg-mint-soft">
           <div className="flex items-center gap-2">
@@ -1109,6 +1117,7 @@ function Rapport({ inp, t }) {
           {bankmelding}
         </pre>
       </div>
+      </LaastFunksjon>
 
       {/* Disclaimer */}
       <div className="flex items-start gap-2.5 bg-sand border border-line rounded-[14px] px-4 py-3.5">
@@ -1228,6 +1237,13 @@ function LagredeRapporter({ onLastInn }) {
   const [rapporter, setRapporter] = useState([]);
   const [valgt, setValgt] = useState([]); // ids
   const [visSammenligning, setVisSammenligning] = useState(false);
+  const [visOppgrader, setVisOppgrader] = useState(false);
+  const { canUse } = usePlan();
+
+  function sammenlign() {
+    if (!canUse('sammenligning')) { setVisOppgrader(true); return; }
+    setVisSammenligning(true);
+  }
 
   useEffect(() => {
     let aktiv = true;
@@ -1261,12 +1277,19 @@ function LagredeRapporter({ onLastInn }) {
 
   return (
     <div className="space-y-3">
+      <OppgraderingsModal
+        apen={visOppgrader}
+        lukk={() => setVisOppgrader(false)}
+        tittel="Sammenlign boliger med Privat eller Pro"
+        beskrivelse="Sammenlign flere analyser side om side for å finne den beste investeringen."
+        plan="Privat eller Pro"
+      />
       {/* Sammenlign-verktøylinje */}
       <div className="flex items-center justify-between bg-surface-2 border border-line rounded-[14px] px-4 py-3">
         <span className="text-[13px] font-semibold text-muted-2">
           {valgt.length === 0 ? 'Velg 2 eller flere analyser for å sammenligne' : `${valgt.length} valgt`}
         </span>
-        <Button variant="primary" size="sm" disabled={valgt.length < 2} onClick={() => setVisSammenligning(true)}>
+        <Button variant="primary" size="sm" disabled={valgt.length < 2} onClick={sammenlign}>
           <BarChart3 size={13} /> Sammenlign valgte
         </Button>
       </div>

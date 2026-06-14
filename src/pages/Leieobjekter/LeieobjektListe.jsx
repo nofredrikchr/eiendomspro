@@ -7,6 +7,8 @@ import { EmptyState } from '../../components/ui/Card';
 import { Select } from '../../components/ui/Input';
 import { Photo, Pill, Avatar, PageHeader } from '../../components/ui/kit';
 import { BekreftModal } from '../../components/ui/BekreftModal';
+import { OppgraderingsModal } from '../../components/plan/OppgraderingsModal';
+import { usePlan } from '../../hooks/usePlan';
 import { formatKr } from '../../utils/format';
 
 const STATUS_LABEL = { utleid: 'Utleid', ledig: 'Ledig', delvis: 'Delvis utleid' };
@@ -19,10 +21,19 @@ const TYPE_LABEL = {
 export default function LeieobjektListe() {
   const navigate = useNavigate();
   const { leieobjekter, bygg, kontrakter = [], lasterEiendom, deleteLeieobjekt } = useApp();
+  const { objektgrense, plan, skrivebeskyttet } = usePlan();
   const [filterBygg, setFilterBygg] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [søk, setSøk] = useState('');
   const [slettId, setSlettId] = useState(null);
+  const [visGrense, setVisGrense] = useState(false);
+
+  // Objektgrense (punkt C): ved grensen — oppgraderingsmodal, ikke hard feil.
+  function nyttObjekt() {
+    if (skrivebeskyttet || leieobjekter.length >= objektgrense) setVisGrense(true);
+    else navigate('/leieobjekter/ny');
+  }
+  const oppgraderTil = plan === 'privat' ? 'Pro' : 'Privat eller Pro';
 
   const byggOptions = bygg.map((b) => ({ value: b.id, label: `${b.gatenavn} ${b.gatenummer}` }));
 
@@ -72,11 +83,22 @@ export default function LeieobjektListe() {
         onAvbryt={() => setSlettId(null)}
       />
 
+      <OppgraderingsModal
+        apen={visGrense}
+        lukk={() => setVisGrense(false)}
+        tittel={skrivebeskyttet ? 'Kontoen er over grensen' : 'Du har nådd grensen for planen din'}
+        beskrivelse={skrivebeskyttet
+          ? 'Du har flere leieobjekter enn planen tillater. Alt er bevart, men du må oppgradere til Pro for å legge til nye.'
+          : `Planen din inkluderer ${objektgrense} ${objektgrense === 1 ? 'leieobjekt' : 'leieobjekter'}. Oppgrader for å legge til flere.`}
+        punkter={['Privat: inntil 5 leieobjekter', 'Pro: ubegrenset antall leieobjekter']}
+        plan={oppgraderTil}
+      />
+
       <PageHeader
         tittel="Leieobjekter"
         undertittel={`${leieobjekter.length} ${leieobjekter.length === 1 ? 'enhet' : 'enheter'} fordelt på ${antallBygg} ${antallBygg === 1 ? 'bygg' : 'bygg'}`}
       >
-        <Button onClick={() => navigate('/leieobjekter/ny')} variant="primary">
+        <Button onClick={nyttObjekt} variant="primary">
           <Plus size={15} strokeWidth={2.4} /> Nytt leieobjekt
         </Button>
       </PageHeader>
@@ -133,7 +155,7 @@ export default function LeieobjektListe() {
           title="Ingen leieobjekter registrert"
           description="Legg til ditt første leieobjekt. Du må ha minst ett bygg registrert først."
           action={
-            <Button onClick={() => navigate('/leieobjekter/ny')} variant="primary">
+            <Button onClick={nyttObjekt} variant="primary">
               <Plus size={15} strokeWidth={2.4} /> Legg til leieobjekt
             </Button>
           }
