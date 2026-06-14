@@ -8,6 +8,11 @@ import { analyseApi } from '../../services/entitetApi';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
+import { lesPref, settPref } from '../../utils/uiPref';
+
+// Alle seksjoner åpne ved første besøk — brukeren skal se hva verktøyet inneholder
+// uten å klikke. Valget huskes etterpå (UI-pref i localStorage).
+const ALLE_ÅPNE = { 1: true, 2: true, 3: true, 4: true, 5: true };
 
 // ─── Lagrede rapporter (Neon, eier-scoped via /api) ──────────────────────────
 async function lagreNyRapport(inp, t) {
@@ -1182,11 +1187,15 @@ const defaultInp = {
 export default function BoliganalyseKalkulator() {
   const [inp, setInp] = useState(defaultInp);
   const [aktivTab, setAktivTab] = useState('kalkulator');
-  const [åpneSeksjoner, setÅpneSeksjoner] = useState({ 1: true, 2: false, 3: false, 4: false, 5: false });
+  const [åpneSeksjoner, setÅpneSeksjoner] = useState(() => lesPref('analyseSeksjoner', ALLE_ÅPNE));
   const [visBekreftet, setVisBekreftet] = useState(false);
 
   const set = (felt) => (e) => setInp((f) => ({ ...f, [felt]: e.target.value }));
-  const toggle = (n) => setÅpneSeksjoner((s) => ({ ...s, [n]: !s[n] }));
+  const toggle = (n) => setÅpneSeksjoner((s) => {
+    const neste = { ...s, [n]: !s[n] };
+    settPref('analyseSeksjoner', neste);
+    return neste;
+  });
 
   const t = useMemo(() => beregn(inp), [inp]);
 

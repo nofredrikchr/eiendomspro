@@ -10,6 +10,7 @@ import { Avatar } from './ui/kit';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { antallUlestForBruker, abonner } from '../services/feedbackService';
+import { lesPref, settPref } from '../utils/uiPref';
 
 // ─── Utleier-modus: aktive sider ──────────────────────────────────────────────
 const utleierNavItems = [
@@ -20,19 +21,15 @@ const utleierNavItems = [
   { to: '/kontrakter', icon: FileText, label: 'Leiekontrakter' },
   { to: '/kpi', icon: Percent, label: 'KPI-regulering' },
   { to: '/rapporter', icon: BarChart3, label: 'Rapporter' },
+  { to: '/annonser', icon: Megaphone, label: 'Mine annonser' },
+  { to: '/meldinger', icon: MessageSquare, label: 'Meldinger' },
+  { to: '/varsler', icon: Bell, label: 'Varsler' },
+  { to: '/integrasjoner', icon: Zap, label: 'Integrasjoner' },
 ];
 
 // ─── Leietaker-modus: aktive sider ────────────────────────────────────────────
 const leietakerNavItems = [
   { to: '/app', icon: LayoutDashboard, label: 'Min oversikt' },
-];
-
-// ─── Kommer snart (kun utleier-modus) ─────────────────────────────────────────
-const kommerNavItems = [
-  { icon: Megaphone, label: 'Mine annonser' },
-  { icon: MessageSquare, label: 'Meldinger' },
-  { icon: Bell, label: 'Varsler' },
-  { icon: Zap, label: 'Integrasjoner' },
 ];
 
 const bottomNavItems = [
@@ -63,21 +60,6 @@ function NavItem({ to, icon: Icon, label, onNavigate, badge }) {
         </>
       )}
     </NavLink>
-  );
-}
-
-function KommerNavItem({ icon: Icon, label }) {
-  return (
-    <div
-      className="flex items-center gap-3 px-3 py-2.5 rounded-[11px] cursor-default select-none"
-      title="Kommer snart"
-    >
-      <Icon size={17} className="shrink-0 text-faint-2" />
-      <span className="flex-1 text-sm font-semibold text-[#AEB5AF]">{label}</span>
-      <span className="text-[10px] font-bold text-faint bg-line-soft px-2 py-0.5 rounded-full shrink-0">
-        Kommer
-      </span>
-    </div>
   );
 }
 
@@ -121,17 +103,42 @@ function ModusVelger({ onNavigate }) {
 }
 
 // ─── E-postverifiserings-banner ───────────────────────────────────────────────
+// Fullt banner ved første besøk. Kan lukkes (X) — da huskes avvisningen og det
+// vises kun en subtil pille videre, så det ikke tar plass for nye brukere.
 function EpostBanner() {
   const { bruker, epostVerifisert, sendVerifisering } = useAuth();
   const [sendt, setSendt] = useState(false);
   const [jobber, setJobber] = useState(false);
+  const [avvist, setAvvist] = useState(() => lesPref('epostBannerAvvist', false));
   if (!bruker || !bruker.epost || epostVerifisert) return null;
+
   async function send() {
     setJobber(true);
     const r = await sendVerifisering();
     setJobber(false);
     if (r.ok) setSendt(true);
   }
+  function avvis() {
+    settPref('epostBannerAvvist', true);
+    setAvvist(true);
+  }
+
+  // Subtil påminnelse etter at brukeren har lukket det fulle banneret.
+  if (avvist) {
+    return (
+      <div className="mb-5 flex items-center gap-2 text-xs text-faint">
+        <MailWarning size={13} className="text-amber shrink-0" />
+        <span>E-post ikke bekreftet.</span>
+        {sendt
+          ? <span className="font-bold text-brand-ink">Sendt!</span>
+          : <button onClick={send} disabled={jobber}
+              className="font-bold text-amber hover:underline cursor-pointer disabled:opacity-50">
+              {jobber ? 'Sender…' : 'Send bekreftelse'}
+            </button>}
+      </div>
+    );
+  }
+
   return (
     <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-amber-line bg-amber-soft px-4 py-3">
       <MailWarning size={16} className="text-amber shrink-0" />
@@ -142,6 +149,10 @@ function EpostBanner() {
             className="text-xs font-bold text-amber hover:underline cursor-pointer disabled:opacity-50">
             {jobber ? 'Sender…' : 'Send på nytt'}
           </button>}
+      <button onClick={avvis} aria-label="Lukk"
+        className="ml-1 w-6 h-6 rounded-lg flex items-center justify-center text-amber/70 hover:bg-amber-line/40 cursor-pointer shrink-0">
+        <X size={14} />
+      </button>
     </div>
   );
 }
@@ -182,7 +193,7 @@ function BrukerKort() {
 }
 
 // ─── Sidemeny-innhold (delt av desktop-aside og mobil-drawer) ─────────────────
-function MenyInnhold({ erLeietaker, navItems, ulestFeedback, onNavigate }) {
+function MenyInnhold({ navItems, ulestFeedback, onNavigate }) {
   return (
     <>
       <ModusVelger onNavigate={onNavigate} />
@@ -192,19 +203,6 @@ function MenyInnhold({ erLeietaker, navItems, ulestFeedback, onNavigate }) {
           <NavItem key={item.to} {...item} onNavigate={onNavigate} />
         ))}
       </nav>
-
-      {!erLeietaker && (
-        <>
-          <div className="mt-7 mb-1.5 px-3 text-[10.5px] font-extrabold text-faint-2 uppercase tracking-[0.12em]">
-            Kommer snart
-          </div>
-          <div className="flex flex-col gap-0.5">
-            {kommerNavItems.map((item) => (
-              <KommerNavItem key={item.label} {...item} />
-            ))}
-          </div>
-        </>
-      )}
 
       <div className="flex-1 min-h-6" />
 
@@ -256,7 +254,7 @@ export function Layout({ children }) {
             <Logo variant="dark" height={32} />
           </div>
           <div className="mt-[18px] flex flex-col flex-1">
-            <MenyInnhold erLeietaker={erLeietaker} navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={undefined} />
+            <MenyInnhold navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={undefined} />
           </div>
         </aside>
 
@@ -273,7 +271,7 @@ export function Layout({ children }) {
                 </button>
               </div>
               <div className="flex flex-col flex-1">
-                <MenyInnhold erLeietaker={erLeietaker} navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={lukk} />
+                <MenyInnhold navItems={navItems} ulestFeedback={ulestFeedback} onNavigate={lukk} />
               </div>
             </div>
           </div>

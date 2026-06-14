@@ -132,6 +132,39 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .animate-fade-up { animation: fadeUp 0.4s ease both; }
 
+/* ── Bevegelse på forsiden («rolig, men levende» — se DESIGNSYSTEM.md) ─────── */
+
+/* Subtil frostet gradient nederst i viewporten: innholdet toner mykt ut i en
+   liten frostsone langs underkanten (maskert oppover, så blur og tint forsvinner
+   gradvis). Kun i bunnen — toppmenyen har sitt eget, tydelige skille. */
+.blur-bunn {
+  pointer-events: none;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  background: linear-gradient(to top, rgba(246, 244, 239, 0.55) 0%, rgba(246, 244, 239, 0) 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 18%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 18%, transparent 100%);
+}
+
+/* «Slik fungerer det»: steget våkner når det er i fokus (klassen settes av
+   ScrollTrigger). Uten JS/med redusert bevegelse er alle steg aktive. */
+.steg .steg-nr {
+  background: #FFFFFF;
+}
+.steg-aktiv .steg-nr {
+  background: #0E9384;
+  border-color: #0E9384;
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px -6px rgba(14, 147, 132, 0.5);
+}
+.steg .steg-tekst { opacity: 0.55; }
+.steg-aktiv .steg-tekst { opacity: 1; }
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .steg .steg-tekst { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up { animation: none; }
+  /* Manifest-ordene styres av GSAP-scrub; uten bevegelse skal de stå i blekk. */
+  .manifest-ord { opacity: 1 !important; }
 }
