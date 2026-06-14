@@ -96,6 +96,25 @@ export async function hentPartner(partnerId) {
   return r[0] || null;
 }
 
+/** Partner knyttet til en brukerkonto (for partner-selvbetjent dashboard). */
+export async function hentPartnerForBruker(brukerId) {
+  const r = await sql`select * from partnere where bruker_id = ${brukerId} and status = 'aktiv' limit 1`;
+  return r[0] || null;
+}
+
+/** Månedlig utbetalingsrapport: opptjent provisjon per partner for en periode. */
+export async function utbetalingsrapport(periode = null) {
+  return sql`
+    select p.id as partner_id, p.navn, p.epost,
+           coalesce(sum(l.provisjon_ore) filter (where l.status = 'opptjent'), 0) as opptjent_ore,
+           count(l.id) filter (where l.status = 'opptjent') as antall
+    from partnere p
+    left join partner_provisjon_ledger l on l.partner_id = p.id
+      and (${periode}::date is null or l.periode = ${periode})
+    group by p.id, p.navn, p.epost
+    order by opptjent_ore desc`;
+}
+
 /** Partner-dashboard: vervede, aktive betalende, opptjent/utbetalt provisjon. */
 export async function hentPartnerDashboard(partnerId) {
   const [antall] = await sql`
