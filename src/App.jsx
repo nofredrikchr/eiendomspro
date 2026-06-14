@@ -41,6 +41,7 @@ const AdminLayout = lazy(() => import('./pages/Admin/AdminLayout').then((m) => (
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
 const AdminBrukere = lazy(() => import('./pages/Admin/AdminBrukere'));
 const AdminLogg = lazy(() => import('./pages/Admin/AdminLogg'));
+const IkkeFunnet = lazy(() => import('./pages/IkkeFunnet'));
 
 const LANDING_PATHS = ['/'];
 
@@ -113,7 +114,7 @@ function AppRoutes() {
           <Route path="/admin/brukere" element={<AdminBrukere />} />
           <Route path="/admin/feedback" element={<AdminFeedback />} />
           <Route path="/admin/logg" element={<AdminLogg />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<IkkeFunnet hjemTil="/admin" hjemLabel="Til admin" />} />
         </Routes>
       </AdminLayout>
     );
@@ -149,7 +150,7 @@ function AppRoutes() {
           <Route path="/meldinger/:kontraktId" element={<Samtale />} />
           <Route path="/protokoll/ny" element={<OvertakelsesProtokoll />} />
           <Route path="/protokoll/:protokollId" element={<OvertakelsesProtokoll />} />
-          <Route path="*" element={<Navigate to="/app" replace />} />
+          <Route path="*" element={<IkkeFunnet hjemTil="/app" hjemLabel="Til oversikt" />} />
         </Routes>
       </Layout>
     </AppProvider>
