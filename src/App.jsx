@@ -4,12 +4,14 @@ import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import Login from './pages/Auth/Login';
+// Offentlige markedssider lastes statisk (eager) så de vises umiddelbart uten
+// «Laster…»-blink på første paint.
+import LandingPage from './pages/LandingPage';
+import Kalkulator from './pages/Kalkulator';
 
-// Rute-komponenter lastes ved behov (code-splitting) — kun Login og Layout
-// ligger i hovedchunken. Tunge biblioteker (recharts, jspdf, xlsx) følger
-// dermed sidene som bruker dem.
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const Kalkulator = lazy(() => import('./pages/Kalkulator'));
+// Øvrige rute-komponenter lastes ved behov (code-splitting) — kun Login, Layout
+// og markedssidene over ligger i hovedchunken. Tunge biblioteker (recharts,
+// jspdf, xlsx) følger dermed sidene som bruker dem.
 const GuiderIndex = lazy(() => import('./pages/Guider/GuiderIndex'));
 const GuideArtikkel = lazy(() => import('./pages/Guider/GuideArtikkel'));
 const ResetPage = lazy(() => import('./pages/Auth/ResetPage'));

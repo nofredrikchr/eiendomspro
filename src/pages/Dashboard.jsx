@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Building2, TrendingUp, Home, FileText,
@@ -11,6 +12,8 @@ import { Button } from '../components/ui/Button';
 import { StatCard } from '../components/ui/Card';
 import { Photo, Pill, IconTile, PageHeader, SectionCard } from '../components/ui/kit';
 import { formatKr, formatPct, calcTerminbelop } from '../utils/format';
+import { lesPref, settPref } from '../utils/uiPref';
+import DemoEiendom from '../components/DemoEiendom';
 
 // ─── Kommende funksjoner ("På vei") ───────────────────────────────────────────
 const PAA_VEI = [
@@ -154,6 +157,23 @@ function Onboarding({ steg, navigate, kompakt }) {
   );
 }
 
+// ─── Tom-tilstand (ny bruker uten bygg) ──────────────────────────────────────
+// Verdidrevet onboarding: vis et ferdig DEMO-eksempel med lønnsomhet FØR vi ber
+// brukeren legge inn egne data. Sjekklisten beholdes under demoen.
+function TomTilstand({ fornavn, steg, navigate }) {
+  const [visDemo, setVisDemo] = useState(() => lesPref('demoEksempelSkjult', false) !== true);
+  const skjulDemo = () => { setVisDemo(false); settPref('demoEksempelSkjult', true); };
+
+  return (
+    <div className="space-y-7 animate-fade-up">
+      <PageHeader tittel={`${hilsen()}${fornavn ? `, ${fornavn}` : ''}`} undertittel="Velkommen til Eiendomspro — la oss komme i gang." />
+      {visDemo && <DemoEiendom onStart={() => navigate('/bygg/ny')} onSkjul={skjulDemo} />}
+      <Onboarding steg={steg} navigate={navigate} />
+      <PaaVei />
+    </div>
+  );
+}
+
 // ─── Hoved ───────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -194,15 +214,9 @@ export default function Dashboard() {
   ];
   const onboardingFerdig = steg.every((s) => s.ferdig);
 
-  // Tom-stat — vis onboarding som hovedinnhold
+  // Tom-stat — vis et ferdig eksempel FØR vi ber om data, så onboarding-sjekklisten.
   if (bygg.length === 0) {
-    return (
-      <div className="space-y-7 animate-fade-up">
-        <PageHeader tittel={`${hilsen()}${fornavn ? `, ${fornavn}` : ''}`} undertittel="Velkommen til Eiendomspro — la oss komme i gang." />
-        <Onboarding steg={steg} navigate={navigate} />
-        <PaaVei />
-      </div>
-    );
+    return <TomTilstand fornavn={fornavn} steg={steg} navigate={navigate} />;
   }
 
   const harOppfolging = utloperSnart.length > 0 || ledigeLeieobjekter.length > 0 || ulisteMeldinger.length > 0;

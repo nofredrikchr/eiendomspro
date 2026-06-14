@@ -255,7 +255,7 @@ export default function LeieforholdDetalj() {
         <UtleggModal kontraktId={id} onLagre={lagreUtlegg} onLukk={() => setVisUtleggModal(false)} />
       )}
       {visKpiModal && (
-        <KpiReguleringModal kontrakt={kontrakt} onLagre={utforKpiRegulering} onLukk={() => setVisKpiModal(false)} />
+        <KpiReguleringModal kontrakt={kontrakt} utleier={utleier} adresse={b ? adresse : ''} onLagre={utforKpiRegulering} onLukk={() => setVisKpiModal(false)} />
       )}
       <BekreftModal
         åpen={slettKontraktVis}

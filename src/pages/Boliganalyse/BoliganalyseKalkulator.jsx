@@ -2,8 +2,11 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Home, TrendingUp, Calculator, FileText, ChevronDown, ChevronUp,
   Copy, Check, BarChart3, AlertTriangle, Info, ArrowRight, Sparkles,
-  Trash2, FolderOpen, Clock,
+  Trash2, FolderOpen, Clock, Activity,
 } from 'lucide-react';
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+} from 'recharts';
 import { analyseApi } from '../../services/entitetApi';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -532,6 +535,183 @@ function InfoBoks({ type = 'info', children }) {
     <div className={`flex gap-2.5 p-3.5 rounded-[12px] border text-[12.5px] font-semibold leading-relaxed ${styles[type]}`}>
       <Icon size={15} className={`shrink-0 mt-0.5 ${iconColor[type]}`} />
       <span>{children}</span>
+    </div>
+  );
+}
+
+// ─── Stort, visuelt resultatpanel (sticky live-oversikt) ──────────────────────
+// Kompakt kr-formattering til akser/tooltip (1,2 mill / 850 k).
+function krKort(n) {
+  if (!isFinite(n) || isNaN(n)) return '–';
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')} mill`;
+  if (abs >= 1_000) return `${Math.round(n / 1_000)} k`;
+  return `${Math.round(n)}`;
+}
+
+// Egen tooltip i prosjektets tokens.
+function PrognoseTooltip({ active, payload, label }) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-[12px] border border-line bg-surface px-3.5 py-2.5 shadow-card">
+      <div className="text-[11px] font-extrabold tracking-[0.04em] uppercase text-faint mb-1.5">År {label}</div>
+      {payload.map((p) => (
+        <div key={p.dataKey} className="flex items-center justify-between gap-4 text-[12px]">
+          <span className="flex items-center gap-1.5 font-semibold text-muted-2">
+            <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+            {p.name}
+          </span>
+          <span className="num font-extrabold text-ink">{kr(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResultatPanel({ t }) {
+  if (!t.kjøpesum) {
+    return (
+      <div className="rounded-[24px] border border-line bg-surface p-8 text-center">
+        <IconTile tone="mint" size={56} radius={18} className="mx-auto mb-4"><Calculator size={26} /></IconTile>
+        <div className="text-base font-extrabold text-ink mb-1">Fyll inn tallene</div>
+        <p className="text-[13px] font-medium text-muted-2">Resultatene oppdateres live mens du skriver — yield, kontantstrøm og 10-års prognose.</p>
+      </div>
+    );
+  }
+
+  const kontantPos = t.kontantstrømMnd >= 0;
+  const stressMnd = t.stressKontantstrøm / 12;
+
+  // Prognosedata til grafen — bygd direkte fra beregningen (t.prognose). År 0 = i dag.
+  const data = [
+    { år: 0, ekVerdi: t.egenkapital || (t.boligverdi - t.lånBeløp), boligverdi: t.boligverdi },
+    ...t.prognose.map((p) => ({ år: p.år, ekVerdi: p.ekVerdi, boligverdi: p.eiendomsverdi })),
+  ];
+
+  const startEk = data[0].ekVerdi;
+  const sluttEk = t.prognose[9]?.ekVerdi ?? startEk;
+  const vekstEk = sluttEk - startEk;
+
+  return (
+    <div className="rounded-[24px] border border-line bg-surface overflow-hidden shadow-card">
+      {/* Topp — hovednøkkeltall på mørk teal-flate */}
+      <div className="bg-brand-deep px-[26px] pt-[22px] pb-[26px]">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity size={15} className="text-white/80" />
+          <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase text-white/80">Live-resultat</span>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <div>
+            <div className="text-[11.5px] font-bold text-white/70 mb-1">Netto yield</div>
+            <div className="text-[34px] leading-none font-extrabold tracking-[-0.03em] text-white num">{pct(t.nettoYield)}</div>
+            <div className="text-[10.5px] font-semibold text-white/55 mt-1.5">Brutto {pct(t.bruttoYield)}</div>
+          </div>
+          <div>
+            <div className="text-[11.5px] font-bold text-white/70 mb-1">Kontantstrøm</div>
+            <div className={`text-[34px] leading-none font-extrabold tracking-[-0.03em] num ${kontantPos ? 'text-white' : 'text-[#F5C95B]'}`}>
+              {kr(t.kontantstrømMnd)}
+            </div>
+            <div className="text-[10.5px] font-semibold text-white/55 mt-1.5">per måned før skatt</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-[22px] space-y-5">
+        {/* Sekundære KPI-fliser */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-[14px] bg-surface-2 border border-line px-4 py-3">
+            <div className="text-[11px] font-bold text-faint mb-1">ROE (cash-on-cash)</div>
+            <div className={`text-xl font-extrabold num ${t.roe >= 5 ? 'text-brand-ink' : t.roe >= 0 ? 'text-ink' : 'text-danger'}`}>{pct(t.roe)}</div>
+          </div>
+          <div className="rounded-[14px] bg-surface-2 border border-line px-4 py-3">
+            <div className="text-[11px] font-bold text-faint mb-1">EK i boligen</div>
+            <div className="text-xl font-extrabold num text-ink">{kr(t.egenkapital)}</div>
+          </div>
+        </div>
+
+        {/* Graf — egenkapitalvekst over 10 år */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[12.5px] font-extrabold text-ink">Formue bygges over 10 år</span>
+            <span className="text-[11px] font-semibold text-brand-ink num">+ {kr(vekstEk)}</span>
+          </div>
+          <div className="rounded-[16px] border border-line bg-surface-2 px-2 pt-4 pb-1">
+            <ResponsiveContainer width="100%" height={190}>
+              <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradBolig" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="var(--color-brand)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradEk" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-brand-ink)" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="var(--color-brand-ink)" stopOpacity={0.04} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--color-line-soft)" vertical={false} />
+                <XAxis
+                  dataKey="år"
+                  tickFormatter={(v) => (v === 0 ? 'I dag' : `${v} år`)}
+                  tick={{ fontSize: 10.5, fill: 'var(--color-faint)', fontWeight: 600 }}
+                  axisLine={false} tickLine={false} interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={krKort}
+                  tick={{ fontSize: 10.5, fill: 'var(--color-faint)', fontWeight: 600 }}
+                  axisLine={false} tickLine={false} width={48}
+                />
+                <Tooltip content={<PrognoseTooltip />} />
+                <Area type="monotone" dataKey="boligverdi" name="Boligverdi" stroke="var(--color-brand)"
+                  strokeWidth={1.5} fill="url(#gradBolig)" strokeDasharray="4 3" />
+                <Area type="monotone" dataKey="ekVerdi" name="Egenkapital" stroke="var(--color-brand-ink)"
+                  strokeWidth={2.5} fill="url(#gradEk)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex items-center gap-4 mt-2 px-1">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-2">
+              <span className="w-3 h-[3px] rounded-full bg-brand-ink" /> Egenkapital
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-2">
+              <span className="w-3 h-[3px] rounded-full bg-brand" style={{ opacity: 0.7 }} /> Boligverdi
+            </span>
+          </div>
+        </div>
+
+        {/* Nøkkeltall-liste */}
+        <div className="space-y-2 border-t border-line-soft pt-4">
+          {[
+            ['Lånebeløp', kr(t.lånBeløp)],
+            ['Terminbeløp/mnd', kr(t.termMnd)],
+            ['Netto leieinntekt/år', kr(t.nettoLeieÅr)],
+            ['Estimert skatt/år', kr(t.estimertSkattÅr)],
+            ['Kontantstrøm etter skatt/mnd', kr(t.kontantstrømEtterSkattÅr / 12)],
+            ['Kontantstrøm v/stressrente', `${kr(stressMnd)}/mnd`],
+          ].map(([label, val]) => (
+            <div key={label} className="flex justify-between text-[12.5px]">
+              <span className="font-semibold text-muted-2">{label}</span>
+              <span className="num font-bold text-ink">{val}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Varsler */}
+        {t.kontantstrømMnd < 0 && (
+          <InfoBoks type="warn">
+            Negativ kontantstrøm på {kr(Math.abs(t.kontantstrømMnd))}/mnd. Du dekker mellomlegget fra lønn.
+          </InfoBoks>
+        )}
+        {t.nettoYield < 2 && t.nettoYield > 0 && (
+          <InfoBoks type="warn">
+            Netto yield under 2 % er lavt i norsk sammenheng. Typisk Oslo-yield 2025: 1,8–2,8 %.
+          </InfoBoks>
+        )}
+        {t.lånBeløp > 0 && t.ltv > 90 && (
+          <InfoBoks type="error">
+            LTV {pct(t.ltv)} — over 90 %-grensen.
+          </InfoBoks>
+        )}
+      </div>
     </div>
   );
 }
@@ -1265,7 +1445,7 @@ export default function BoliganalyseKalkulator() {
 
       {/* Kalkulator */}
       {aktivTab === 'kalkulator' && (
-        <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))' }}>
+        <div className="grid gap-[18px] items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
           {/* Skjema */}
           <div className="space-y-3">
 
@@ -1615,67 +1795,9 @@ export default function BoliganalyseKalkulator() {
             </div>
           </div>
 
-          {/* Sticky live-preview */}
-          <div>
-            <div className="sticky top-6 rounded-[20px] border border-line bg-surface p-[22px] space-y-4">
-              <div className="text-[11px] font-extrabold tracking-[0.08em] uppercase text-faint">Live-oversikt</div>
-
-              {t.kjøpesum ? (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Brutto yield', val: pct(t.bruttoYield), cls: t.bruttoYield >= 5 ? 'text-brand-ink' : t.bruttoYield >= 3 ? 'text-ink' : 'text-danger' },
-                      { label: 'Netto yield', val: pct(t.nettoYield), cls: t.nettoYield >= 3 ? 'text-brand-ink' : t.nettoYield >= 1.5 ? 'text-ink' : 'text-danger' },
-                      { label: 'Kontantstrøm/mnd', val: kr(t.kontantstrømMnd), cls: t.kontantstrømMnd >= 0 ? 'text-brand-ink' : 'text-danger' },
-                      { label: 'ROE', val: pct(t.roe), cls: t.roe >= 5 ? 'text-brand-ink' : t.roe >= 0 ? 'text-ink' : 'text-danger' },
-                    ].map(({ label, val, cls }) => (
-                      <div key={label}>
-                        <div className="text-[11px] font-bold text-faint">{label}</div>
-                        <div className={`text-lg font-extrabold num ${cls}`}>{val}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="h-px bg-line-soft" />
-
-                  <div className="space-y-2">
-                    {[
-                      ['Lånbeløp', kr(t.lånBeløp)],
-                      ['Terminbeløp/mnd', kr(t.termMnd)],
-                      ['Netto leieinntekt/år', kr(t.nettoLeieÅr)],
-                      ['Estimert skatt/år', kr(t.estimertSkattÅr)],
-                      ['Ekstra lånekapasitet', kr(t.ekstraLånekapasitet)],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex justify-between text-xs">
-                        <span className="font-semibold text-muted-2">{label}</span>
-                        <span className="num font-bold text-ink">{val}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {t.kontantstrømMnd < 0 && (
-                    <InfoBoks type="warn">
-                      Negativ kontantstrøm på {kr(Math.abs(t.kontantstrømMnd))}/mnd. Du dekker mellomlegget fra lønn.
-                    </InfoBoks>
-                  )}
-                  {t.nettoYield < 2 && t.nettoYield > 0 && (
-                    <InfoBoks type="warn">
-                      Netto yield under 2 % er lavt i norsk sammenheng. Typisk Oslo-yield 2025: 1,8–2,8 %.
-                    </InfoBoks>
-                  )}
-                  {t.lånBeløp > 0 && t.ltv > 90 && (
-                    <InfoBoks type="error">
-                      LTV {pct(t.ltv)} — over 90 %-grensen.
-                    </InfoBoks>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <Calculator size={24} className="text-faint-2 mx-auto mb-2" />
-                  <p className="text-xs font-medium text-muted-2">Fyll inn kjøpesum for å se beregninger</p>
-                </div>
-              )}
-            </div>
+          {/* Stort, visuelt resultatpanel — sticky på store skjermer */}
+          <div className="lg:sticky lg:top-6">
+            <ResultatPanel t={t} />
           </div>
         </div>
       )}

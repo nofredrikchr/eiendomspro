@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, TrendingUp, ArrowRight, Check, Send, Loader2, AlertTriangle } from 'lucide-react';
+import { X, TrendingUp, ArrowRight, Check, Send, Loader2, AlertTriangle, FileDown } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { IconTile } from './ui/kit';
 import { beregnNyLeie, nesteReguleringTekst, kanReguleresNaa } from '../utils/kpi';
 import { beregnKpiJustering, ssbMaanedTilTekst } from '../services/ssbKpi';
 import { sendKpiVarsel, tidligsteIkrafttredelse } from '../services/varslingService';
+import { genererKpiVarselPDF } from '../utils/kpiVarselPDF';
 import { formatKr } from '../utils/format';
 
 /**
@@ -15,7 +16,7 @@ import { formatKr } from '../utils/format';
  * - Sender varsel til leietaker (e-post/SMS) og gir utleier bekreftelse.
  * onLagre(nyLeie) oppdaterer kontraktens leie og setter sisteRegulering = i dag.
  */
-export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
+export function KpiReguleringModal({ kontrakt, utleier, adresse, onLagre, onLukk }) {
   const [kpi, setKpi] = useState('');
   const [auto, setAuto] = useState('laster'); // laster | ok | feil
   const [kilde, setKilde] = useState('');
@@ -58,6 +59,19 @@ export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
       gammelLeie: gjeldende, nyLeie, gjelderFra: gjelderFra.toISOString(), elektroniskSamtykke: samtykke,
     });
     setResultat(r); setVarsling('sendt');
+  }
+
+  function lastNedVarsel() {
+    genererKpiVarselPDF({
+      utleier: utleier || { navn: kontrakt.utleierNavn },
+      leietaker: { navn: kontrakt.leietakerNavn, epost: kontrakt.leietakerEpost, tlf: kontrakt.leietakerTlf },
+      adresse: adresse || '',
+      gjeldendeLeie: gjeldende,
+      nyLeie,
+      kpiProsent: Number(kpi) || 0,
+      kpiKilde: kilde,
+      gjelderFra,
+    });
   }
 
   const kanalTekst = resultat?.kanaler?.map((k) => (k === 'epost' ? 'e-post' : 'SMS')).join(' og ') || 'e-post';
@@ -132,6 +146,9 @@ export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
               <Button variant="primary" className="w-full justify-center" disabled={varsling === 'sender' || !kontrakt.leietakerEpost} onClick={sendVarsel}>
                 {varsling === 'sender' ? <><Loader2 size={14} className="animate-spin" /> Sender varsel …</> : <><Send size={14} /> Send varsel til leietaker</>}
               </Button>
+              <Button variant="secondary" className="w-full justify-center mt-2.5" onClick={lastNedVarsel}>
+                <FileDown size={14} /> Last ned varselbrev (PDF)
+              </Button>
             </div>
           ) : (
             <div className="rounded-[14px] border border-mint-line bg-mint-soft p-4">
@@ -145,6 +162,9 @@ export function KpiReguleringModal({ kontrakt, onLagre, onLukk }) {
                 <div className="text-muted-2">Du har fått bekreftelse som utleier.</div>
                 {resultat.simulert && <div className="text-amber mt-1">Demo: faktisk utsending aktiveres når e-post/SMS-tjeneste er koblet på.</div>}
               </div>
+              <Button variant="secondary" className="w-full justify-center mt-3" onClick={lastNedVarsel}>
+                <FileDown size={14} /> Last ned varselbrev (PDF)
+              </Button>
             </div>
           )}
 
