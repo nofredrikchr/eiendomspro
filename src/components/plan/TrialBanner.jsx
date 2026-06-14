@@ -17,12 +17,12 @@ export function TrialBanner() {
       <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-line bg-mint/60 px-4 py-3">
         <Sparkles size={16} className="text-brand shrink-0" />
         <div className="flex-1 text-sm font-semibold text-ink-2">
-          Du har <strong>{trialDagerIgjen} {trialDagerIgjen === 1 ? 'dag' : 'dager'}</strong> igjen av Pro-prøven.
-          {trialDagerIgjen <= 3 && ' Velg årlig og få 2 måneder gratis.'}
+          Du har <strong>{trialDagerIgjen} {trialDagerIgjen === 1 ? 'dag' : 'dager'}</strong> igjen av prøveperioden.
+          {' '}Si opp før den utløper om du ikke vil fortsette — da trekkes ingenting.
         </div>
-        <button onClick={() => navigate('/priser')}
+        <button onClick={() => navigate('/innstillinger')}
           className="text-xs font-extrabold text-brand-ink hover:underline cursor-pointer shrink-0">
-          Velg plan
+          Administrer
         </button>
       </div>
     );
@@ -35,7 +35,7 @@ export function TrialBanner() {
       <div className="mb-5 flex items-center gap-3 rounded-[14px] border border-amber-line bg-amber-soft px-4 py-3">
         <RefreshCw size={16} className="text-amber shrink-0" />
         <div className="flex-1 text-sm font-medium text-[#7a611c]">
-          Pro-tilgangen er avsluttet. Alt du har lagt inn er trygt lagret — meld deg inn igjen, så er alt tilbake der du slapp.
+          Abonnementet er avsluttet. Alt du har lagt inn er trygt lagret — meld deg inn igjen, så er alt tilbake der du slapp.
         </div>
         <button onClick={() => navigate('/priser')}
           className="text-xs font-extrabold text-amber hover:underline cursor-pointer shrink-0">

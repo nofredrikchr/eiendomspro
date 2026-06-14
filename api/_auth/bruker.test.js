@@ -52,10 +52,10 @@ describe('offentligBruker', () => {
     expect(u.trialDagerIgjen).toBe(0);
   });
 
-  it('i prøveperiode: effektiv plan = pro med dager igjen', () => {
+  it('i prøveperiode på Pro: effektiv plan = pro med dager igjen', () => {
     const trialEnds = new Date(Date.now() + 5 * 86_400_000).toISOString();
     const u = offentligBruker(rad, ['utleier'], {
-      abonnement: { status: 'prøve', plan_id: 'gratis', trial_ends_at: trialEnds },
+      abonnement: { status: 'prøve', plan_id: 'pro', trial_ends_at: trialEnds },
       kredittOre: 12000,
     });
     expect(u.plan).toBe('pro');

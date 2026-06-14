@@ -17,13 +17,13 @@ export default function Velkommen() {
   const [data, setData] = useState(null);
   const [forsok, setForsok] = useState(0);
 
-  // Etter Stripe-redirect kan webhooken ligge et øyeblikk bak — vi poller /api/abonnement
-  // til status er 'aktiv' (maks ~5 forsøk), og oppdaterer global auth-tilstand.
+  // Etter Stripe-redirect kan webhooken ligge et øyeblikk bak — vi poller
+  // /api/abonnement til status er 'prøve' (kort-sikret prøve) eller 'aktiv'.
   const sjekk = useCallback(async () => {
     try {
       const d = await abonnementApi.hent();
       setData(d);
-      if (d?.abonnement?.status === 'aktiv') { lastInn(); return true; }
+      if (['prøve', 'aktiv'].includes(d?.abonnement?.status)) { lastInn(); return true; }
     } catch { /* prøv igjen */ }
     return false;
   }, [lastInn]);
@@ -40,10 +40,13 @@ export default function Velkommen() {
     return () => { aktiv = false; clearTimeout(timer); };
   }, [sjekk, forsok]);
 
-  const aktiv = data?.abonnement?.status === 'aktiv';
-  const planId = aktiv ? data.abonnement.planId : (data?.plan ?? 'privat');
+  const status = data?.abonnement?.status;
+  const ferdig = status === 'prøve' || status === 'aktiv';
+  const erTrial = status === 'prøve';
+  const planId = data?.abonnement?.planId || data?.plan || 'privat';
   const planNavn = PLANER[planId]?.navn ?? 'abonnementet';
-  const venter = !data || (!aktiv && forsok < 5);
+  const dagerIgjen = data?.trialDagerIgjen ?? 14;
+  const venter = !data || (!ferdig && forsok < 5);
   const fordeler = FORDELER[planId] || FORDELER.privat;
 
   return (
@@ -60,17 +63,22 @@ export default function Velkommen() {
 
           {venter ? (
             <>
-              <h1 className="text-[26px] font-extrabold text-ink mb-2">Behandler betalingen…</h1>
-              <p className="text-[15px] text-muted leading-relaxed">Vi bekrefter abonnementet ditt. Dette tar vanligvis bare et par sekunder.</p>
+              <h1 className="text-[26px] font-extrabold text-ink mb-2">Setter opp abonnementet…</h1>
+              <p className="text-[15px] text-muted leading-relaxed">Vi bekrefter detaljene dine. Dette tar vanligvis bare et par sekunder.</p>
             </>
-          ) : aktiv ? (
+          ) : ferdig ? (
             <>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-mint text-brand-ink text-[12px] font-extrabold px-3 py-1 mb-4">
-                <Sparkles size={13} /> {planNavn}-abonnement aktivt
+                <Sparkles size={13} /> {planNavn}{erTrial ? ' – prøveperiode' : '-abonnement aktivt'}
               </div>
               <h1 className="text-[30px] font-extrabold text-ink leading-tight mb-2">Velkommen på laget! 🎉</h1>
               <p className="text-[15px] text-muted leading-relaxed mb-6">
-                Du er nå på <strong>{planNavn}</strong>-planen, og alt er låst opp. Takk for at du valgte EiendomsPRO.
+                {erTrial ? (
+                  <>Prøveperioden din på <strong>{planNavn}</strong> er i gang – du har <strong>{dagerIgjen} dager</strong> med full tilgang.
+                    {' '}Du kan si opp når som helst i Min konto før prøven utløper, så trekkes ingenting.</>
+                ) : (
+                  <>Du er nå på <strong>{planNavn}</strong>-planen, og alt er låst opp. Takk for at du valgte EiendomsPRO.</>
+                )}
               </p>
 
               <div className="rounded-2xl border border-line bg-surface p-5 text-left mb-6">
@@ -91,7 +99,7 @@ export default function Velkommen() {
                 </button>
                 <button onClick={() => navigate('/innstillinger')}
                   className="text-[13.5px] font-bold text-muted hover:text-brand-ink cursor-pointer">
-                  Se abonnementet i Min konto
+                  {erTrial ? 'Administrer prøveperioden i Min konto' : 'Se abonnementet i Min konto'}
                 </button>
               </div>
             </>
@@ -99,7 +107,7 @@ export default function Velkommen() {
             <>
               <h1 className="text-[26px] font-extrabold text-ink mb-2">Nesten i mål</h1>
               <p className="text-[15px] text-muted leading-relaxed mb-6">
-                Betalingen er mottatt, men bekreftelsen tok litt lengre tid enn vanlig. Den dukker opp i Min konto straks – du trenger ikke gjøre noe mer.
+                Vi mottok betalingsdetaljene, men bekreftelsen tok litt lengre tid enn vanlig. Den dukker opp i Min konto straks – du trenger ikke gjøre noe mer.
               </p>
               <button onClick={() => navigate('/innstillinger')}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand text-white px-6 py-3.5 text-[15px] font-bold hover:bg-brand-hover cursor-pointer">

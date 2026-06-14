@@ -14,6 +14,7 @@ import Kalkulator from './pages/Kalkulator';
 // jspdf, xlsx) følger dermed sidene som bruker dem.
 const Priser = lazy(() => import('./pages/Priser'));
 const Velkommen = lazy(() => import('./pages/Velkommen'));
+const VelgPlan = lazy(() => import('./pages/VelgPlan'));
 const VervEnVenn = lazy(() => import('./pages/Verv/VervEnVenn'));
 const PartnerDashboard = lazy(() => import('./pages/Partner/PartnerDashboard'));
 const GuiderIndex = lazy(() => import('./pages/Guider/GuiderIndex'));
@@ -66,7 +67,7 @@ function AppRoutes() {
   const isLanding = LANDING_PATHS.includes(pathname);
   const isLeietaker = pathname.startsWith('/leietaker');
   const isLogin = pathname === '/login';
-  const isMarketing = isLanding || pathname === '/kalkulator' || pathname === '/priser' || pathname === '/velkommen' || pathname.startsWith('/guider');
+  const isMarketing = isLanding || pathname === '/kalkulator' || pathname === '/priser' || pathname === '/velkommen' || pathname === '/velg-plan' || pathname.startsWith('/guider');
 
   // Offentlige markedsføringssider — ingen innlogging, ingen app-layout
   if (isMarketing) {
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="/kalkulator" element={<Kalkulator />} />
         <Route path="/priser" element={<Priser />} />
         <Route path="/velkommen" element={<Velkommen />} />
+        <Route path="/velg-plan" element={<VelgPlan />} />
         <Route path="/guider" element={<GuiderIndex />} />
         <Route path="/guider/:slug" element={<GuideArtikkel />} />
       </Routes>

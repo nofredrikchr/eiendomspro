@@ -66,7 +66,8 @@ export default function Login({ startModus = 'innlogg' }) {
       : await loggInn({ identifikator, passord });
     setJobber(false);
     if (!res.ok) { setFeil(res.feil); return; }
-    navigate('/app');
+    // Nye brukere velger plan (onboarding); innlogging går rett til appen.
+    navigate(modus === 'registrer' ? '/velg-plan' : '/app');
   }
 
   const tittel = modus === 'registrer' ? 'Opprett konto' : modus === 'glemt' ? 'Tilbakestill passord' : 'Velkommen tilbake';

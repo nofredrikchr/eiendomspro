@@ -6,7 +6,7 @@ import { byggSesjonsCookie } from '../_auth/cookie.js';
 import { sjekkRate } from '../_auth/ratelimit.js';
 import { lagEngangsToken } from '../_auth/tokens.js';
 import { sendEpost, malVerifisering } from '../_auth/epost.js';
-import { opprettTrialOgKonto, hentAbonnement } from '../_plan/db.js';
+import { opprettKonto, hentAbonnement } from '../_plan/db.js';
 import { registrerVerving } from '../_verving/db.js';
 
 export default async function handler(req, res) {
@@ -37,9 +37,9 @@ export default async function handler(req, res) {
     });
     res.setHeader('Set-Cookie', byggSesjonsCookie(token));
 
-    // Reverse trial: permanent Gratis-konto + 14 dager full Pro (kortløst).
-    // Oppretter også kontokreditt-rad og personlig vervekode.
-    await opprettTrialOgKonto(bruker.id, bruker.fullt_navn);
+    // Start på GRATIS-plan. Brukeren velger plan i onboarding (/velg-plan);
+    // prøveperiode på Privat/Pro krever kort. Oppretter kreditt-rad + vervekode.
+    await opprettKonto(bruker.id, bruker.fullt_navn);
 
     // Verve-/partnerkode (best-effort — registrering skal aldri feile på ugyldig kode).
     const vervekode = typeof req.body?.vervekode === 'string' ? req.body.vervekode.trim() : null;

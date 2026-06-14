@@ -28,7 +28,7 @@ export const PLANER = {
   },
   privat: {
     id: 'privat',
-    navn: 'Privat',
+    navn: 'Utleier',
     prisMndOre: 9900, // 99 kr
     prisAarOre: 99000, // 990 kr (= 10 × 99)
     objektgrense: 5,
@@ -149,7 +149,7 @@ export function partnerProvisjonOre(inklBetaltOre) {
 
 // ─── Abonnementsstatus → effektiv tilgang ───────────────────────────────────────
 // Statuser: 'prøve' | 'aktiv' | 'betalingsproblem' | 'forfalt' | 'kansellert' | 'over_grensen'
-//  - prøve:           full Pro-tilgang til trial_ends_at, deretter gratis
+//  - prøve:           prøveperiode på plan_id (privat/pro) til trial_ends_at, deretter gratis
 //  - aktiv:           betalt plan
 //  - betalingsproblem: beholder tilgang under gjenforsøk (punkt K)
 //  - forfalt:         alle trekk feilet → gratis
@@ -168,7 +168,7 @@ export function effektivPlan(abonnement, naa = Date.now()) {
   const { status, plan_id: planId, trial_ends_at: trialSlutt, gjeldende_slutt: slutt } = abonnement;
   switch (status) {
     case 'prøve':
-      return tid(trialSlutt) > naa ? PLAN_PRO : PLAN_GRATIS;
+      return tid(trialSlutt) > naa ? (planId || PLAN_GRATIS) : PLAN_GRATIS;
     case 'aktiv':
     case 'betalingsproblem':
     case 'over_grensen':

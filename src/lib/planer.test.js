@@ -110,9 +110,10 @@ describe('effektivPlan / trial', () => {
   const naa = new Date('2026-06-14T12:00:00Z').getTime();
   const om = (dager) => new Date(naa + dager * 86_400_000).toISOString();
 
-  it('prøve gir Pro mens den varer, gratis etterpå', () => {
-    expect(effektivPlan({ status: 'prøve', plan_id: 'gratis', trial_ends_at: om(5) }, naa)).toBe('pro');
-    expect(effektivPlan({ status: 'prøve', plan_id: 'gratis', trial_ends_at: om(-1) }, naa)).toBe('gratis');
+  it('prøve gir plan_id-planen mens den varer, gratis etterpå', () => {
+    expect(effektivPlan({ status: 'prøve', plan_id: 'pro', trial_ends_at: om(5) }, naa)).toBe('pro');
+    expect(effektivPlan({ status: 'prøve', plan_id: 'privat', trial_ends_at: om(5) }, naa)).toBe('privat');
+    expect(effektivPlan({ status: 'prøve', plan_id: 'pro', trial_ends_at: om(-1) }, naa)).toBe('gratis');
   });
   it('aktiv gir den betalte planen', () => {
     expect(effektivPlan({ status: 'aktiv', plan_id: 'privat' }, naa)).toBe('privat');
@@ -140,7 +141,7 @@ describe('effektivPlan / trial', () => {
   });
   it('erBetalende kun for privat/pro-tilgang', () => {
     expect(erBetalende({ status: 'aktiv', plan_id: 'privat' }, naa)).toBe(true);
-    expect(erBetalende({ status: 'prøve', plan_id: 'gratis', trial_ends_at: om(5) }, naa)).toBe(true);
+    expect(erBetalende({ status: 'prøve', plan_id: 'privat', trial_ends_at: om(5) }, naa)).toBe(true);
     expect(erBetalende({ status: 'forfalt', plan_id: 'pro' }, naa)).toBe(false);
   });
 });
