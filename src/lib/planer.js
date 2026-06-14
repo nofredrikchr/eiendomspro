@@ -207,6 +207,42 @@ export function inkluderteKontrakterTilgjengelig(abonnement) {
   return effektivPlan(abonnement) === PLAN_PRO && abonnement?.betalt_forste_gang === true;
 }
 
+// ─── Fakturering / livssyklus (rene hjelpere) ──────────────────────────────────
+export const MAKS_BETALINGSFORSOK = 3; // gjenforsøk før degradering (punkt K)
+
+/**
+ * Ny status etter et mislykket trekk, gitt antall feilede forsøk SÅ LANGT
+ * (inkl. dette). Beholder tilgang under gjenforsøk; degraderer først når alle
+ * forsøk er brukt opp.
+ */
+export function statusEtterBetalingsfeil(feiledeTrekk) {
+  return feiledeTrekk >= MAKS_BETALINGSFORSOK ? 'forfalt' : 'betalingsproblem';
+}
+
+/** Slutt på neste betalte periode (ISO) fra et starttidspunkt. */
+export function nyPeriodeSlutt(intervall, fraMs = Date.now()) {
+  const dager = intervall === 'aar' ? 365 : 30;
+  return new Date(fraMs + dager * 86_400_000).toISOString();
+}
+
+/**
+ * Beregn netto å betale etter at kontokreditt er trukket fra, og hvor mye kreditt
+ * som faktisk brukes. Bruker maks fakturabeløpet (kreditt går aldri tapt).
+ */
+export function bruktKreditt(fakturaOre, kredittSaldoOre) {
+  const brukt = Math.max(0, Math.min(fakturaOre, kredittSaldoOre));
+  return { brukt, nettoOre: fakturaOre - brukt };
+}
+
+/**
+ * Status ved nedgradering til en lavere plan: hvis antall objekter overstiger den
+ * nye planens grense, settes 'over_grensen' (les, men ikke opprett nytt) —
+ * ingenting slettes (punkt L). Ellers 'aktiv'.
+ */
+export function statusVedNedgradering(nyPlan, antallObjekter) {
+  return antallObjekter > objectLimit(nyPlan) ? 'over_grensen' : 'aktiv';
+}
+
 // ─── Skjulte funksjoner (punkt J — alle av, helt skjult i UI) ───────────────────
 export const SKJULTE_FUNKSJONER = {
   auto_faktura_kid: false,

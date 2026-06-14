@@ -4,6 +4,7 @@ import {
   eksMvaOre, formaterKr, bankidPrisOre, ververKredittOre, vervetKredittOre,
   medPartnerRabattOre, partnerProvisjonOre, effektivPlan, trialDagerIgjen,
   erBetalende, erSkrivebeskyttet, inkluderteKontrakterTilgjengelig, funksjonPa,
+  statusEtterBetalingsfeil, bruktKreditt, statusVedNedgradering,
 } from './planer.js';
 
 describe('priser og grenser', () => {
@@ -149,6 +150,24 @@ describe('Pro inkluderte kontrakter (misbrukssikring)', () => {
     expect(inkluderteKontrakterTilgjengelig({ status: 'prøve', plan_id: 'gratis', trial_ends_at: new Date(Date.now() + 86_400_000).toISOString(), betalt_forste_gang: false })).toBe(false);
     expect(inkluderteKontrakterTilgjengelig({ status: 'aktiv', plan_id: 'pro', betalt_forste_gang: true })).toBe(true);
     expect(inkluderteKontrakterTilgjengelig({ status: 'aktiv', plan_id: 'privat', betalt_forste_gang: true })).toBe(false);
+  });
+});
+
+describe('fakturering / livssyklus', () => {
+  it('betalingsfeil: beholder tilgang til 3 forsøk er brukt opp', () => {
+    expect(statusEtterBetalingsfeil(1)).toBe('betalingsproblem');
+    expect(statusEtterBetalingsfeil(2)).toBe('betalingsproblem');
+    expect(statusEtterBetalingsfeil(3)).toBe('forfalt');
+  });
+  it('kreditt trekkes maks fakturabeløpet', () => {
+    expect(bruktKreditt(9900, 5000)).toEqual({ brukt: 5000, nettoOre: 4900 });
+    expect(bruktKreditt(9900, 20000)).toEqual({ brukt: 9900, nettoOre: 0 });
+    expect(bruktKreditt(9900, 0)).toEqual({ brukt: 0, nettoOre: 9900 });
+  });
+  it('nedgradering over grensen → over_grensen, ellers aktiv', () => {
+    expect(statusVedNedgradering('privat', 7)).toBe('over_grensen');
+    expect(statusVedNedgradering('privat', 5)).toBe('aktiv');
+    expect(statusVedNedgradering('pro', 9999)).toBe('aktiv'); // ubegrenset
   });
 });
 
