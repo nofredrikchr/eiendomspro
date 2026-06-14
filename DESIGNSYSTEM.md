@@ -110,18 +110,26 @@ Bevegelsesspråket skal kjennes varmt og omsorgsfullt — aldri hektisk. Innhold
 - `data-parallakse` — foto litt høyere enn rammen (112–116 %) som driver
   oppover; bruk kun negative `yPercent`-spenn så kantene aldri blottlegges.
 - `data-steg` + `.steg-aktiv` — scrolldrevet aktiv-tilstand med fyllende linje.
-- **Progressiv kant-blur** (`.blur-topp`, `.blur-topp-sterk`, `.blur-bunn` i
-  `index.css`): innholdet smelter inn i en frostet sone under toppmenyen ved
-  scroll (tones inn via `.topp-skrollet`) og i en subtil fast sone nederst i
-  viewporten. Gradient-maskede `backdrop-filter`-lag — tint og blur toner ut
-  sammen. Bruk samme klasser på nye markedssider; ikke i appen.
+
+**Toppmeny & kant-blur:**
+- **Header** er en ren, frostet glasslinje (`bg-canvas/80 backdrop-blur-[16px]`)
+  med et *tydelig skille* (`border-b border-line`) mot innholdet. Skillet og en
+  mild skygge forsterkes ved scroll via `.topp-skrollet` (settes av ScrollTrigger).
+  Ingen gradient-«melt» under headeren — skillet skal være klart.
+- **`.blur-bunn`** (`index.css`): én subtil, fast frostsone nederst i viewporten
+  der innholdet toner mykt ut (gradient-maskert `backdrop-filter`). Kun i bunnen.
+
+**Three.js-atmosfære:** `components/HeroAtmosfere.jsx` legger en rolig bokeh-flate
+(myke lyssirkler i mint/teal/amber/krem) bak hero. Three lastes *dynamisk* i en
+effekt (blokkerer aldri LCP), pauses utenfor viewport / skjult fane, og hopper
+over animasjon ved `prefers-reduced-motion` / manglende WebGL. Hold den subtil
+(lav opasitet) så overskriften alltid er skarp. Egen markedseffekt — ikke i appen.
 
 **Ufravikelig:** all animasjon settes opp i JS (`gsap.from`) slik at innholdet
 er synlig uten JS, og ALT pakkes i
 `gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', …)` —
 med redusert bevegelse står siden stille og fullt synlig (CSS-fallbacks i
-`index.css` håndterer dim-/opacity-tilstander). Marquee og svev er rene
-CSS-animasjoner som skrus av i samme media query.
+`index.css` håndterer dim-/opacity-tilstander).
 
 ## Regler ved ombygging
 1. Behold ALL dataflyt: API-kall, hooks (`useApp`, `useAuth`), props, ruter, eksport-navn
