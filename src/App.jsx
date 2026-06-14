@@ -12,6 +12,9 @@ import Kalkulator from './pages/Kalkulator';
 // Øvrige rute-komponenter lastes ved behov (code-splitting) — kun Login, Layout
 // og markedssidene over ligger i hovedchunken. Tunge biblioteker (recharts,
 // jspdf, xlsx) følger dermed sidene som bruker dem.
+const Priser = lazy(() => import('./pages/Priser'));
+const VervEnVenn = lazy(() => import('./pages/Verv/VervEnVenn'));
+const PartnerDashboard = lazy(() => import('./pages/Partner/PartnerDashboard'));
 const GuiderIndex = lazy(() => import('./pages/Guider/GuiderIndex'));
 const GuideArtikkel = lazy(() => import('./pages/Guider/GuideArtikkel'));
 const ResetPage = lazy(() => import('./pages/Auth/ResetPage'));
@@ -62,7 +65,7 @@ function AppRoutes() {
   const isLanding = LANDING_PATHS.includes(pathname);
   const isLeietaker = pathname.startsWith('/leietaker');
   const isLogin = pathname === '/login';
-  const isMarketing = isLanding || pathname === '/kalkulator' || pathname.startsWith('/guider');
+  const isMarketing = isLanding || pathname === '/kalkulator' || pathname === '/priser' || pathname.startsWith('/guider');
 
   // Offentlige markedsføringssider — ingen innlogging, ingen app-layout
   if (isMarketing) {
@@ -70,6 +73,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/kalkulator" element={<Kalkulator />} />
+        <Route path="/priser" element={<Priser />} />
         <Route path="/guider" element={<GuiderIndex />} />
         <Route path="/guider/:slug" element={<GuideArtikkel />} />
       </Routes>
@@ -144,6 +148,8 @@ function AppRoutes() {
           <Route path="/kpi" element={<KpiRegulering />} />
           <Route path="/boliganalyse" element={<BoliganalyseKalkulator />} />
           <Route path="/innstillinger" element={<MinKonto />} />
+          <Route path="/verv" element={<VervEnVenn />} />
+          <Route path="/partner" element={<PartnerDashboard />} />
           <Route path="/tilbakemelding" element={<Feedback />} />
           <Route path="/admin/*" element={<Navigate to="/app" replace />} />
           <Route path="/integrasjoner" element={<IntegrasjonsSide />} />

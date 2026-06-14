@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Building2, User, Check, X, Settings, Users, Shield, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Pencil, Trash2, Building2, User, Check, X, Settings, Users, Shield, LogOut, CreditCard, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePlan } from '../../hooks/usePlan';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { BekreftModal } from '../../components/ui/BekreftModal';
 import { Pill, IconTile, Avatar, PageHeader, SectionCard } from '../../components/ui/kit';
 import { profilApi } from '../../services/entitetApi';
+import { abonnementApi } from '../../services/abonnementApi';
+import { PLANER, formaterKr } from '../../lib/planer';
 
 // ─── Utleier-skjema ────────────────────────────────────────────
 const defaultUtleierForm = {
@@ -108,9 +112,114 @@ function UtleierKort({ utleier, onRediger, onSlett }) {
 // ─── Faner ────────────────────────────────────────────────────
 const TABS = [
   { id: 'innstillinger', label: 'Innstillinger', icon: Settings },
+  { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'utleiere', label: 'Utleiere', icon: Users },
   { id: 'tilgang', label: 'Tilgang', icon: Shield },
 ];
+
+const STATUS_TEKST = {
+  prøve: 'Pro-prøveperiode',
+  aktiv: 'Aktivt',
+  betalingsproblem: 'Betalingsproblem',
+  forfalt: 'Avsluttet (betaling feilet)',
+  kansellert: 'Sagt opp – aktiv ut perioden',
+  over_grensen: 'Over grensen',
+};
+
+// ─── Abonnement-fane ──────────────────────────────────────────
+function AbonnementTab() {
+  const navigate = useNavigate();
+  const { lastInn } = useAuth();
+  const { plan, abonnement, trialDagerIgjen, kredittOre, erBetalende } = usePlan();
+  const [jobber, setJobber] = useState(null);
+  const [visKanseller, setVisKanseller] = useState(false);
+  const [melding, setMelding] = useState(null);
+
+  async function kjor(navn, fn) {
+    setMelding(null);
+    setJobber(navn);
+    try {
+      const r = await fn();
+      await lastInn();
+      if (r?.url) { window.location.assign(r.url); return; }
+      if (r?.stub) setMelding('Utført (stub-modus – ingen ekte betaling).');
+    } catch (e) {
+      setMelding(e.message || 'Noe gikk galt.');
+    } finally {
+      setJobber(null);
+    }
+  }
+
+  const planNavn = PLANER[plan]?.navn || 'Gratis';
+  const statusTekst = abonnement ? (STATUS_TEKST[abonnement.status] || abonnement.status) : 'Gratis';
+
+  return (
+    <div className="max-w-lg space-y-5">
+      <BekreftModal
+        åpen={visKanseller}
+        tittel="Si opp abonnementet?"
+        tekst="Du beholder full tilgang ut den betalte perioden, og ingen data slettes. Etterpå går kontoen tilbake til Gratis."
+        bekreftLabel="Si opp"
+        onBekreft={async () => { setVisKanseller(false); await kjor('kanseller', () => abonnementApi.kanseller()); }}
+        onAvbryt={() => setVisKanseller(false)}
+      />
+
+      <SectionCard tittel="Din plan">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-extrabold text-ink">{planNavn}</span>
+              <Pill tone={erBetalende ? 'mint' : 'neutral'}>{statusTekst}</Pill>
+            </div>
+            {abonnement?.status === 'prøve' && trialDagerIgjen > 0 && (
+              <div className="text-[13px] font-semibold text-brand-ink mt-1">{trialDagerIgjen} dager igjen av Pro-prøven</div>
+            )}
+          </div>
+          <Button variant="primary" onClick={() => navigate('/priser')}>
+            <Sparkles size={14} /> Se planer
+          </Button>
+        </div>
+      </SectionCard>
+
+      <SectionCard tittel="Betaling og kreditt">
+        <div className="space-y-3">
+          <Rad label="Vervekreditt" verdi={formaterKr(kredittOre)} hjelp="Trekkes automatisk fra neste faktura. Forsvinner aldri." />
+          <Rad label="Betalingskort" verdi={abonnement?.harKort ? 'Registrert' : 'Ikke registrert'} />
+          <div className="flex flex-wrap gap-2 pt-1">
+            {!abonnement?.harKort && (
+              <Button variant="secondary" onClick={() => kjor('kort', () => abonnementApi.leggTilKort())} disabled={jobber === 'kort'}>
+                <CreditCard size={14} /> {jobber === 'kort' ? 'Jobber…' : 'Legg til kort'}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => kjor('portal', () => abonnementApi.portal())} disabled={jobber === 'portal'}>
+              {jobber === 'portal' ? 'Åpner…' : 'Administrer i kundeportal'}
+            </Button>
+            {erBetalende && abonnement?.status !== 'kansellert' && (
+              <Button variant="danger" onClick={() => setVisKanseller(true)} disabled={jobber === 'kanseller'}>
+                Si opp abonnement
+              </Button>
+            )}
+          </div>
+          {melding && <p className="text-[13px] font-semibold text-muted-2">{melding}</p>}
+        </div>
+      </SectionCard>
+
+      <p className="text-xs text-faint">Ingen bindingstid. Sier du opp, beholder du tilgangen ut betalt periode, og alt du har lagt inn bevares.</p>
+    </div>
+  );
+}
+
+function Rad({ label, verdi, hjelp }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-line-soft pb-3 last:border-0 last:pb-0">
+      <div>
+        <div className="text-sm font-bold text-ink-2">{label}</div>
+        {hjelp && <div className="text-xs text-faint mt-0.5">{hjelp}</div>}
+      </div>
+      <div className="text-sm font-extrabold text-ink shrink-0">{verdi}</div>
+    </div>
+  );
+}
 
 function TabBtn({ active, onClick, icon: Icon, label }) {
   return (
@@ -298,6 +407,7 @@ export default function MinKonto() {
       </div>
 
       {aktiveTab === 'innstillinger' && <InnstillingerTab />}
+      {aktiveTab === 'abonnement' && <AbonnementTab />}
       {aktiveTab === 'utleiere' && <UtleiereTab />}
       {aktiveTab === 'tilgang' && <TilgangTab />}
     </div>

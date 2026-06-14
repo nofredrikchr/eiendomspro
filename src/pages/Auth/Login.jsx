@@ -22,7 +22,10 @@ export default function Login({ startModus = 'innlogg' }) {
   const { loggInn, registrer, bePassordReset, erDemo } = useAuth();
   const navigate = useNavigate();
   const { search } = useLocation();
-  const urlFeil = FEIL_TEKST[new URLSearchParams(search).get('feil')];
+  const params = new URLSearchParams(search);
+  const urlFeil = FEIL_TEKST[params.get('feil')];
+  const vervekode = params.get('ref') || '';
+  const partnerkode = params.get('partner') || '';
   const [modus, setModus] = useState(startModus === 'registrer' ? 'registrer' : 'innlogg');
   const [identifikator, setIdentifikator] = useState('');
   const [epost, setEpost] = useState('');
@@ -56,7 +59,10 @@ export default function Login({ startModus = 'innlogg' }) {
     }
     setJobber(true);
     const res = modus === 'registrer'
-      ? await registrer({ fulltNavn, epost: epost || undefined, telefon: telefon || undefined, passord, primaryRolle })
+      ? await registrer({
+        fulltNavn, epost: epost || undefined, telefon: telefon || undefined, passord, primaryRolle,
+        vervekode: vervekode || undefined, partnerkode: partnerkode || undefined,
+      })
       : await loggInn({ identifikator, passord });
     setJobber(false);
     if (!res.ok) { setFeil(res.feil); return; }
@@ -121,6 +127,19 @@ export default function Login({ startModus = 'innlogg' }) {
               <div className="flex gap-2 p-3 rounded-xl border border-amber-line bg-amber-bg text-xs font-semibold text-amber leading-relaxed mb-5">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
                 <span>Demo-modus: database er ikke konfigurert, så innlogging er deaktivert. Du kan gå rett inn.</span>
+              </div>
+            )}
+
+            {modus === 'registrer' && vervekode && (
+              <div className="flex gap-2 p-3 rounded-xl border border-line bg-mint/60 text-xs font-semibold text-brand-ink leading-relaxed mb-5">
+                <Heart size={14} className="shrink-0 mt-0.5" />
+                <span>Du er invitert! Du får <strong>1 måned gratis</strong> på ditt første abonnement.</span>
+              </div>
+            )}
+            {modus === 'registrer' && partnerkode && (
+              <div className="flex gap-2 p-3 rounded-xl border border-line bg-mint/60 text-xs font-semibold text-brand-ink leading-relaxed mb-5">
+                <Check size={14} className="shrink-0 mt-0.5" />
+                <span>Partnerkode aktivert: <strong>20 % rabatt i 3 måneder</strong>.</span>
               </div>
             )}
 
