@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Home, TrendingUp, Calculator, FileText, ChevronDown, ChevronUp,
   Copy, Check, BarChart3, AlertTriangle, Info, ArrowRight, Sparkles,
@@ -620,6 +621,8 @@ function ResultatPanel({ t }) {
         </div>
       </div>
 
+      <LaastFunksjon feature="investeringsanalyse" tittel="Lås opp full analyse"
+        beskrivelse="Prognose, lånekapasitet, skatt og avkastning. Gratis viser kun yield og kontantstrøm.">
       <div className="p-[22px] space-y-5">
         {/* Sekundære KPI-fliser */}
         <div className="grid grid-cols-2 gap-3">
@@ -716,6 +719,7 @@ function ResultatPanel({ t }) {
           </InfoBoks>
         )}
       </div>
+      </LaastFunksjon>
     </div>
   );
 }
@@ -723,8 +727,26 @@ function ResultatPanel({ t }) {
 // ─── Rapport ──────────────────────────────────────────────────────────────────
 function Rapport({ inp, t }) {
   const [kopiert, setKopiert] = useState('');
+  const navigate = useNavigate();
+  const { canUse } = usePlan();
   const analysetekst = useMemo(() => genererAnalyse(inp, t), [inp, t]);
   const bankmelding = useMemo(() => genererBankmelding(inp, t), [inp, t]);
+
+  // Full rapport (investeringsanalyse, prognose, bankrapport) er for betalende.
+  // Gratis ser kun grunnleggende nøkkeltall i live-panelet på kalkulatorfanen.
+  if (!canUse('investeringsanalyse')) {
+    return (
+      <div className="max-w-md mx-auto text-center rounded-2xl border border-line bg-surface p-8">
+        <IconTile tone="mint" size={56} radius={18} className="mx-auto mb-4"><Sparkles size={26} /></IconTile>
+        <div className="text-base font-extrabold text-ink mb-1.5">Full rapport er låst</div>
+        <p className="text-[13.5px] text-muted leading-relaxed mb-5">
+          Med Utleier eller Pro får du hele rapporten: investeringsanalyse, 10-års prognose, bankrapport
+          og sammenligning. På Gratis ser du grunnleggende nøkkeltall (yield og kontantstrøm) i kalkulatoren.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/priser')}>Lås opp med Utleier eller Pro</Button>
+      </div>
+    );
+  }
 
   function kopier(tekst, id) {
     navigator.clipboard.writeText(tekst).then(() => {
