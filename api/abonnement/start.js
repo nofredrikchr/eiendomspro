@@ -19,7 +19,7 @@ export default medBruker({
       brukerId: okt.bruker.id,
       planId,
       intervall,
-      suksessUrl: `${base}/innstillinger?betaling=ok`,
+      suksessUrl: `${base}/velkommen`,
       avbrytUrl: `${base}/priser?avbrutt=1`,
       kundeEpost: okt.bruker.epost,
     });

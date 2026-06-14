@@ -85,7 +85,7 @@ export default function Priser() {
       const r = await abonnementApi.start(planId, intervall);
       await lastInn();
       if (r.url) { window.location.assign(r.url); return; }
-      navigate('/innstillinger?betaling=ok');
+      navigate('/velkommen');
     } catch (e) {
       setFeil(e.message || 'Noe gikk galt. Prøv igjen.');
     } finally {
