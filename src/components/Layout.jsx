@@ -5,6 +5,7 @@ import {
   ArrowLeftRight, MailWarning, AlertTriangle, Gift,
 } from 'lucide-react';
 import { TrialBanner } from './plan/TrialBanner';
+import { Feilgrense } from './Feilgrense';
 import { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 import { Avatar } from './ui/kit';
@@ -285,7 +286,7 @@ export function Layout({ children }) {
             <TrialBanner />
             <EpostBanner />
             <LastefeilBanner />
-            {children}
+            <Feilgrense>{children}</Feilgrense>
           </div>
         </main>
       </div>

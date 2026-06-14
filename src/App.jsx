@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
+import { Feilgrense } from './components/Feilgrense';
 import Login from './pages/Auth/Login';
 // Offentlige markedssider lastes statisk (eager) så de vises umiddelbart uten
 // «Laster…»-blink på første paint.
@@ -174,7 +175,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Suspense fallback={<Laster />}>
-          <AppRoutes />
+          <Feilgrense>
+            <AppRoutes />
+          </Feilgrense>
         </Suspense>
       </AuthProvider>
     </BrowserRouter>
