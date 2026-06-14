@@ -13,6 +13,7 @@ import { Button } from '../../components/ui/Button';
 import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
 import { LaastFunksjon } from '../../components/plan/LaastFunksjon';
 import { OppgraderingsModal } from '../../components/plan/OppgraderingsModal';
+import { VerveOppfordring } from '../../components/plan/VerveOppfordring';
 import { usePlan } from '../../hooks/usePlan';
 import { lesPref, settPref } from '../../utils/uiPref';
 
@@ -1124,6 +1125,9 @@ function Rapport({ inp, t }) {
         <Info size={15} className="text-faint shrink-0 mt-0.5" />
         <span className="text-[12.5px] font-medium text-muted-2 leading-relaxed">Beregningen er veiledende. Skatt er forenklet (22 % på leieoverskudd etter rentefradrag) og tar ikke høyde for formuesskatt, individuelle fradrag eller fremtidige renteendringer ut over stresstesten.</span>
       </div>
+
+      {/* Verve-oppfordring etter opplevd verdi (kun betalende) */}
+      <VerveOppfordring />
 
     </div>
   );
