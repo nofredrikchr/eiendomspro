@@ -22,6 +22,7 @@ export class Feilgrense extends Component {
 
   render() {
     if (this.state.feil) {
+      if (this.props.fallback !== undefined) return this.props.fallback;
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="max-w-md w-full rounded-2xl border border-line bg-surface p-6 text-center">
@@ -38,7 +39,10 @@ export class Feilgrense extends Component {
             {this.state.feil?.message && (
               <details className="mt-4 text-left">
                 <summary className="text-xs font-semibold text-faint cursor-pointer">Tekniske detaljer</summary>
-                <pre className="mt-2 text-[11px] text-muted whitespace-pre-wrap break-words">{String(this.state.feil.message)}</pre>
+                <pre className="mt-2 text-[11px] text-muted whitespace-pre-wrap break-words">
+                  {String(this.state.feil.message)}
+                  {this.state.feil.stack ? `\n\n${String(this.state.feil.stack).slice(0, 800)}` : ''}
+                </pre>
               </details>
             )}
           </div>

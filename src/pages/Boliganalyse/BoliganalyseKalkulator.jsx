@@ -5,13 +5,11 @@ import {
   Copy, Check, BarChart3, AlertTriangle, Info, ArrowRight, Sparkles,
   Trash2, FolderOpen, Clock, Activity,
 } from 'lucide-react';
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
-} from 'recharts';
 import { analyseApi } from '../../services/entitetApi';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
+import { Feilgrense } from '../../components/Feilgrense';
 import { LaastFunksjon } from '../../components/plan/LaastFunksjon';
 import { OppgraderingsModal } from '../../components/plan/OppgraderingsModal';
 import { VerveOppfordring } from '../../components/plan/VerveOppfordring';
@@ -554,21 +552,29 @@ function krKort(n) {
   return `${Math.round(n)}`;
 }
 
-// Egen tooltip i prosjektets tokens.
-function PrognoseTooltip({ active, payload, label }) {
-  if (!active || !payload || !payload.length) return null;
+// Lett, avhengighetsfri SVG-graf for egenkapital/boligverdi over 10 år.
+// (Erstatter recharts, som krasjet med «t is not a function» i sin interne lodash-bruk.)
+function EnkelFormuesgraf({ data }) {
+  const W = 320; const H = 180; const P = 10;
+  const maxV = Math.max(1, ...data.map((d) => Math.max(d.boligverdi || 0, d.ekVerdi || 0)));
+  const n = Math.max(1, data.length - 1);
+  const x = (i) => P + (i / n) * (W - 2 * P);
+  const y = (v) => H - P - ((v || 0) / maxV) * (H - 2 * P);
+  const punkter = (key) => data.map((d, i) => `${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+  const flate = (key) => `${x(0).toFixed(1)},${(H - P).toFixed(1)} ${punkter(key)} ${x(n).toFixed(1)},${(H - P).toFixed(1)}`;
   return (
-    <div className="rounded-[12px] border border-line bg-surface px-3.5 py-2.5 shadow-card">
-      <div className="text-[11px] font-extrabold tracking-[0.04em] uppercase text-faint mb-1.5">År {label}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-4 text-[12px]">
-          <span className="flex items-center gap-1.5 font-semibold text-muted-2">
-            <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-            {p.name}
-          </span>
-          <span className="num font-extrabold text-ink">{kr(p.value)}</span>
-        </div>
-      ))}
+    <div className="rounded-[16px] border border-line bg-surface-2 px-3 pt-4 pb-2">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="none" style={{ display: 'block', height: 190 }} role="img" aria-label="Formuesutvikling over 10 år">
+        <polygon points={flate('boligverdi')} fill="var(--color-brand)" opacity="0.08" />
+        <polygon points={flate('ekVerdi')} fill="var(--color-brand-ink)" opacity="0.12" />
+        <polyline points={punkter('boligverdi')} fill="none" stroke="var(--color-brand)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+        <polyline points={punkter('ekVerdi')} fill="none" stroke="var(--color-brand-ink)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="flex justify-between mt-1 px-0.5 text-[10.5px] font-semibold text-faint">
+        <span>I dag</span>
+        <span className="num">Topp {krKort(maxV)}</span>
+        <span>10 år</span>
+      </div>
     </div>
   );
 }
@@ -636,45 +642,15 @@ function ResultatPanel({ t }) {
           </div>
         </div>
 
-        {/* Graf — egenkapitalvekst over 10 år */}
+        {/* Graf — egenkapitalvekst over 10 år (recharts; isolert med feilgrense så
+            en graf-feil ikke svartlegger hele analysen) */}
+        <Feilgrense fallback={<div className="rounded-[16px] border border-line bg-surface-2 px-4 py-8 text-center text-[12px] text-faint">Grafen kunne ikke vises akkurat nå.</div>}>
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[12.5px] font-extrabold text-ink">Formue bygges over 10 år</span>
             <span className="text-[11px] font-semibold text-brand-ink num">+ {kr(vekstEk)}</span>
           </div>
-          <div className="rounded-[16px] border border-line bg-surface-2 px-2 pt-4 pb-1">
-            <ResponsiveContainer width="100%" height={190}>
-              <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradBolig" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="var(--color-brand)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradEk" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-brand-ink)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--color-brand-ink)" stopOpacity={0.04} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--color-line-soft)" vertical={false} />
-                <XAxis
-                  dataKey="år"
-                  tickFormatter={(v) => (v === 0 ? 'I dag' : `${v} år`)}
-                  tick={{ fontSize: 10.5, fill: 'var(--color-faint)', fontWeight: 600 }}
-                  axisLine={false} tickLine={false} interval="preserveStartEnd"
-                />
-                <YAxis
-                  tickFormatter={krKort}
-                  tick={{ fontSize: 10.5, fill: 'var(--color-faint)', fontWeight: 600 }}
-                  axisLine={false} tickLine={false} width={48}
-                />
-                <Tooltip content={<PrognoseTooltip />} />
-                <Area type="monotone" dataKey="boligverdi" name="Boligverdi" stroke="var(--color-brand)"
-                  strokeWidth={1.5} fill="url(#gradBolig)" strokeDasharray="4 3" />
-                <Area type="monotone" dataKey="ekVerdi" name="Egenkapital" stroke="var(--color-brand-ink)"
-                  strokeWidth={2.5} fill="url(#gradEk)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <EnkelFormuesgraf data={data} />
           <div className="flex items-center gap-4 mt-2 px-1">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-2">
               <span className="w-3 h-[3px] rounded-full bg-brand-ink" /> Egenkapital
@@ -684,6 +660,7 @@ function ResultatPanel({ t }) {
             </span>
           </div>
         </div>
+        </Feilgrense>
 
         {/* Nøkkeltall-liste */}
         <div className="space-y-2 border-t border-line-soft pt-4">
