@@ -15,6 +15,13 @@ export async function hentAbonnement(brukerId) {
   return r[0] || null;
 }
 
+/** Slå opp bruker fra Stripe-kunde-ID (brukes av webhooks). */
+export async function finnBrukerViaStripeCustomer(stripeCustomerId) {
+  if (!stripeCustomerId) return null;
+  const r = await sql`select bruker_id from abonnement where stripe_customer_id = ${stripeCustomerId} limit 1`;
+  return r[0]?.bruker_id || null;
+}
+
 /**
  * Reverse trial ved registrering: permanent Gratis-konto (plan_id='gratis') men
  * 14 dager full Pro-tilgang via status='prøve' + trial_ends_at. Kortløst.
