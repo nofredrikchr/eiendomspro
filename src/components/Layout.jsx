@@ -2,8 +2,9 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Home, FileText, TrendingUp, Settings,
   Menu, X, BarChart3, Megaphone, MessageSquare, Bell, Zap, LifeBuoy, Percent,
-  ArrowLeftRight, MailWarning, AlertTriangle,
+  ArrowLeftRight, MailWarning, AlertTriangle, Gift,
 } from 'lucide-react';
+import { TrialBanner } from './plan/TrialBanner';
 import { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 import { Avatar } from './ui/kit';
@@ -33,6 +34,7 @@ const leietakerNavItems = [
 ];
 
 const bottomNavItems = [
+  { to: '/verv', icon: Gift, label: 'Verv en venn' },
   { to: '/tilbakemelding', icon: LifeBuoy, label: 'Tilbakemelding' },
   { to: '/innstillinger', icon: Settings, label: 'Min konto' },
 ];
@@ -280,6 +282,7 @@ export function Layout({ children }) {
         {/* Hovedinnhold */}
         <main className="flex-1 min-w-0">
           <div className="max-w-[1140px] mx-auto px-[clamp(16px,3.5vw,44px)] pt-[clamp(20px,3.5vw,44px)] pb-[clamp(48px,6vw,72px)]">
+            <TrialBanner />
             <EpostBanner />
             <LastefeilBanner />
             {children}
