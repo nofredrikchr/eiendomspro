@@ -63,7 +63,7 @@ APP_URL=https://eiendomspro.vercel.app
 
 ### 1.4 Webhook
 1. **Developers → Webhooks → Add endpoint**: `https://<din-app>/api/webhooks/stripe`
-2. Velg events: `invoice.paid`, `invoice.payment_failed`,
+2. Velg events: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`,
    `customer.subscription.deleted`, `charge.refunded`.
 3. Kopier «Signing secret» → `STRIPE_WEBHOOK_SECRET`.
 

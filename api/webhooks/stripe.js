@@ -15,7 +15,7 @@ import { verifiserWebhook } from '../_betaling/index.js';
 import {
   handterBetaltFaktura, handterMislyktBetaling, handterKansellering, handterRefusjon,
 } from '../_plan/livssyklus.js';
-import { finnBrukerViaStripeCustomer } from '../_plan/db.js';
+import { finnBrukerViaStripeCustomer, oppdaterAbonnement } from '../_plan/db.js';
 
 // Vi trenger rå body for å verifisere Stripe-signaturen.
 export const config = { api: { bodyParser: false } };
@@ -41,15 +41,36 @@ export default async function handler(req, res) {
 
   const type = event.type;
   const obj = event.data?.object ?? event; // stub sender flatt objekt
-  const brukerId = obj.metadata?.brukerId || obj.brukerId || (await finnBrukerViaStripeCustomer(obj.customer));
+
+  // Metadata kan ligge på objektet selv (Checkout Session), på subscription_details
+  // (Invoice), eller mangle helt — fall tilbake til kunde-ID-oppslag.
+  const meta = obj.metadata || obj.subscription_details?.metadata || {};
+  const brukerId = meta.brukerId || obj.client_reference_id || obj.brukerId
+    || (await finnBrukerViaStripeCustomer(obj.customer));
   if (!brukerId) return res.status(200).json({ ok: true, ignorert: true });
+
+  const planId = meta.planId || obj.planId || 'pro';
+  const intervall = meta.intervall || obj.intervall || 'mnd';
 
   try {
     switch (type) {
-      case 'invoice.paid':
+      // Kanonisk event etter fullført Checkout — bærer kunde + abonnement + metadata.
+      case 'checkout.session.completed':
+        await oppdaterAbonnement(brukerId, {
+          stripe_customer_id: obj.customer || null,
+          stripe_subscription_id: obj.subscription || null,
+        });
+        // setup-modus (kortregistrering for BankID) skal ikke aktivere abonnement
+        if (obj.mode === 'setup') {
+          await oppdaterAbonnement(brukerId, { har_kort: true });
+        } else {
+          await handterBetaltFaktura(brukerId, { planId, intervall, bruttoOre: obj.amount_total ?? null });
+        }
+        break;
+      case 'invoice.paid': // fornyelser (renewals)
         await handterBetaltFaktura(brukerId, {
-          planId: obj.metadata?.planId || obj.planId || 'pro',
-          intervall: obj.metadata?.intervall || obj.intervall || 'mnd',
+          planId,
+          intervall,
           bruttoOre: obj.amount_paid ?? obj.bruttoOre ?? null,
         });
         break;

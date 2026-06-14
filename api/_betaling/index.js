@@ -32,13 +32,15 @@ export async function opprettCheckout({ brukerId, planId, intervall, suksessUrl,
   const prisId = prisIdFor(planId, intervall);
   const sesjon = await s.checkout.sessions.create({
     mode: 'subscription',
-    payment_method_types: ['card'], // Vipps legges til via Stripe Dashboard når aktivert
+    // Betalingsmetoder (kort, Vipps) styres fra Stripe Dashboard → vises automatisk.
     line_items: [{ price: prisId, quantity: 1 }],
     success_url: suksessUrl,
     cancel_url: avbrytUrl,
     customer_email: kundeEpost || undefined,
     client_reference_id: brukerId,
     metadata: { brukerId, planId, intervall },
+    // Metadata på abonnementet → følger med på fremtidige fakturaer (renewals).
+    subscription_data: { metadata: { brukerId, planId, intervall } },
   });
   return { stub: false, url: sesjon.url, sesjonId: sesjon.id };
 }
