@@ -9,6 +9,7 @@ import { formatKr } from '../../utils/format';
 import { hentKpiSerie, indeksFor, tilSsbMaaned, ssbMaanedTilTekst } from '../../services/ssbKpi';
 import { kanReguleresNaa, nesteReguleringTekst, nesteReguleringsdato, beregnNyLeie } from '../../utils/kpi';
 import { genererKpiVarselPDF } from '../../utils/kpiVarselPDF';
+import KpiVarslerPanel from '../../components/kpi/KpiVarslerPanel';
 
 function ssbMinus(maaned, n) {
   const m = String(maaned).match(/(\d{4})M(\d{2})/);
@@ -121,6 +122,8 @@ export default function KpiRegulering() {
         tittel="KPI-regulering"
         undertittel="Juster husleien i takt med konsumprisindeksen — med live tall fra SSB."
       />
+
+      <KpiVarslerPanel />
 
       {status === 'laster' && (
         <SectionCard>
