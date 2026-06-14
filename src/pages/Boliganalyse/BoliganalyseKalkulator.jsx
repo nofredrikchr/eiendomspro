@@ -12,6 +12,7 @@ import { analyseApi } from '../../services/entitetApi';
 import { Input, Select } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { SectionCard, Pill, IconTile, PageHeader } from '../../components/ui/kit';
+import { Feilgrense } from '../../components/Feilgrense';
 import { LaastFunksjon } from '../../components/plan/LaastFunksjon';
 import { OppgraderingsModal } from '../../components/plan/OppgraderingsModal';
 import { VerveOppfordring } from '../../components/plan/VerveOppfordring';
@@ -636,7 +637,9 @@ function ResultatPanel({ t }) {
           </div>
         </div>
 
-        {/* Graf — egenkapitalvekst over 10 år */}
+        {/* Graf — egenkapitalvekst over 10 år (recharts; isolert med feilgrense så
+            en graf-feil ikke svartlegger hele analysen) */}
+        <Feilgrense fallback={<div className="rounded-[16px] border border-line bg-surface-2 px-4 py-8 text-center text-[12px] text-faint">Grafen kunne ikke vises akkurat nå.</div>}>
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[12.5px] font-extrabold text-ink">Formue bygges over 10 år</span>
@@ -684,6 +687,7 @@ function ResultatPanel({ t }) {
             </span>
           </div>
         </div>
+        </Feilgrense>
 
         {/* Nøkkeltall-liste */}
         <div className="space-y-2 border-t border-line-soft pt-4">
