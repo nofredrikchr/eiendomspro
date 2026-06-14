@@ -592,10 +592,10 @@ export default function LandingPage() {
           <div className="order-1 lg:order-2">
             <Merke>For leietakere</Merke>
             <h2 data-reveal className="m-0 mb-3.5 font-extrabold tracking-[-0.025em] text-balance" style={{ fontSize: 'clamp(28px, 3.6vw, 42px)' }}>
-              En portal som føles som god service
+              Din leietaker får sin egen portal — automatisk
             </h2>
             <p data-reveal className="m-0 mb-[26px] text-base leading-[1.6] text-muted max-w-[50ch]">
-              Å leie skal ikke føles som papirarbeid. Leietakerne dine får et ryddig hjem på nett — med alt de trenger gjennom hele leieforholdet.
+              I det du inviterer en leietaker, står portalen klar. Ingen ekstra oppsett, ingen app å laste ned — bare et ryddig hjem på nett med alt de trenger gjennom hele leieforholdet.
             </p>
             <div className="grid gap-3.5 mb-7" data-reveal-gruppe>
               {[
@@ -609,6 +609,10 @@ export default function LandingPage() {
                   <div className="text-[15px] font-semibold text-ink-2">{t}</div>
                 </div>
               ))}
+            </div>
+            <div data-reveal className="flex items-center gap-[7px] mb-5 text-[13.5px] font-semibold text-muted">
+              <Check size={15} strokeWidth={2.4} className="text-brand" />
+              Følger med på alle planer — også gratis
             </div>
             <button data-reveal onClick={tilLogin} className="inline-flex items-center gap-2 bg-transparent border-none p-0 text-[15px] font-bold text-brand-ink hover:underline cursor-pointer">
               Se leietakerportalen
