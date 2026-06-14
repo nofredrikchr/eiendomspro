@@ -6,6 +6,10 @@
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "crons": [
+    { "path": "/api/cron/kpi", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/trial-epost", "schedule": "0 7 * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

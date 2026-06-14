@@ -42,6 +42,21 @@ export async function opprettTrialOgKonto(brukerId, fulltNavn) {
   return rader[0] || (await hentAbonnement(brukerId));
 }
 
+/** Har det allerede blitt logget en hendelse av denne typen for brukeren? */
+export async function harHendelse(brukerId, type) {
+  const r = await sql`select 1 from abonnement_hendelser where bruker_id = ${brukerId} and type = ${type} limit 1`;
+  return r.length > 0;
+}
+
+/** Alle abonnement i prøveperiode (for trial-e-post-cron). */
+export async function hentTrialAbonnement() {
+  return sql`
+    select a.bruker_id, a.trial_ends_at, b.epost, b.fullt_navn
+    from abonnement a
+    join brukere b on b.id = a.bruker_id
+    where a.status = 'prøve' and a.trial_ends_at is not null and b.epost is not null`;
+}
+
 export async function loggAbonnementHendelse(brukerId, type, detaljer = null, utfortAv = null) {
   await sql`
     insert into abonnement_hendelser (bruker_id, type, detaljer, utfort_av)
